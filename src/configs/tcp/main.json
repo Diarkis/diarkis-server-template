@@ -1,0 +1,5 @@
+{
+  "address": "127.0.0.1",
+  "port": "7200",
+  "connectionTTL": 120
+}
