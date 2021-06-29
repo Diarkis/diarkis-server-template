@@ -11,23 +11,27 @@ make project={Project name of your application} output={Install destination path
 # Structure
 
 ```
-───┬─ servers/ ─┬─ http/main.go [HTTP server main]
+───┬─ servers/ ─┬─ http/main.go      [HTTP server main]
    │            │
-   │            ├─ udp/main.go  [UDP server main]
+   │            ├─ udp/main.go       [UDP server main]
    │            │
-   │            ├─ tcp/main.go  [TCP server main]
+   │            ├─ tcp/main.go       [TCP server main]
    │            │
-   │            └─ ws/main.go   [WebSocket server main]
+   │            ├─ connector/main.go [Connector server main]
+   │            │
+   │            └─ ws/main.go        [WebSocket server main]
    │
    ├─ configs/ ─┬─ shared/ [Shared configuration directory] ────────────────────┬─ field.json
    │            │                                                               ├─ group.json
-   │            ├─ http/   [HTTP configuration directory] ────────── main.json  ├─ log.json
+   │            ├─ http/     [HTTP configuration directory] ──────── main.json  ├─ log.json
    │            │                                                               ├─ matching.json
-   │            ├─ udp/    [UDP configuration directory]  ────────── main.json  └─ mesh.json
+   │            ├─ udp/      [UDP configuration directory]  ──────── main.json  └─ mesh.json
    │            │
-   │            ├─ tcp/    [TCP configuration directory]  ────────── main.json
+   │            ├─ tcp/      [TCP configuration directory]  ──────── main.json
    │            │
-   │            └─ ws/     [WebSocket configuration directory]  ──── main.json
+   │            ├─ connector [Connector configuration directory] ─── main.json
+   │            │
+   │            └─ ws/       [WebSocket configuration directory] ─── main.json
    │
    ├─ cmds/  [Custom client command directory] ─┬─ main.go [Entry point for all cmds]
    │                                            ├── http   ──────────────────────────────────────┬─── main.go
