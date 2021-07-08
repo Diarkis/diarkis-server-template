@@ -10,6 +10,9 @@ import (
 	"path/filepath"
 )
 
+var projectID = ""
+var buildToken = ""
+
 func main() {
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -20,10 +23,12 @@ func main() {
 	pkg := os.Args[1]
 	src := fmt.Sprintf("%s/src/", cwd)
 	dest := ""
-	if os.Args[2][0:1] == "/" {
-		dest = os.Args[2]
+	projectID = os.Args[2]
+	buildToken = os.Args[3]
+	if os.Args[4][0:1] == "/" {
+		dest = os.Args[4]
 	} else {
-		dest = fmt.Sprintf("%s/%s", cwd, os.Args[2])
+		dest = fmt.Sprintf("%s/%s", cwd, os.Args[4])
 	}
 	fmt.Printf("Installing the template as package %s to %s\n", pkg, dest)
 	err = copyDirectory(pkg, src, dest)
@@ -107,6 +112,8 @@ func copyFile(pkg string, srcFile string, dstFile string) error {
 		return err
 	}
 	fileData := strings.Replace(string(data), "{0}", prj, -1)
+	fileData = strings.Replace(fileData, "{{PROJECT_ID}}", projectID, -1)
+	fileData = strings.Replace(fileData, "{{BUILD_TOKEN}}", buildToken, -1)
 	//fmt.Printf("%s - %s\n------\n%s\n\n", prj, srcFile, fileData)
 	_, err = io.WriteString(out, fileData)
 	if err != nil {

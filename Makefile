@@ -6,5 +6,5 @@ help:
 .DEFAULT_GOAL := help
 
 .PHONY: install
-install: ## make install project={name of your application} output={absolute path to install}
-	go run ./tools/install.go $(project) $(output)
+install: ## make install project={name of your application} project_id={project ID} build_token={build token} output={absolute path to install}
+	go run ./tools/install.go $(project) $(project_id) $(build_token) $(output)
