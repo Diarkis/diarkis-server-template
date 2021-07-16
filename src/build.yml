@@ -8,16 +8,16 @@ buildSettings:
     CGO_LDFLAGS: -L${PROJECT_DIR} -Wl,-rpath,${PROJECT_DIR}
   projects:
     http:
-      target: cmd/http/main.go
+      target: servers/http/main.go
       output: remote_bin/http
     udp:
-      target: cmd/udp/main.go
+      target: servers/udp/main.go
       output: remote_bin/udp
     tcp:
-      target: cmd/tcp/main.go
+      target: servers/tcp/main.go
       output: remote_bin/tcp
     ws:
-      target: cmd/ws/main.go
+      target: servers/ws/main.go
       output: remote_bin/ws
 diarkis:
   project_id: {{PROJECT_ID}}
