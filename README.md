@@ -5,7 +5,7 @@ Server code template aims to provide entry point to server development using Dia
 # How To Install Template
 
 ```
-make install project={Project name of your application} project_id={Project ID for build config} build_token={Build token} output={Install destination path}
+make install project={Project name of your application} project_id={Project ID for build config} builder_token={Builder token} output={Install destination path}
 ```
 
 # Structure
