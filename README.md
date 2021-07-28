@@ -21,24 +21,26 @@ make install project={Project name of your application} project_id={Project ID f
    │            │
    │            └─ ws/main.go        [WebSocket server main]
    │
-   ├─ configs/ ─┬─ shared/ [Shared configuration directory] ────────────────────┬─ field.json
-   │            │                                                               ├─ group.json
-   │            ├─ http/     [HTTP configuration directory] ──────── main.json  ├─ log.json
-   │            │                                                               ├─ matching.json
-   │            ├─ udp/      [UDP configuration directory]  ──────── main.json  └─ mesh.json
+   ├─ configs/ ─┬─ shared/    [Shared configuration directory] ────────────────────┬─ field.json
+   │            │                                                                  ├─ group.json
+   │            ├─ http/      [HTTP configuration directory] ──────── main.json    ├─ log.json
+   │            │                                                                  ├─ matching.json
+   │            ├─ udp/       [UDP configuration directory]  ──────── main.json    └─ mesh.json
    │            │
-   │            ├─ tcp/      [TCP configuration directory]  ──────── main.json
+   │            ├─ tcp/       [TCP configuration directory]  ──────── main.json
    │            │
-   │            ├─ connector [Connector configuration directory] ─── main.json
+   │            ├─ connector/ [Connector configuration directory] ─── main.json
    │            │
-   │            └─ ws/       [WebSocket configuration directory] ─── main.json
+   │            ├─ mars/      [MARS configuration directory] ──────── main.json
+   │            │
+   │            └─ ws/        [WebSocket configuration directory] ─── main.json
    │
    ├─ cmds/  [Custom client command directory] ─┬─ main.go [Entry point for all cmds]
    │                                            ├── http   ──────────────────────────────────────┬─── main.go
    ├─ lib/   [Shared library directory]         ├── room   ──────────────────────────── main.go  └─── matching.go
    │                                            ├── group  ──────────────────────────── main.go
    ├─ bin/   [Built server binary directory]    ├── field  ──────────────────────────── main.go
-   │                                            │
-   └─ go.mod [Go module file for the project]   └── custom ──────────────────────────── main.go
+   │                                            └── custom ──────────────────────────── main.go
+   └─ go.mod [Go module file for the project]
 
 ```
