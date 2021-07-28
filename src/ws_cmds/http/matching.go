@@ -11,14 +11,26 @@ import (
 	"strings"
 )
 
-func exposeMatchMaking(rootpath string) {
+func exposeMatchMaker(rootpath string) {
 	matching.Setup(fmt.Sprintf("%s/configs/shared/matching.json", rootpath))
-	http.Post("/mm/add/:mmID", addToMatchMaking)
-	http.Delete("/mm/rm/:mmID", removeFromMatchMaking)
+	http.Post("/mm/add/:mmID/:uniqueID/:ttl", addToMatchMaker)
+	http.Delete("/mm/rm/:mmID", removeFromMatchMaker)
 	http.Get("mm/search/:mmIDs/:limit", searchMatching)
+	defineMatchMakerRules()
 }
 
-func addToMatchMaking(res *http.Response, req *http.Request, params *http.Params, next func(error)) {
+func defineMatchMakerRules() {
+	// rank will match rank range of 10. i.e. 0 to 10, 11 to 20, 21 to 30...
+	rankRule := make(map[string]int)
+	rankRule["rank"] = 10
+	matching.Define("rank", rankRule)
+	// socre will match score range of 1000. i.e. 0 to 1000, 1001 to 2000...
+	scoreRule := make(map[string]int)
+	scoreRule["score"] = 1000
+	matching.Define("score", scoreRule)
+}
+
+func addToMatchMaker(res *http.Response, req *http.Request, params *http.Params, next func(error)) {
 	mmID, err := params.GetAsString("mmID")
 	if err != nil {
 		res.Respond(err.Error(), http.Bad)
@@ -37,14 +49,14 @@ func addToMatchMaking(res *http.Response, req *http.Request, params *http.Params
 		next(err)
 		return
 	}
-	dataJSON := req.Req.FormValue("data")
+	dataJSON := req.Req.FormValue("props")
 	if dataJSON == "" {
-		err := errors.New("Match making data is missing")
+		err := errors.New("MatchMaker data is missing")
 		res.Respond(err.Error(), http.Bad)
 		next(err)
 		return
 	}
-	// match making data is expected to be JSON
+	// MatchMaker data is expected to be JSON
 	m := make(map[string]interface{})
 	err = json.Unmarshal([]byte(dataJSON), &m)
 	if err != nil {
@@ -56,7 +68,7 @@ func addToMatchMaking(res *http.Response, req *http.Request, params *http.Params
 	for k, v := range m {
 		if _, ok := v.(float64); !ok {
 			// invalid data
-			err := errors.New("Invalid match making data. The all values must be numbers")
+			err := errors.New("Invalid MatchMaker data. The all values must be numbers")
 			res.Respond(err.Error(), http.Bad)
 			next(err)
 			return
@@ -78,7 +90,7 @@ func addToMatchMaking(res *http.Response, req *http.Request, params *http.Params
 	next(nil)
 }
 
-func removeFromMatchMaking(res *http.Response, req *http.Request, params *http.Params, next func(error)) {
+func removeFromMatchMaker(res *http.Response, req *http.Request, params *http.Params, next func(error)) {
 	mmID, err := params.GetAsString("mmID")
 	if err != nil {
 		res.Respond(err.Error(), http.Bad)
@@ -104,7 +116,7 @@ func removeFromMatchMaking(res *http.Response, req *http.Request, params *http.P
 	next(nil)
 }
 
-func searchMatching(res *http.Response, req *http.Request, params *http.Params, next func(error)) {
+func searchMatchMaker(res *http.Response, req *http.Request, params *http.Params, next func(error)) {
 	// mmIDs is comma separated list of matching IDs
 	mmIDs, err := params.GetAsString("mmIDs")
 	if err != nil {
@@ -116,12 +128,12 @@ func searchMatching(res *http.Response, req *http.Request, params *http.Params, 
 	// search properties are expected to be JSON
 	propsJSON := req.Req.FormValue("props")
 	if propsJSON == "" {
-		err := errors.New("Match making data is missing")
+		err := errors.New("MatchMaker data is missing")
 		res.Respond(err.Error(), http.Bad)
 		next(err)
 		return
 	}
-	// match making data is expected to be JSON
+	// MatchMaker data is expected to be JSON
 	m := make(map[string]interface{})
 	err = json.Unmarshal([]byte(propsJSON), &m)
 	if err != nil {
@@ -133,7 +145,7 @@ func searchMatching(res *http.Response, req *http.Request, params *http.Params, 
 	for k, v := range m {
 		if _, ok := v.(float64); !ok {
 			// invalid data
-			err := errors.New("Invalid match making data. The all values must be numbers")
+			err := errors.New("Invalid MatchMaker data. The all values must be numbers")
 			res.Respond(err.Error(), http.Bad)
 			next(err)
 			return
