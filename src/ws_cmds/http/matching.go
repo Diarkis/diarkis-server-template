@@ -15,7 +15,7 @@ func exposeMatchMaker(rootpath string) {
 	matching.Setup(fmt.Sprintf("%s/configs/shared/matching.json", rootpath))
 	http.Post("/mm/add/:mmID/:uniqueID/:ttl", addToMatchMaker)
 	http.Delete("/mm/rm/:mmID", removeFromMatchMaker)
-	http.Get("mm/search/:mmIDs/:limit", searchMatching)
+	http.Get("mm/search/:mmIDs/:limit", searchMatchMaker)
 	defineMatchMakerRules()
 }
 
