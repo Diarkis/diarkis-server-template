@@ -19,6 +19,9 @@ buildSettings:
     ws:
       target: servers/ws/main.go
       output: remote_bin/ws
+    mars:
+      target: mars/main.go
+      output: remote_bin/mars
 diarkis:
   project_id: {{PROJECT_ID}}
   builder_token: {{BUILD_TOKEN}}

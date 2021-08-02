@@ -19,6 +19,9 @@ Only HTTP server is required in the cluster and the rest of the servers should b
    │            │
    │            └─ ws/main.go        [WebSocket server main]
    │
+   ├─ mars/ ────── main.go
+   │
+   │
    ├─ configs/ ─┬─ shared/ [Shared configuration directory] ────────────────────┬─ field.json
    │            │                                                               ├─ group.json
    │            ├─ http/     [HTTP configuration directory] ──────── main.json  ├─ log.json
@@ -72,6 +75,12 @@ servers/ws/main.go
 ```
 servers/connector/main.go
 ```
+
+# MARS
+
+Diarkis server cluster requires it's unique server called MARS server.
+
+You need to simple build MARS server and deploy it along with other Diarkis servers.
 
 # Commands
 

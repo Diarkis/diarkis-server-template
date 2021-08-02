@@ -88,6 +88,7 @@ func copyDirectory(pkg string, src string, dest string) error {
 }
 
 func copyFile(pkg string, srcFile string, dstFile string) error {
+	fmt.Printf("Installing from %v to %v\n", srcFile, dstFile)
 	out, err := os.Create(dstFile)
 	if err != nil {
 		return err
@@ -114,7 +115,6 @@ func copyFile(pkg string, srcFile string, dstFile string) error {
 	fileData := strings.Replace(string(data), "{0}", prj, -1)
 	fileData = strings.Replace(fileData, "{{PROJECT_ID}}", projectID, -1)
 	fileData = strings.Replace(fileData, "{{BUILD_TOKEN}}", buildToken, -1)
-	//fmt.Printf("%s - %s\n------\n%s\n\n", prj, srcFile, fileData)
 	_, err = io.WriteString(out, fileData)
 	if err != nil {
 		return err

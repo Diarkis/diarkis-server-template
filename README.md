@@ -1,12 +1,10 @@
-# TemplateOf Server Code
+# Overview
 
-Server code template aims to provide entry point to server development using Diarkis.
+Diarkis server cluster is made up with HTTP, TCP, UDP and WebSocket servrers.
 
-# How To Install Template
+Each protocol servers run independently within the cluster, but you do not have to have all protocols.
 
-```
-make install project={Project name of your application} project_id={Project ID for build config} builder_token={Builder token} output={Install destination path}
-```
+Only HTTP server is required in the cluster and the rest of the servers should be chosen according to your application's requirements.
 
 # Structure
 
@@ -21,26 +19,147 @@ make install project={Project name of your application} project_id={Project ID f
    │            │
    │            └─ ws/main.go        [WebSocket server main]
    │
-   ├─ configs/ ─┬─ shared/    [Shared configuration directory] ────────────────────┬─ field.json
-   │            │                                                                  ├─ group.json
-   │            ├─ http/      [HTTP configuration directory] ──────── main.json    ├─ log.json
-   │            │                                                                  ├─ matching.json
-   │            ├─ udp/       [UDP configuration directory]  ──────── main.json    └─ mesh.json
+   ├─ mars/ ────── main.go
+   │
+   │
+   ├─ configs/ ─┬─ shared/ [Shared configuration directory] ────────────────────┬─ field.json
+   │            │                                                               ├─ group.json
+   │            ├─ http/     [HTTP configuration directory] ──────── main.json  ├─ log.json
+   │            │                                                               ├─ matching.json
+   │            ├─ udp/      [UDP configuration directory]  ──────── main.json  └─ mesh.json
    │            │
-   │            ├─ tcp/       [TCP configuration directory]  ──────── main.json
+   │            ├─ tcp/      [TCP configuration directory]  ──────── main.json
    │            │
-   │            ├─ connector/ [Connector configuration directory] ─── main.json
+   │            ├─ connector [Connector configuration directory] ─── main.json
    │            │
-   │            ├─ mars/      [MARS configuration directory] ──────── main.json
-   │            │
-   │            └─ ws/        [WebSocket configuration directory] ─── main.json
+   │            └─ ws/       [WebSocket configuration directory] ─── main.json
    │
    ├─ cmds/  [Custom client command directory] ─┬─ main.go [Entry point for all cmds]
    │                                            ├── http   ──────────────────────────────────────┬─── main.go
    ├─ lib/   [Shared library directory]         ├── room   ──────────────────────────── main.go  └─── matching.go
    │                                            ├── group  ──────────────────────────── main.go
    ├─ bin/   [Built server binary directory]    ├── field  ──────────────────────────── main.go
-   │                                            └── custom ──────────────────────────── main.go
-   └─ go.mod [Go module file for the project]
+   │                                            │
+   └─ go.mod [Go module file for the project]   └── custom ──────────────────────────── main.go
 
+```
+
+# Server Entry Points
+
+## HTTP server
+
+```
+servers/http/main.go
+```
+
+## UDP server
+
+```
+servers/udp/main.go
+```
+
+## TCP server
+
+```
+servers/tcp/main.go
+```
+
+## WebSocket server
+
+```
+servers/ws/main.go
+```
+
+## Connector server
+
+```
+servers/connector/main.go
+```
+
+# MARS
+
+Diarkis server cluster requires it's unique server called MARS server.
+
+You need to simple build MARS server and deploy it along with other Diarkis servers.
+
+# Commands
+
+This is where you add your custom commands.
+
+## UDP and TCP
+
+```
+cmds/
+```
+
+## WebSocket
+
+```
+ws_cmds/
+```
+
+# Configurations
+
+This is where you place your configuration JSON files.
+
+```
+configs/
+```
+
+# MatchMaker
+
+This is where you define your own MatchMaker rules.
+
+The template provides HTTP API endpoints, but you may implement UDP, TCP, WebSocket commands for MatchMaker as well.
+
+```
+cmds/http/matching.go
+```
+
+## Default HTTP API Endpoints
+
+We have pre-define rules of `rank` and `score`.
+
+`rank` and `score` are also the `mmID` of each rule.
+
+### Adding data to MatchMaker pool to be searched
+
+```
+POST /mm/add/:mmID/:uniqueID/:ttl
+```
+
+- `mmID` is the ID of MatchMaker rule.
+
+- `uniqueID` is the unique ID of the data that is to be added to MatchMaker pool.
+
+- `ttl` is the TTL of the data that is to be added to MatcMaker pool.
+
+#### Request Body
+
+- `props` is the JSON data to represent conditions of the data. This is used by search.
+
+- `metadata` is the JSON data to be returned when search returns with results.
+
+### Searching candidates from MatchMaker pool
+
+```
+GET /mm/search/:mmIDs/:limit
+```
+
+- `mmIDs` is a comma separated MatchMaker rule IDs.
+
+- `limit` defines how many matching results you expect.
+
+# Custom Commands
+
+This is where you impleement your own custom commands for TCP, UDP/RUDP.
+
+```
+/cmds/custom/main.go
+```
+
+This is where you implement your own custom commands for WebSocket.
+
+```
+ws_cmds/custom/main.go
 ```
