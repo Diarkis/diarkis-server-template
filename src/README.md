@@ -80,7 +80,15 @@ servers/connector/main.go
 
 Diarkis server cluster requires it's unique server called MARS server.
 
-You need to simple build MARS server and deploy it along with other Diarkis servers.
+You need to simply build MARS server and deploy it along with other Diarkis servers.
+
+## Starting MARS Server With Configuration File
+
+By default, there is MARS configuration JSON file: `configs/mars/main.json`
+
+```
+./mars <path to the config JSON file>
+```
 
 # Commands
 
