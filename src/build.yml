@@ -23,7 +23,7 @@ buildSettings:
       target: mars/main.go
       output: remote_bin/mars
     health-check:
-      target: health-check/main.go
+      target: healthcheck/main.go
       output: remote_bin/health-check
 diarkis:
   project_id: {{PROJECT_ID}}
