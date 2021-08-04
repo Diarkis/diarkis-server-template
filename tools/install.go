@@ -20,16 +20,17 @@ func main() {
 		os.Exit(1)
 		return
 	}
-	pkg := os.Args[1]
 	src := fmt.Sprintf("%s/src/", cwd)
 	dest := ""
-	projectID = os.Args[2]
-	buildToken = os.Args[3]
-	if os.Args[4][0:1] == "/" {
-		dest = os.Args[4]
+	projectID = os.Args[1]
+	buildToken = os.Args[2]
+	if os.Args[3][0:1] == "/" {
+		dest = os.Args[3]
 	} else {
 		dest = fmt.Sprintf("%s/%s", cwd, os.Args[4])
 	}
+	list := strings.Split(dest, "/")
+	pkg := list[len(list) - 1]
 	fmt.Printf("Installing the template as package %s to %s\n", pkg, dest)
 	err = copyDirectory(pkg, src, dest)
 	if err != nil {
