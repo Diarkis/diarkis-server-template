@@ -6,6 +6,16 @@ Each protocol servers run independently within the cluster, but you do not have 
 
 Only HTTP server is required in the cluster and the rest of the servers should be chosen according to your application's requirements.
 
+# How To Install
+
+You may initialize your Diarkis server project from this repository:
+
+```
+make install project={name of your application} project_id={project ID} builder_token={build token} output={absolute path to install
+```
+
+**NOTE**: To get your porject ID and builder token, please contact us at https://diarkis.io/en/contact
+
 # Structure
 
 ```
