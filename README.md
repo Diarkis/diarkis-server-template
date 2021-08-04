@@ -11,7 +11,7 @@ Only HTTP server is required in the cluster and the rest of the servers should b
 You may initialize your Diarkis server project from this repository:
 
 ```
-make install project_id={project ID} builder_token={build token} output={absolute path to install
+make install project_id={project ID} builder_token={build token} output={absolute path to install the server project}
 ```
 
 **NOTE**: To get your porject ID and builder token, please contact us at https://diarkis.io/en/contact
