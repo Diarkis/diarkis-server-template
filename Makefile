@@ -8,4 +8,3 @@ help:
 .PHONY: install
 install: ## make install project={name of your application} project_id={project ID} builder_token={build token} output={absolute path to install}
 	go run ./tools/install.go $(project) $(project_id) $(builder_token) $(output)
-	umask 022 $(output)/remote_bin
