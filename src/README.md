@@ -9,39 +9,41 @@ Only HTTP server is required in the cluster and the rest of the servers should b
 # Structure
 
 ```
-───┬─ servers/ ─┬─ http/main.go      [HTTP server main]
+───┬─ servers/ ─┬──── http/main.go      [HTTP server main]
    │            │
-   │            ├─ udp/main.go       [UDP server main]
+   │            ├──── udp/main.go       [UDP server main]
    │            │
-   │            ├─ tcp/main.go       [TCP server main]
+   │            ├──── tcp/main.go       [TCP server main]
    │            │
-   │            ├─ connector/main.go [Connector server main]
+   │            ├──── connector/main.go [Connector server main]
    │            │
-   │            └─ ws/main.go        [WebSocket server main]
+   │            └──── ws/main.go        [WebSocket server main]
    │
-   ├─ mars/ ────── main.go
+   ├─ mars/ ───────── main.go
    │
    │
-   ├─ configs/ ─┬─ shared/ [Shared configuration directory] ────────────────────┬─ field.json
-   │            │                                                               ├─ group.json
-   │            ├─ http/     [HTTP configuration directory] ──────── main.json  ├─ log.json
-   │            │                                                               ├─ matching.json
-   │            ├─ udp/      [UDP configuration directory]  ──────── main.json  └─ mesh.json
-   │            │
-   │            ├─ tcp/      [TCP configuration directory]  ──────── main.json
-   │            │
-   │            ├─ connector [Connector configuration directory] ─── main.json
-   │            │
-   │            └─ ws/       [WebSocket configuration directory] ─── main.json
+   ├─ healthcheck/ ── main.go
    │
-   ├─ cmds/  [Custom client command directory] ─┬─ main.go [Entry point for all cmds]
+   │
+   ├─ configs/ ─┬──── shared/ [Shared configuration directory] ────────────────────┬─ field.json
+   │            │                                                                  ├─ group.json
+   │            ├──── http/     [HTTP configuration directory] ──────── main.json  ├─ log.json
+   │            │                                                                  ├─ matching.json
+   │            ├──── udp/      [UDP configuration directory]  ──────── main.json  └─ mesh.json
+   │            │
+   │            ├──── tcp/      [TCP configuration directory]  ──────── main.json
+   │            │
+   │            ├──── connector [Connector configuration directory] ─── main.json
+   │            │
+   │            └──── ws/       [WebSocket configuration directory] ─── main.json
+   │
+   ├─ cmds/  [Custom client command directory] ─┬── main.go [Entry point for all cmds]
    │                                            ├── http   ──────────────────────────────────────┬─── main.go
    ├─ lib/   [Shared library directory]         ├── room   ──────────────────────────── main.go  └─── matching.go
    │                                            ├── group  ──────────────────────────── main.go
    ├─ bin/   [Built server binary directory]    ├── field  ──────────────────────────── main.go
    │                                            │
    └─ go.mod [Go module file for the project]   └── custom ──────────────────────────── main.go
-
 ```
 
 # Server Entry Points
@@ -89,6 +91,12 @@ By default, there is MARS configuration JSON file: `configs/mars/main.json`
 ```
 ./mars <path to the config JSON file>
 ```
+
+# Health Check
+
+Diarkis server needs to have health check. This template provides the source to build the health check binary.
+
+The build will be automatically executed when you execute our make commands.
 
 # Commands
 
