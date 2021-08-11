@@ -5,6 +5,6 @@ help:
 ## Set default command of make to help, so that running make will output help texts
 .DEFAULT_GOAL := help
 
-.PHONY: install
-install: ## make install project_id={project ID} builder_token={build token} output={absolute path to install}
+.PHONY: init
+init: ## make init project_id={project ID} builder_token={build token} output={absolute path to install}
 	go run ./tools/install.go $(project_id) $(builder_token) $(output)

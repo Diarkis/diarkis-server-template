@@ -15,7 +15,7 @@ func exposeMatchMaker(rootpath string) {
 	matching.Setup(fmt.Sprintf("%s/configs/shared/matching.json", rootpath))
 	http.Post("/mm/add/:mmID/:uniqueID/:ttl", addToMatchMaker)
 	http.Delete("/mm/rm/:mmID", removeFromMatchMaker)
-	http.Get("mm/search/:mmIDs/:limit", searchMatchMaker)
+	http.Post("/mm/search/:mmIDs/:limit", searchMatchMaker)
 	defineMatchMakerRules()
 }
 
@@ -165,13 +165,16 @@ func searchMatchMaker(res *http.Response, req *http.Request, params *http.Params
 			next(err)
 			return
 		}
-		found, err := json.Marshal(results)
+		response := make(map[string]interface{})
+		response["props"] = props
+		response["results"] = results
+		encodedResponse, err := json.Marshal(response)
 		if err != nil {
 			res.Respond(err.Error(), http.Bad)
 			next(err)
 			return
 		}
-		res.Respond(string(found), http.Ok)
+		res.Respond(string(encodedResponse), http.Ok)
 		next(nil)
 	})
 }

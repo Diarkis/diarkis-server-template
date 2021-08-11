@@ -159,12 +159,16 @@ POST /mm/add/:mmID/:uniqueID/:ttl
 ### Searching candidates from MatchMaker pool
 
 ```
-GET /mm/search/:mmIDs/:limit
+POST /mm/search/:mmIDs/:limit
 ```
 
 - `mmIDs` is a comma separated MatchMaker rule IDs.
 
 - `limit` defines how many matching results you expect.
+
+#### Request Body
+
+- `props` is the JSON data representation of search conditions.
 
 # Custom Commands
 

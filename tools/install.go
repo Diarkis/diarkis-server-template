@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"syscall"
 	"io"
 	"io/ioutil"
@@ -32,12 +33,36 @@ func main() {
 	list := strings.Split(dest, "/")
 	pkg := list[len(list) - 1]
 	fmt.Printf("Installing the template as package %s to %s\n", pkg, dest)
+	_, err = os.Stat(dest)
+	if err != nil {
+		if os.IsNotExist(err) {
+			err = os.Mkdir(dest, os.FileMode(0777))
+			if err != nil {
+				fmt.Printf("Error %v\n", err)
+				os.Exit(1)
+			}
+		} else {
+			fmt.Printf("Error %v\n", err)
+			os.Exit(1)
+		}
+	}
 	err = copyDirectory(pkg, src, dest)
 	if err != nil {
 		fmt.Printf("Error %v\n", err)
 		os.Exit(1)
 	}
 	fmt.Printf("Installation of template completed - %v\n", dest)
+	err = os.Chdir(dest)
+	if err != nil {
+		fmt.Printf("Error %v\n", err)
+		os.Exit(1)
+	}
+	cmd := exec.Command("go", "mod", "tidy")
+	err = cmd.Run()
+	if err != nil {
+		fmt.Printf("Error %v\n", err)
+		os.Exit(1)
+	}
 	os.Exit(0)
 }
 
