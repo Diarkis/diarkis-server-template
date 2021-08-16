@@ -9,12 +9,17 @@ jobs:
   zip:
     runs-on: ubuntu-latest
     steps:
-      - name: check files
+      - name: Set version
+        id: version
         run: |
-          ls -la .
+          REPOSITORY=$(echo ${{ github.repository }} | sed -e "s#.*/##")
+          VERSION=$(echo ${{ github.ref }} | sed -e "s#refs/tags/##g")
+          echo ::set-output name=version::$VERSION
+          echo ::set-output name=filename::$REPOSITORY-$VERSION
+      - uses: actions/checkout@{{ VERSION }}
       - name: Zip output
         run: |
-          zip -r diarkis-server-template.zip ./
+          zip -r diarkis-server-template.zip ./ -x "*.git*"
       - name: FTP-Deploy-Action
         uses: SamKirkland/FTP-Deploy-Action@2.0.0   
         env:                                        
