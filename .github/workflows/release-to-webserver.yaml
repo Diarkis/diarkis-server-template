@@ -13,8 +13,8 @@ jobs:
         id: version_tag
         run: |
           [[ ! "$GITHUB_REF" =~ refs/tags ]] && exit
-          echo "::set-output name=value::${{ GITHUB_REF#refs/tags/ }}"
-      - uses: actions/checkout@${{ GITHUB_REF#refs/tags/}}
+          echo "::set-output name=value::${{GITHUB_REF#refs/tags/}}"
+      - uses: actions/checkout@${{GITHUB_REF#refs/tags/}}
       - name: Zip output
         run: |
           zip -r diarkis-server-template.zip ./ -x "*.git*"
