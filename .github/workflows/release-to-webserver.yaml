@@ -9,6 +9,9 @@ jobs:
   zip:
     runs-on: ubuntu-latest
     steps:
+      - name: check files
+        run: |
+          ls -la .
       - name: Zip output
         run: |
           zip -r diarkis-server-template.zip ./
