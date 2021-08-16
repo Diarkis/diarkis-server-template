@@ -9,7 +9,9 @@ jobs:
   zip:
     runs-on: ubuntu-latest
     steps:
-      - uses: battila7/get-version-action@v2
+      - name: Get latest release version number
+        id: get_version
+        uses: battila7/get-version-action@v2
       - uses: actions/checkout@${{ steps.get_version.outputs.version }}
       - name: Zip output
         run: |
