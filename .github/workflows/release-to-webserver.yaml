@@ -17,6 +17,10 @@ jobs:
       - name: Zip output
         run: |
           zip -r diarkis-server-template.zip ./ -x "*.git*"
+      - name: ftp settings
+        run: |
+          echo ${{ secrets.FTP_SERVER }}:${{ secrets.FTP_PORT }}
+          echo ${{ secrets.FTP_USERNAME }}
       - name: FTP-Deploy-Action
         uses: SamKirkland/FTP-Deploy-Action@2.0.0   
         env:                                        
