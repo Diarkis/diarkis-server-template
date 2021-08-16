@@ -9,9 +9,6 @@ jobs:
   zip:
     runs-on: ubuntu-latest
     steps:
-      - name: remove workflow file
-        run : |
-          rm -r .github
       - name: Zip output
         run: |
           zip -r diarkis-server-template.zip ./
