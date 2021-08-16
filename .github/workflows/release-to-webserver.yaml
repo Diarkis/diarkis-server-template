@@ -9,12 +9,11 @@ jobs:
   zip:
     runs-on: ubuntu-latest
     steps:
-      - name: Get version tag
-        id: version_tag
+      - uses: actions/checkout@v2
+      - name: Checkout Latest tag
         run: |
-          [[ ! "$GITHUB_REF" =~ refs/tags ]] && exit
-          echo "::set-output name=value::${{GITHUB_REF#refs/tags/}}"
-      - uses: actions/checkout@${{GITHUB_REF#refs/tags/}}
+          git fetch --prune --unshallow
+          git checkout $(git describe --tags --abbrev=0)
       - name: Zip output
         run: |
           zip -r diarkis-server-template.zip ./ -x "*.git*"
