@@ -9,14 +9,8 @@ jobs:
   zip:
     runs-on: ubuntu-latest
     steps:
-      - name: Set version
-        id: version
-        run: |
-          REPOSITORY=$(echo ${{ github.repository }} | sed -e "s#.*/##")
-          VERSION=$(echo ${{ github.ref }} | sed -e "s#refs/tags/##g")
-          echo ::set-output name=version::$VERSION
-          echo ::set-output name=filename::$REPOSITORY-$VERSION
-      - uses: actions/checkout@${{ VERSION }}
+      - uses: battila7/get-version-action@v2
+      - uses: actions/checkout@${{ steps.get_version.outputs.version }}
       - name: Zip output
         run: |
           zip -r diarkis-server-template.zip ./ -x "*.git*"
