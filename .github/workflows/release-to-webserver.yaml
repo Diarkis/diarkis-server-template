@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Zip output
         run: |
-        zip diarkis-server-template *.*
+          zip diarkis-server-template *.*
       - name: FTP-Deploy-Action
         uses: SamKirkland/FTP-Deploy-Action@2.0.0   
         env:                                        
