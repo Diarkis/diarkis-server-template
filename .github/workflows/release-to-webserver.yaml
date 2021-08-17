@@ -17,17 +17,16 @@ jobs:
       - name: Zip output
         run: |
           zip -r diarkis-server-template.zip ./ -x "*.git*"
-      - name: ftp settings
+      - name: files
         run: |
-          echo ${{ secrets.FTP_SERVER }}:${{ secrets.FTP_PORT }}
-          echo ${{ secrets.FTP_USERNAME }}
+          ls -la .
       - name: FTP-Deploy-Action
         uses: SamKirkland/FTP-Deploy-Action@2.0.0   
         env:                                        
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }} 
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }} 
-          LOCAL_DIR: ./diarkis-server-template.zip                           
+          LOCAL_DIR: ./
           REMOTE_DIR: "/www/diarkis_814/public/cli/"
           PORT: ${{ secrets.FTP_PORT }}
           METHOD: sftp
