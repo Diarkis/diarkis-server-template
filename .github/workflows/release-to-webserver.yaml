@@ -24,7 +24,7 @@ jobs:
       - name: FTP-Deploy-Action
         uses: SamKirkland/FTP-Deploy-Action@2.0.0   
         env:                                        
-          FTP_SERVER: ${{ secrets.FTP_SERVER }}:${{ secrets.FTP_PORT }}    
+          FTP_SERVER: ${{ secrets.FTP_SERVER_PORT }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }} 
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }} 
           LOCAL_DIR: ./diarkis-server-template.zip                           
