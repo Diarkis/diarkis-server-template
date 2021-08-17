@@ -31,3 +31,10 @@ jobs:
           PORT: ${{ secrets.FTP_PORT }}
           METHOD: sftp
           ARGS: --delete
+          EXCLUDE:
+            - **/.git*
+            - **/.git*/**
+            - **/Makefile
+            - **/README.md
+            - **/src/**
+            - **/tools/**
