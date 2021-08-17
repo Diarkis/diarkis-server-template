@@ -37,4 +37,3 @@ jobs:
           REMOTE_DIR: ${{ secrets.FTP_REMOTE_DIR }}
           PORT: ${{ secrets.FTP_PORT }}
           METHOD: sftp
-          ARGS: --delete
