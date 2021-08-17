@@ -29,3 +29,5 @@ jobs:
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }} 
           LOCAL_DIR: ./diarkis-server-template.zip                           
           REMOTE_DIR: "/www/diarkis_814/public/cli/"
+          METHOD: sftp
+          ARGS: --delete
