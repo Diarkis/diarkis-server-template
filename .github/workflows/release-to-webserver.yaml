@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 jobs:
-  zip:
+  release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -34,7 +34,7 @@ jobs:
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }} 
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }} 
           LOCAL_DIR: ./
-          REMOTE_DIR: "/www/diarkis_814/public/cli/"
+          REMOTE_DIR: ${{ secrets.FTP_REMOTE_DIR }}
           PORT: ${{ secrets.FTP_PORT }}
           METHOD: sftp
           ARGS: --delete
