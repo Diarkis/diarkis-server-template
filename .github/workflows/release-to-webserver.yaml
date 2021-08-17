@@ -17,8 +17,15 @@ jobs:
       - name: Zip output
         run: |
           zip -r diarkis-server-template.zip ./ -x "*.git*"
-      - name: files
+      - name: cleanup
         run: |
+          ls -la .
+          rm -rf .git
+          rm -rf .github
+          rm README.md
+          rm Makefile
+          rm -rf ./src/
+          rm -rf ./tools
           ls -la .
       - name: FTP-Deploy-Action
         uses: SamKirkland/FTP-Deploy-Action@2.0.0   
@@ -31,10 +38,3 @@ jobs:
           PORT: ${{ secrets.FTP_PORT }}
           METHOD: sftp
           ARGS: --delete
-          EXCLUDE:
-            - **/.git*
-            - **/.git*/**
-            - **/Makefile
-            - **/README.md
-            - **/src/**
-            - **/tools/**
