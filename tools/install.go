@@ -57,12 +57,15 @@ func main() {
 		fmt.Printf("Error %v\n", err)
 		os.Exit(1)
 	}
+	// There is no access to Dirkis source from the local, so go mod tidy fails
+	/*
 	cmd := exec.Command("go", "mod", "tidy")
 	err = cmd.Run()
 	if err != nil {
 		fmt.Printf("Error %v\n", err)
 		os.Exit(1)
 	}
+	*/
 	os.Exit(0)
 }
 
