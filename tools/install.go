@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
+	//"os/exec"
 	"syscall"
 	"io"
 	"io/ioutil"
