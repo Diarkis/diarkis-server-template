@@ -1,0 +1,39 @@
+name: release-to-webserver
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Checkout Latest tag
+        run: |
+          git fetch --prune --unshallow
+          git checkout $(git describe --tags --abbrev=0)
+      - name: Zip output
+        run: |
+          zip -r diarkis-server-template.zip ./ -x "*.git*"
+      - name: cleanup
+        run: |
+          ls -la .
+          rm -rf .git
+          rm -rf .github
+          rm README.md
+          rm Makefile
+          rm -rf ./src/
+          rm -rf ./tools
+          ls -la .
+      - name: FTP-Deploy-Action
+        uses: SamKirkland/FTP-Deploy-Action@2.0.0   
+        env:                                        
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }} 
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }} 
+          LOCAL_DIR: ./
+          REMOTE_DIR: ${{ secrets.FTP_REMOTE_DIR }}
+          PORT: ${{ secrets.FTP_PORT }}
+          METHOD: sftp
