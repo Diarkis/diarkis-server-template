@@ -122,7 +122,27 @@ This is where you place your configuration JSON files.
 configs/
 ```
 
-# MatchMaker
+# MatchMaker With UDP and/or TCP Server
+
+There are two sample matchmaking implemented for UDP and/or TCP server.
+
+```
+cmds/custom/main.go
+```
+
+## Sample Matching IDs
+
+- RankMatch
+
+  - `rank` is range of 5
+
+- RateAndPlay
+
+  - `rate` is range of 1
+
+  - `play` is range of 1
+
+# MatchMaker With HTTP Server
 
 This is where you define your own MatchMaker rules.
 
