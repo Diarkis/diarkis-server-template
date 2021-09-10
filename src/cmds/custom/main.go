@@ -110,6 +110,7 @@ func searchMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User
 		operations := make([]func(func(error)), len(results))
 		index := 0
 		joinedRoomID := ""
+		ct := int64(0)
 		isRoomFull := false
 		done := func(err error) {
 			if err != nil {
@@ -119,6 +120,11 @@ func searchMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User
 				userData.ServerRespond([]byte("No room found to join"), ver, cmd, server.Bad, true)
 				return
 			}
+			timeBytes := make([]byte, 4)
+			binary.BigEndian.PutUint32(timeBytes, uint32(ct))
+			roomIDBytes := []byte(joinedRoomID)
+			bytes := append(timeBytes, roomIDBytes...)
+			userData.ServerRespond(bytes, util.CmdBuiltInVer, util.CmdRandJoinRoom, server.Ok, true)
 			userData.ServerRespond([]byte(joinedRoomID), ver, cmd, server.Ok, true)
 			if isRoomFull {
 				userData.ServerPush(ver, cmd, []byte(joinedRoomID), true)
@@ -139,6 +145,7 @@ func searchMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User
 				}
 				logger.Sys("Successfully joined a from by MatchMaker %v", roomID)
 				joinedRoomID = roomID
+				ct = createdTime
 				isRoomFull = len(memberIDs) == item["maxMembers"].(int)
 				// joined successfully
 				done(nil)
