@@ -137,7 +137,7 @@ func UnpackMMSearch(bytes []byte) *MMSearch {
 	propsBytes := bytes[2+size:]
 	index := 0
 	props := make(map[string]int)
-	for index < size {
+	for index < len(propsBytes) {
 		val := int(binary.BigEndian.Uint32(propsBytes[index:index+4]))
 		index += 4
 		nameSize := int(binary.BigEndian.Uint16(propsBytes[index:index+2]))
