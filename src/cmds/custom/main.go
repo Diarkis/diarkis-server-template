@@ -107,16 +107,16 @@ func searchMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User
 		list := make([]map[string]interface{}, len(results))
 		operations := make([]func(func(error)), len(results))
 		index := 0
-		joined := false
+		joinedRoomID := ""
 		done := func(err error) {
 			if err != nil {
 				userData.ServerRespond([]byte(err.Error()), ver, cmd, server.Bad, true)
 			}
-			if !joined {
+			if joinedRoomID == "" {
 				userData.ServerRespond([]byte("No room found to join"), ver, cmd, server.Bad, true)
 				return
 			}
-			userData.ServerRespond([]byte("OK"), ver, cmd, server.Ok, true)
+			userData.ServerRespond([]byte(joinedRoomID), ver, cmd, server.Ok, true)
 			next(err)
 		}
 		join := func(moveon func(error)) {
@@ -132,7 +132,7 @@ func searchMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User
 					return
 				}
 				logger.Sys("Successfully joined a from by MatchMaker %v", roomID)
-				joined = true
+				joinedRoomID = roomID
 				// joined successfully
 				done(nil)
 			})
