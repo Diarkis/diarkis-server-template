@@ -25,9 +25,6 @@ buildSettings:
     health-check:
       target: healthcheck/main.go
       output: remote_bin/health-check
-    connector:
-      target: connector/main.go
-      output: remote_bin/connector
 diarkis:
   project_id: {{PROJECT_ID}}
   builder_token: {{BUILD_TOKEN}}

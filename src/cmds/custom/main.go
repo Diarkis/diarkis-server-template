@@ -17,6 +17,7 @@ const pushCmdID = 11
 const matchmakerAdd = 100
 const matchmakerRm = 101
 const matchmakerSearch = 102
+const matchmakerComplete = 103 // sent when room is full
 
 var logger = log.New("CUSTOM")
 
@@ -81,6 +82,7 @@ func addToMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User,
 	metadata := make(map[string]interface{})
 	metadata["serialized"] = mmAdd.Metadata
 	metadata["roomID"] = roomID
+	metadata["maxMembers"] = maxMembers
 	matching.Add(mmAdd.ID, mmAdd.UID, mmAdd.Props, metadata, mmAdd.TTL, 2)
 	// response for matchmaking
 	userData.ServerRespond([]byte("OK"), ver, cmd, server.Ok, true)
@@ -108,6 +110,7 @@ func searchMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User
 		operations := make([]func(func(error)), len(results))
 		index := 0
 		joinedRoomID := ""
+		isRoomFull := false
 		done := func(err error) {
 			if err != nil {
 				userData.ServerRespond([]byte(err.Error()), ver, cmd, server.Bad, true)
@@ -117,6 +120,9 @@ func searchMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User
 				return
 			}
 			userData.ServerRespond([]byte(joinedRoomID), ver, cmd, server.Ok, true)
+			if isRoomFull {
+				userData.ServerPush(ver, cmd, []byte(joinedRoomID), true)
+			}
 			next(err)
 		}
 		join := func(moveon func(error)) {
@@ -133,6 +139,7 @@ func searchMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User
 				}
 				logger.Sys("Successfully joined a from by MatchMaker %v", roomID)
 				joinedRoomID = roomID
+				isRoomFull = len(memberIDs) == item["maxMembers"].(int)
 				// joined successfully
 				done(nil)
 			})
