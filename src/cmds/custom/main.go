@@ -146,9 +146,7 @@ func searchMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User
 				logger.Sys("Successfully joined a from by MatchMaker %v", roomID)
 				joinedRoomID = roomID
 				ct = createdTime
-				if _, ok := item["maxMembers"]; ok {
-					isRoomFull = len(memberIDs) == item["maxMembers"].(int)
-				}
+				isRoomFull = len(memberIDs) == int(item["maxMembers"].(float64))
 				// joined successfully
 				done(nil)
 			})
