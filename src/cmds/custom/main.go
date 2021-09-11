@@ -124,7 +124,7 @@ func searchMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User
 			binary.BigEndian.PutUint32(timeBytes, uint32(ct))
 			roomIDBytes := []byte(joinedRoomID)
 			bytes := append(timeBytes, roomIDBytes...)
-			userData.ServerRespond(bytes, util.CmdBuiltInVer, util.CmdRandJoinRoom, server.Ok, true)
+			userData.ServerRespond(bytes, util.CmdBuiltInVer, util.CmdJoinRoom, server.Ok, true)
 			userData.ServerRespond([]byte(joinedRoomID), ver, cmd, server.Ok, true)
 			if isRoomFull {
 				userData.ServerPush(ver, cmd, []byte(joinedRoomID), true)
