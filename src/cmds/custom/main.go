@@ -81,6 +81,7 @@ func addToMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User,
 	userData.ServerRespond(bytes, util.CmdBuiltInVer, util.CmdCreateRoom, server.Ok, true)
 	metadata := make(map[string]interface{})
 	metadata["serialized"] = mmAdd.Metadata
+	metadata["uniqueID"] = mmAdd.UID
 	metadata["roomID"] = roomID
 	metadata["maxMembers"] = maxMembers
 	matching.Add(mmAdd.ID, mmAdd.UID, mmAdd.Props, metadata, mmAdd.TTL, 2)
@@ -133,11 +134,14 @@ func searchMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User
 		}
 		join := func(moveon func(error)) {
 			item := list[index]
+			uniqueID := item["uniqueID"].(string)
 			roomID := item["roomID"].(string)
 			logger.Sys("Try to join room %v", roomID)
 			room.Join(roomID, userData, util.CmdBuiltInVer, util.CmdJoinRoom, []byte(userData.ID),
 			func(err error, memberIDs []string, ownerID string, createdTime int64, props map[string]interface{}) {
 				if err != nil {
+					// discard stale room ID
+					removeFromMM(mmSearch.IDs, uniqueID)
 					// try the next room
 					index++
 					moveon(nil)
@@ -157,4 +161,12 @@ func searchMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User
 		}
 		util.Waterfall(operations, done)
 	})
+}
+
+func removeFromMM(mmIDs []string, uniqueID string) {
+	uids := make([]string, 1)
+	uids[0] = uniqueID
+	for _, id := range mmIDs {
+		matching.Remove(id, uids, 2)
+	}
 }
