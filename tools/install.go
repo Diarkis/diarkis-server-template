@@ -57,15 +57,6 @@ func main() {
 		fmt.Printf("Error %v\n", err)
 		os.Exit(1)
 	}
-	// There is no access to Dirkis source from the local, so go mod tidy fails
-	/*
-	cmd := exec.Command("go", "mod", "tidy")
-	err = cmd.Run()
-	if err != nil {
-		fmt.Printf("Error %v\n", err)
-		os.Exit(1)
-	}
-	*/
 	os.Exit(0)
 }
 
@@ -80,6 +71,14 @@ func copyDirectory(pkg string, src string, dest string) error {
 		fileInfo, err := os.Stat(sourcePath)
 		if err != nil {
 			return err
+		}
+		if entry.Name() == "build.yml" {
+			_, err := os.Stat(destPath)
+			if err == nil {
+				fmt.Printf("Project build.yml found at %s - Skip installing\n", destPath)
+				// the project already has build.yml - skip
+				continue
+			}
 		}
 		stat, ok := fileInfo.Sys().(*syscall.Stat_t)
 		if !ok {

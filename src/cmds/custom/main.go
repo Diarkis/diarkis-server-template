@@ -19,6 +19,8 @@ const matchmakerRm = 101
 const matchmakerSearch = 102
 const matchmakerComplete = 103 // sent when room is full
 
+const mmAddInterval = 40 // 40 seconds
+
 var logger = log.New("CUSTOM")
 
 func Expose() {
@@ -85,6 +87,22 @@ func addToMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User,
 	metadata["roomID"] = roomID
 	metadata["maxMembers"] = maxMembers
 	matching.Add(mmAdd.ID, mmAdd.UID, mmAdd.Props, metadata, mmAdd.TTL, 2)
+	// update MatchMaker add every 40 seconds
+	timeCnt := util.NowSeconds()
+	room.SetOnTick(roomID, func(roomID_ string) {
+		if util.NowSeconds() - timeCnt < mmAddInterval {
+			return
+		}
+		if len(room.GetMemberIDs(roomID_)) == maxMembers {
+			return
+		}
+		timeCnt = util.NowSeconds()
+		metadata["serialized"] = mmAdd.Metadata
+		metadata["uniqueID"] = mmAdd.UID
+		metadata["roomID"] = roomID
+		metadata["maxMembers"] = maxMembers
+		matching.Add(mmAdd.ID, mmAdd.UID, mmAdd.Props, metadata, mmAdd.TTL, 2)
+	})
 	// response for matchmaking
 	userData.ServerRespond([]byte("OK"), ver, cmd, server.Ok, true)
 	next(nil)
