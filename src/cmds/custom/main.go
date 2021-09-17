@@ -24,11 +24,14 @@ const mmAddInterval = 40 // 40 seconds
 var logger = log.New("CUSTOM")
 
 func Expose() {
+	// defined in main.go
 	server.HandleCommand(customVer, helloCmdID, helloCmd)
 	server.HandleCommand(customVer, helloCmdID, afterHelloCmd)
 	server.HandleCommand(customVer, pushCmdID, pushCmd)
+	// defined in matchmaker.go
 	server.HandleCommand(customVer, matchmakerAdd, addToMatchMaker)
 	server.HandleCommand(customVer, matchmakerSearch, searchMatchMaker)
+	// defined in p2p.go
 	server.HandleCommand(customVer, p2pReportAddr, reportP2PAddr)
 	server.HandleCommand(customVer, p2pInit, initP2P)
 }
