@@ -11,7 +11,7 @@ import (
 const p2pAddrList = "p2pAddrList"
 
 func reportP2PAddr(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
-	addr := dpayload.UnpackP2PReport(payload)
+	addr := string(payload)
 	if addr == "" {
 		userData.ServerRespond([]byte("Invalid payload"), ver, cmd, server.Bad, true)
 		return
