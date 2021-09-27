@@ -26,6 +26,8 @@ func onDiscardCustomMessage(roomID string, userID string) []byte {
 		return []byte(userID)
 	}
 	bytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(bytes, uint64(conv))
-	return bytes
+	binary.LittleEndian.PutUint64(bytes, uint64(conv))
+	sizeBytes := make([]byte, 4)
+	binary.BigEndian.PutUint32(sizeBytes, uint32(len(bytes)))
+	return append(sizeBytes, bytes...)
 }
