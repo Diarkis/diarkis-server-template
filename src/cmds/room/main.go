@@ -21,7 +21,7 @@ func Expose() {
 func onDiscardCustomMessage(roomID string, userID string) []byte {
 	logger.Debug("OnDiscardCustomMessage roomID:%v userID:%v", roomID, userID)
 	// UE4 sample client uses uin64 as the data type for userID
-	conv, err := strconv.Atoi(userID)
+	conv, err := strconv.ParseUint(userID, 10, 64)
 	if err != nil {
 		return []byte(userID)
 	}
