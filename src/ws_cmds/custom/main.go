@@ -23,8 +23,8 @@ func helloCmd(userData *user.User, next func(error)) {
 	logger.Debug("Hello command has received %#v from the client SID:%s - UID:%s", userData.Data, userData.SID, userData.ID)
 	payload, err := json.Marshal(userData.Data)
 	if err != nil {
-		logger.Error("Failed to create payload %v", err)
 		userData.Respond([]byte(err.Error()), server.Bad, true)
+		next(err)
 		return
 	}
 	// we send a response back to the client with the byte array sent from the client
@@ -43,6 +43,7 @@ func pushCmd(userData *user.User, next func(error)) {
 	payload, err := json.Marshal(userData.Data)
 	if err != nil {
 		logger.Error("Failed to create payload %v", err)
+		next(err)
 		return
 	}
 	// we send a push packet to the client that sent the data to this command
