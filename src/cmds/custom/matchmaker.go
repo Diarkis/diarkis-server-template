@@ -2,6 +2,7 @@ package customcmds
 
 import (
 	"encoding/binary"
+	"errors"
 	dpayload "{0}/lib/payload"
 	"github.com/Diarkis/diarkis/matching"
 	"github.com/Diarkis/diarkis/room"
@@ -15,6 +16,7 @@ func addToMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User,
 	mmAdd := dpayload.UnpackMMAdd(payload)
 	if mmAdd == nil {
 		userData.ServerRespond([]byte("Invalid payload"), ver, cmd, server.Bad, true)
+		next(errors.New("Invalid payload"))
 		return
 	}
 	// raise Room.OnCreate event
@@ -66,17 +68,20 @@ func searchMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User
 	mmSearch := dpayload.UnpackMMSearch(payload)
 	if mmSearch == nil {
 		userData.ServerRespond([]byte("Invalid payload"), ver, cmd, server.Bad, true)
+		next(errors.New("Invalid payload"))
 		return
 	}
 	howmany := 10
 	matching.Search(mmSearch.IDs, mmSearch.Props, howmany, func(err error, results []interface{}) {
 		if err != nil {
 			userData.ServerRespond([]byte(err.Error()), ver, cmd, server.Bad, true)
+			next(err)
 			return
 		}
 		logger.Sys("MatchMaker search results %v", results)
 		if len(results) == 0 {
-			userData.ServerRespond([]byte("Mathing not found"), ver, cmd, server.Bad, true)
+			userData.ServerRespond([]byte("Matching not found"), ver, cmd, server.Bad, true)
+			next(errors.New("Matching not found"))
 			return
 		}
 		list := make([]map[string]interface{}, len(results))
@@ -91,6 +96,7 @@ func searchMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User
 			}
 			if joinedRoomID == "" {
 				userData.ServerRespond([]byte("No room found to join"), ver, cmd, server.Bad, true)
+				next(errors.New("No room found to join"))
 				return
 			}
 			timeBytes := make([]byte, 4)
