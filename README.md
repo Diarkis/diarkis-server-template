@@ -6,16 +6,6 @@ Each protocol servers run independently within the cluster, but you do not have 
 
 Only HTTP server is required in the cluster and the rest of the servers should be chosen according to your application's requirements.
 
-# How To Initialize Server Project
-
-You may initialize your Diarkis server project from this repository:
-
-```
-make init project_id={project ID} builder_token={build token} output={absolute path to install the server project}
-```
-
-**NOTE**: To get your porject ID and builder token, please contact us at https://diarkis.io/en/contact
-
 # Structure
 
 ```
@@ -102,6 +92,12 @@ By default, there is MARS configuration JSON file: `configs/mars/main.json`
 ./mars <path to the config JSON file>
 ```
 
+# Health Check
+
+Diarkis server needs to have health check. This template provides the source to build the health check binary.
+
+The build will be automatically executed when you execute our make commands.
+
 # Commands
 
 This is where you add your custom commands.
@@ -126,7 +122,218 @@ This is where you place your configuration JSON files.
 configs/
 ```
 
-# MatchMaker
+# MatchMaker With UDP and/or TCP Server
+
+There are two sample matchmaking implemented for UDP and/or TCP server.
+
+```
+cmds/custom/main.go
+```
+
+## Sample Matching IDs
+
+- RankMatch
+
+  - `rank` is range of 5
+
+- RateAndPlay
+
+  - `rate` is range of 1
+
+  - `play` is range of 1
+
+## MatchMaker Add Command For UDP/RUDP and TCP
+
+MatchMaker add command creates a new room and adds that to MatchMaker to be searched and found.
+
+Client receives a response with `ver:2` and `cmd:100` to evaluate success or failure of the command.
+
+Client raises `On Room Creation` event if successful.
+
+### Command Version and ID
+
+```
+ver: 2
+cmd: 100
+```
+
+### Payload
+
+Endianess is `Big Endian`.
+
+```
++--------+-----------+-----------------+--------------------+
+|   TTL  |   *Size   |   String List   |    Property Map    |
++--------+-----------+-----------------+--------------------+
+| 8 byte |   2 byte  |      *Size      |   variable size    |
++--------+-----------+-----------------+--------------------+
+| 0    7 | 8       9 | 10   10 + *size | 10 + *size + 1 ... |
++--------+-----------+-----------------+--------------------+
+```
+
+**String List**
+```
++---------+-------------+----------+-----------+
+|  *size  | Matching ID |  **size  | Unique ID |
++---------+-------------+----------+-----------+
+|  4 byte |    *size    |  4 byte  |  **size   |
++---------+-------------+----------+-----------+
+```
+
+**Property Map**
+
+Property Value, size, and Property Name may repeat as a set of data.
+
+```
++----------------+--------+---------------+
+| Property Value | *size  | Property Name |
++----------------+--------+---------------+
+|     4 byte     | 2 byte |     *size     |
++----------------+--------+---------------+
+| 0            3 | 4    5 | 6   6 + *size |
++----------------+--------+---------------+
+```
+
+## MatchMaker Search Command For UDP/RUDP and TCP
+
+MatchMaker search finds rooms that matches the given properties (conditions) and join the found room.
+
+Client receives a response with `ver:2` and `cmd:102` to evaluate success or failure of the command.
+
+Remote clients that already matched receives a server push with `ver:2` and `cmd:103` to notify the matched room is now full.
+
+Remote clients that already matched raise `On Member Join` event on successful search.
+
+### Command Version and ID
+
+```
+ver: 2
+cmd: 102
+```
+
+### Payload
+
+```
++--------+-----------------+---------------+
+| *size  |   String List   |  Propery Map  |
++--------+-----------------+---------------+
+| 2 byte |      *size      |    Variable   |
++--------+-----------------+---------------+
+| 0    1 | 2     2 + *size | 2 + *size ... |
++--------+-----------------+---------------+
+```
+
+**String List**
+
+size and Matching ID may repeat as a set of data.
+
+```
++---------+-------------+
+|  *size  | Matching ID |
++---------+-------------+
+|  4 byte |    *size    |
++---------+-------------+
+```
+
+**Property Map**
+
+Property Value, size, and Property Name may repeat as a data set.
+
+```
++----------------+--------+---------------+
+| Property Value | *size  | Property Name |
++----------------+--------+---------------+
+|     4 byte     | 2 byte |     *size     |
++----------------+--------+---------------+
+| 0            3 | 4    5 | 6   6 + *size |
++----------------+--------+---------------+
+```
+
+## P2P Address Report Command For UDP/RUDP and TCP
+
+The command is used to report the client's public address meant for peer-to-peer communication.
+
+This command assumes the client has joined a room.
+
+### Command Version and ID
+
+```
+ver: 2
+cmd: 110
+```
+
+### Payload
+
+Client Address is a byte array encoded UTF8 string.
+
+```
++---------------+----------------+
+| Custom Header | Client Address |
++---------------+----------------+
+|     5 byte    |    Variable    |
++---------------+----------------+
+| 0           4 | 5          ... |
++---------------+----------------+
+```
+
+## P2P Initialize Command For UDP/RUDP and TCP
+
+Starts peer-to-peer communication with all members of the room the client is in.
+
+Client receives a response with `ver:2` and `cmd:111` to evaluate success or failure of the command.
+
+All remote clients that are members of the room raise `On Member Broadcast` with a list of other client's addresses.
+
+The clients may use those addreses to initiate peer-to-peer communication immediately.
+
+### Command Version and ID
+
+```
+ver: 2
+cmd: 111
+```
+
+### Payload
+
+Empty payload.
+
+### Payload Of On Member Broadcast
+
+**String List**
+
+size and Client Address may repeat as a set of data.
+
+```
++---------+----------------+
+|  *size  | Client Address |
++---------+----------------+
+|  4 byte |      *size     |
++---------+----------------+
+```
+
+---
+
+# Creating A New Room Via Diarkis HTTP Server
+
+You may create an empty room from Diarkis HTTP serever.
+
+```
+POST /room/create/:serverType/:maxMembers/:ttl/:interval
+```
+
+## Parameters
+
+- `serverType` is to choose which server to create a new room in. Valid types are: `udp`, `tcp`, and `ws`.
+
+- `maxMembers` is a maximum client members allowed in the new room.
+
+- `ttl` is a TTL value for the empty room to be kept. TTL is in seconds.
+
+- `interval` is an interval of room broadcast in milliseconds. The room will buffer broadcast message on every interval.
+
+---
+
+# MatchMaker With HTTP Server
 
 This is where you define your own MatchMaker rules.
 
@@ -172,7 +379,7 @@ POST /mm/search/:mmIDs/:limit
 
 #### Request Body
 
-- `props` is the JSON data representing search conditions.
+- `props` is the JSON data representation of search conditions.
 
 # Custom Commands
 

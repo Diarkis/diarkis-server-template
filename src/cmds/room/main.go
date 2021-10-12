@@ -2,6 +2,7 @@ package roomcmds
 
 import (
 	"encoding/binary"
+	"{0}/lib/meshCmds"
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/room"
 	"github.com/Diarkis/diarkis/roomSupport"
@@ -16,6 +17,8 @@ func Expose() {
 	// we broadcast user ID to room members when the client leaves unexpectedly
 	// The message will be propagated by OnMemberLeave even on the client
 	room.SetOnDiscardCustomMessage(onDiscardCustomMessage)
+	// set up custom mesh commands
+	meshCmds.Setup()
 }
 
 func onDiscardCustomMessage(roomID string, userID string) []byte {

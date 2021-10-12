@@ -15,6 +15,8 @@ func Expose(rootpath string) {
 	roomSupport.DefineRoomSupport()
 	// if yout do not need group module, comment out this line
 	groupSupport.DefineGroupSupport()
+	// custom room operations
+	exposeRoom(rootpath)
 }
 
 func handleHello(res *http.Response, req *http.Request, params *http.Params, next func(error)) {
