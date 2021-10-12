@@ -7,13 +7,19 @@ on:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - name: Checkout Latest tag
+      - name: set version
+        id: git-version
         run: |
-          git fetch --prune --unshallow
-          git checkout $(git describe --tags --abbrev=0)
+          REPOSITORY=$(echo ${{ github.repository }} | sed -e "s#.*/##")
+          VERSION=$(echo ${{ github.ref }} | sed -e "s#refs/tags/##g")
+          echo ::set-output name=version::$VERSION
+          echo ::set-output name=filename::$REPOSITORY-$VERSION
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
       - name: Zip output
         run: |
           zip -r diarkis-server-template.zip ./ -x "*.git*"

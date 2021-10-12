@@ -1,6 +1,7 @@
 package customcmds
 
 import (
+	"errors"
 	dpayload "{0}/lib/payload"
 	"github.com/Diarkis/diarkis/room"
 	"github.com/Diarkis/diarkis/server"
@@ -14,12 +15,14 @@ func reportP2PAddr(ver uint8, cmd uint16, payload []byte, userData *user.User, n
 	addr := string(payload)
 	if addr == "" {
 		userData.ServerRespond([]byte("Invalid payload"), ver, cmd, server.Bad, true)
+		next(errors.New("Invalid payload"))
 		return
 	}
 	// we assume the user reporting is in a room
 	roomID := room.GetRoomID(userData)
 	if roomID == "" {
 		userData.ServerRespond([]byte("User not in room"), ver, cmd, server.Bad, true)
+		next(errors.New("User not in room"))
 		return
 	}
 	updated := true
@@ -36,6 +39,7 @@ func reportP2PAddr(ver uint8, cmd uint16, payload []byte, userData *user.User, n
 	})
 	if !updated {
 		userData.ServerRespond([]byte("Invalid room property"), ver, cmd, server.Bad, true)
+		next(errors.New("Invalid room property"))
 		return
 	}
 	userData.ServerRespond([]byte("OK"), ver, cmd, server.Ok, true)
@@ -47,11 +51,13 @@ func initP2P(ver uint8, cmd uint16, payload []byte, userData *user.User, next fu
 	roomID := room.GetRoomID(userData)
 	if roomID == "" {
 		userData.ServerRespond([]byte("User not in room"), ver, cmd, server.Bad, true)
+		next(errors.New("User not in room"))
 		return
 	}
 	addrList := room.GetProperty(roomID, p2pAddrList)
 	if addrList == nil {
 		userData.ServerRespond([]byte("No address list"), ver, cmd, server.Bad, true)
+		next(errors.New("No address list"))
 		return
 	}
 	bytes := dpayload.PackP2PInit(addrList.([]string))
