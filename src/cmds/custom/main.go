@@ -10,6 +10,8 @@ import (
 const customVer = 2
 const helloCmdID = 10
 const pushCmdID = 11
+// Client error log
+const clientErrLog = 12
 // MatchMaker command IDs
 const matchmakerAdd = 100
 const matchmakerRm = 101
@@ -28,6 +30,7 @@ func Expose() {
 	server.HandleCommand(customVer, helloCmdID, helloCmd)
 	server.HandleCommand(customVer, helloCmdID, afterHelloCmd)
 	server.HandleCommand(customVer, pushCmdID, pushCmd)
+	server.handleCommand(customVer, pushCmdID, outputClientErrLog)
 	// defined in matchmaker.go
 	server.HandleCommand(customVer, matchmakerAdd, addToMatchMaker)
 	server.HandleCommand(customVer, matchmakerSearch, searchMatchMaker)
@@ -58,5 +61,10 @@ func pushCmd(ver uint8, cmd uint16, payload []byte, userData *user.User, next fu
 	// we send a push packet to the client that sent the data to this command
 	userData.ServerPush(ver, cmd, payload, reliable)
 	// move on to the next command handler if there is any
+	next(nil)
+}
+
+func outputClientErrLog(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
+	logger.Error("Client error log - client sid:%v uid:%v: %v", userData.SID, userData.ID, string(payload))
 	next(nil)
 }

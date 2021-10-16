@@ -313,6 +313,23 @@ size and Client Address may repeat as a set of data.
 
 ---
 
+## Output Client Error Log On UDP/RUDP and TCP Server
+
+This custom command expects the client to send error log and output the error log as an error log on the server.
+
+### Command Version and ID
+
+```
+ver: 2
+cmd: 12
+```
+
+### Payload
+
+The payload should be a UTF8 encoded string.
+
+---
+
 # Creating A New Room Via Diarkis HTTP Server
 
 You may create an empty room from Diarkis HTTP serever.
