@@ -1,0 +1,51 @@
+namespace: aws
+bases:
+  - ../../base
+
+# build target
+patches:
+  - http/deploy.yaml
+  - http/ingress.yaml
+  - http/svc.yaml
+  - udp/deploy.yaml
+  - tcp/deploy.yaml
+
+images:
+- name: udp
+  newName: AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/udp
+  newTag: latest
+- name: tcp
+  newName: AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/tcp
+  newTag: latest
+- name: mars
+  newName: AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/mars
+  newTag: latest
+- name: http
+  newName: AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/http
+  newTag: latest
+  
+  
+configMapGenerator:
+- name: shared-conf
+  behavior: replace
+  files:
+    - shared/conf/field.json
+    - shared/conf/group.json
+    - shared/conf/log.json
+    - shared/conf/matching.json
+    - shared/conf/mesh.json
+    
+- name: http-conf
+  behavior: replace
+  files:
+    - http/conf/main.json
+    
+- name: udp-conf
+  behavior: replace  
+  files:
+    - udp/conf/main.json
+
+- name: tcp-conf
+  behavior: replace  
+  files:
+    - tcp/conf/main.json
