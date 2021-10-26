@@ -106,6 +106,26 @@ Diarkis server needs to have health check. This template provides the source to 
 
 The build will be automatically executed when you execute our make commands.
 
+# Stress Test Bots
+
+Diarkis server template comes with simple bots for stress tests.
+
+All bots can be built using diarkis-cli
+
+## MatchMaker Sample Bot
+
+This bot uses sample custom commands that Diarkis server template implements.
+
+```
+bots/matchmaker/main.go
+```
+
+### How To Use MatchMaker Bot
+
+```
+./remote_bin/bot-matchmaker {How many bots to spawn}
+```
+
 # Commands
 
 This is where you add your custom commands.
