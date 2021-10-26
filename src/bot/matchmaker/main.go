@@ -36,9 +36,13 @@ var states = make(map[int]int)
 var mutex = new(sync.RWMutex)
 
 func main() {
-	if len(os.Args) > 1 {
-		howmany, _ = strconv.Atoi(os.Args[1])
+	if len(os.Args) < 2 {
+		fmt.Printf("Bot requires 2 parameters: {http host:port} {how many bots}")
+		os.Exit(1)
+		return
 	}
+	host = os.Args[1]
+	howmany, _ = strconv.Atoi(os.Args[2])
 	fmt.Printf("Starting MatchMaker Bot %v - %v bots\n", proto, howmany)
 	searchProps["rank"] = 5
 	addProps["rank"] = 5
