@@ -30,7 +30,7 @@ func Expose() {
 	server.HandleCommand(customVer, helloCmdID, helloCmd)
 	server.HandleCommand(customVer, helloCmdID, afterHelloCmd)
 	server.HandleCommand(customVer, pushCmdID, pushCmd)
-	server.handleCommand(customVer, pushCmdID, outputClientErrLog)
+	server.HandleCommand(customVer, pushCmdID, outputClientErrLog)
 	// defined in matchmaker.go
 	server.HandleCommand(customVer, matchmakerAdd, addToMatchMaker)
 	server.HandleCommand(customVer, matchmakerSearch, searchMatchMaker)

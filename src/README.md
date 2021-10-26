@@ -19,6 +19,8 @@ Only HTTP server is required in the cluster and the rest of the servers should b
    │            │
    │            └──── ws/main.go        [WebSocket server main]
    │
+   ├─ bot/ [Bot clients for stress test]
+   │
    ├─ mars/ ───────── main.go
    │
    │
@@ -37,13 +39,19 @@ Only HTTP server is required in the cluster and the rest of the servers should b
    │            │
    │            └──── ws/       [WebSocket configuration directory] ─── main.json
    │
-   ├─ cmds/  [Custom client command directory] ─┬── main.go [Entry point for all cmds]
-   │                                            ├── http   ──────────────────────────────────────┬─── main.go
-   ├─ lib/   [Shared library directory]         ├── room   ──────────────────────────── main.go  └─── matching.go
-   │                                            ├── group  ──────────────────────────── main.go
-   ├─ bin/   [Built server binary directory]    ├── field  ──────────────────────────── main.go
-   │                                            │
-   └─ go.mod [Go module file for the project]   └── custom ──────────────────────────── main.go
+   ├─ cmds/  [Custom client command directory] ────────────────┬── main.go [Entry point for all cmds]
+   │                                                           │
+   ├─ ws_cmds/ [Custom client command directory for WebSocket] │
+   │                                                           │
+   │                                                           ├── http   ──────────────────────────────────────┬─── main.go
+   ├─ lib/   [Shared library directory]                        ├── room   ──────────────────────────── main.go  └─── matching.go
+   │                                                           ├── group  ──────────────────────────── main.go
+   ├─ bin/   [Built server binary directory]                   ├── field  ──────────────────────────── main.go
+   │                                                           └── custom ──────────────────────────── main.go
+   │
+   ├─ build.yml [Build configuration file for diarkis-cli]
+   │
+   └─ go.mod [Go module file for the project]
 ```
 
 # Server Entry Points
