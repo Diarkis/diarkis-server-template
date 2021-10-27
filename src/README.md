@@ -123,7 +123,7 @@ bots/matchmaker/main.go
 ### How To Use MatchMaker Bot
 
 ```
-./remote_bin/bot-matchmaker {How many bots to spawn}
+./remote_bin/bot-matchmaker {HTTP endpoint:port} {How many bots to spawn}
 ```
 
 # Commands
