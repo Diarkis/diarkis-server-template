@@ -1,23 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: udp
-  labels:
-    component: udp
+  name: http
 spec:
   template:
     spec:
-      hostNetwork: true
       containers:
-      - name: udp
+      - name: http
+        image: http
         resources:
           limits:
-            cpu: "1"
+            cpu: "100m"
           requests:
-            cpu: "1"
+            cpu: "100m"
         securityContext:
           runAsUser: 1000
           readOnlyRootFilesystem: true
           runAsNonRoot: true
           allowPrivilegeEscalation: false
           privileged: false
+        env:
+         - name: DIARKIS_CLOUD_ENV
+           value: AWS
+             

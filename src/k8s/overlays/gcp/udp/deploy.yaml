@@ -1,20 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: http
+  name: udp
+  labels:
+    component: udp
 spec:
   template:
     spec:
+      hostNetwork: true
       containers:
-      - name: http
+      - name: udp
+        image: AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/udp
         resources:
           limits:
-            cpu: "1"
+            cpu: "200m"
           requests:
-            cpu: "1"
+            cpu: "200m"
         securityContext:
           runAsUser: 1000
           readOnlyRootFilesystem: true
           runAsNonRoot: true
           allowPrivilegeEscalation: false
           privileged: false
+        env:
+          - name: DIARKIS_CLOUD_ENV
+            value: AWS

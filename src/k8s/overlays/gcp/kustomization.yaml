@@ -1,12 +1,29 @@
-namespace: dev0
+namespace: aws
 bases:
   - ../../base
 
 # build target
 patches:
   - http/deploy.yaml
+  - http/ingress.yaml
+  - http/svc.yaml
   - udp/deploy.yaml
   - tcp/deploy.yaml
+
+images:
+- name: udp
+  newName: AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/udp
+  newTag: latest
+- name: tcp
+  newName: AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/tcp
+  newTag: latest
+- name: mars
+  newName: AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/mars
+  newTag: latest
+- name: http
+  newName: AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/http
+  newTag: latest
+  
   
 configMapGenerator:
 - name: shared-conf

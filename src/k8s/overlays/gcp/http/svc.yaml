@@ -5,7 +5,7 @@ metadata:
   labels:
     component: http
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     component: http
   ports:

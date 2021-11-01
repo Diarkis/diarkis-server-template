@@ -15,7 +15,6 @@ spec:
     spec:
       containers:
       - name: mars
-        image: mars
         ports:
         - containerPort: 6779
           name: mars

@@ -19,20 +19,14 @@ Diarkis構成コンポーネントをpushするためのregistryを準備
 alpineなどもsampleで使用しているが、それに関してはdocker hubから取得している。
 ```
 aws ecr create-repository --repository-name http
-export HTTP_URI=$(aws ecr describe-repositories --repository-names http | jq '.repositories[].repositoryUri')
 aws ecr create-repository --repository-name udp
-export UDP_URI=$(aws ecr describe-repositories --repository-names http | jq '.repositories[].repositoryUri')
 aws ecr create-repository --repository-name tcp
-export TCP_URI=$(aws ecr describe-repositories --repository-names http | jq '.repositories[].repositoryUri')
 aws ecr create-repository --repository-name mars
-export MARS_URI=$(aws ecr describe-repositories --repository-names http | jq '.repositories[].repositoryUri')
-aws ecr create-repository --repository-name ws
-export WS=$(aws ecr describe-repositories --repository-names http | jq '.repositories[].repositoryUri')
 ```
 
 ## 3. Create EKS for diarkis
 ```
-eksctl create cluster --node-type c5n.xlarge --name diarkis --nodes 1 --alb-ingress-access --asg-access # about 10 minutes
+eksctl create cluster --node-type c5n.xlarge --name diarkis --nodes 1 --alb-ingress-access --asg-access # nodeはサービス規模に応じて選択してください。
 ```
 
 ## 4. connect to eks
@@ -67,15 +61,16 @@ docker push ${AWS_ACCOUNT_NUM}.dkr.ecr.ap-northeast-1.amazonaws.com/mars
 
 ## 6. apply manifest
 ```
-kustomize build k8s/overlays/dev0 | sed -e "s/__AWS_ACCOUNT_NUM__/${AWS_ACCOUNT_NUM}/g" | kubectl apply -f -
+# project rootから
+kustomize build k8s/overlays/aws | sed -e "s/AWS_ACCOUNT_NUM/${AWS_ACCOUNT_NUM}/g" | kubectl apply -f -
 ```
 下記のように4つのコンポーネントが立ち上がっていればOKです。
 ```
 $ kubectl get po -n dev0
 NAME                    READY   STATUS    RESTARTS   AGE
-http-5c7dbbb6d7-lhjlm   1/1     Running   0          3d14h
+http-xxxxxxxxx-xxxxx   1/1     Running   0          3d14h
 mars-0                  1/1     Running   0          3d14h
-tcp-88dc5f97d-7sqk9     1/1     Running   0          3d14h
+tcp-xxxxxxxxx-xxxxx     1/1     Running   0          3d14h
 udp-fdc6bbccc-dwc5w     1/1     Running   0          3d14h
 ```
 ## 7. check diarkis cluster
@@ -90,7 +85,7 @@ curl ${EXTERNAI_IP}/auth/1
 ```
 下記の様なレスポンスが返ってくれば正常です。
 ```
-{"TCP":"ec2-xx-xx-xx-xx.ap-northeast-1.compute.amazonaws.com:7201","UDP":"ec2-xx-xx-xx-xx.ap-northeast-1.compute.amazonaws.com:7101","sid":"6a970e7a66a24d1e998fe5211e11890b","encryptionKey":"59ccc205e9a94e11a17a59c601669102","encryptionIV":"0167b0e1c1e24ff39d3150dae640f67f","encryptionMacKey":"197dc161f4c44f829ff9712805ab6b36"}%
+{"TCP":"ec2-xx-xx-xx-xx.ap-northeast-1.compute.amazonaws.com:7201","UDP":"ec2-xx-xx-xx-xx.ap-northeast-1.compute.amazonaws.com:7101","sid":"6a970e7a66a24d1e998fe5211e11890b","encryptionKey":"59ccc205e9a94e11a17a59c601669102","encryptionIV":"0167b0e1c1e24ff39d3150dae640f67f","encryptionMacKey":"197dc161f4c44f829ff9712805ab6b36"}
 ```
 抜けている項目等があれば、何かのコンポーネントに異常をきたしていると思われる。
 
