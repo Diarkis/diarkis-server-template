@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: udp
+  name: ws
   labels:
-    component: udp
+    component: ws
 spec:
   template:
     spec:
       hostNetwork: true
       containers:
-      - name: udp
-        image: udp
+      - name: ws
+        image: ws
         resources:
           limits:
             cpu: "200m"
@@ -24,4 +24,4 @@ spec:
           privileged: false
         env:
           - name: DIARKIS_CLOUD_ENV
-            value: AWS
+            value: GCP

@@ -14,23 +14,10 @@ resources:
  - http/deploy.yaml
  - http/svc.yaml
  - http/ingress.yaml
- - http/hpa.yaml  
+ - http/hpa.yaml
+ - ws/deploy.yaml
+ - ws/hpa.yaml 
  - ns.yaml
-
-
-#images:
-# - name: udp
-#   newName: asia.gcr.io/__GCP_PROJECT_ID__/udp
-#   newTag: latest
-# - name: tcp
-#   newName: asia.gcr.io/__GCP_PROJECT_ID__/tcp
-#   newTag: latest
-# - name: mars
-#   newName: asia.gcr.io/__GCP_PROJECT_ID__/mars
-#   newTag: latest
-# - name: http
-#   newName: asia.gcr.io/__GCP_PROJECT_ID__/http
-#   newTag: latest
   
 configMapGenerator:
 - name: shared-conf
@@ -56,6 +43,10 @@ configMapGenerator:
 - name: mars-conf
   files:
     - mars/conf/default.conf.json
+    
+- name: ws-conf
+  files:
+    - ws/conf/main.json    
 
 - name: hc-conf
   files:

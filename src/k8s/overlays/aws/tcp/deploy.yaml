@@ -9,7 +9,7 @@ spec:
     spec:
       containers:
       - name: tcp
-        image: AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/tcp
+        image: tcp
         resources:
           limits:
             cpu: "200m"

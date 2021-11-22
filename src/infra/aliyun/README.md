@@ -16,7 +16,15 @@ alibaba cloud への権限のあるアカウントで alibaba cloud console へ�
 途中一般ユーザーだと規約に同意できない箇所があるので初回は Admin ユーザーアカウントでログインをしていただければと思います。
 
 ## インフラ構築手順1 - VPC の作成
-![VPC](img/vpc-0.png)
+VPC 作成画面に移動し、create VPC ボタンから VPC を作成する。
+![VPC-0](img/vpc-0.png)
+下記のように、VPCの名前の設定、IP CIDR、vStwitchの作成等を行います。
+画像の例では 10.0.0.0/8 で作成していますが、他のVPCとVPNでつなぐ必要があったり、組織で使用CIDRを管理している場合はそれに習ってください。
+また vSwitch についても、リリース予定のサービス規模などに応じて設定してください。
+![VPC-1](img/vpc-1.png)
+
+## インフラ構築手順2 - ACK による kuberentes cluster の作成
+
 
 ## インフラ構築手順3 - firewall の作成
 Diarkis は、外部と通信する際、
