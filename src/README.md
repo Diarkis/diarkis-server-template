@@ -19,6 +19,8 @@ Only HTTP server is required in the cluster and the rest of the servers should b
    │            │
    │            └──── ws/main.go        [WebSocket server main]
    │
+   ├─ bot/ [Bot clients for stress test]
+   │
    ├─ mars/ ───────── main.go
    │
    │
@@ -37,13 +39,19 @@ Only HTTP server is required in the cluster and the rest of the servers should b
    │            │
    │            └──── ws/       [WebSocket configuration directory] ─── main.json
    │
-   ├─ cmds/  [Custom client command directory] ─┬── main.go [Entry point for all cmds]
-   │                                            ├── http   ──────────────────────────────────────┬─── main.go
-   ├─ lib/   [Shared library directory]         ├── room   ──────────────────────────── main.go  └─── matching.go
-   │                                            ├── group  ──────────────────────────── main.go
-   ├─ bin/   [Built server binary directory]    ├── field  ──────────────────────────── main.go
-   │                                            │
-   └─ go.mod [Go module file for the project]   └── custom ──────────────────────────── main.go
+   ├─ cmds/  [Custom client command directory] ────────────────┬── main.go [Entry point for all cmds]
+   │                                                           │
+   ├─ ws_cmds/ [Custom client command directory for WebSocket] │
+   │                                                           │
+   │                                                           ├── http   ──────────────────────────────────────┬─── main.go
+   ├─ lib/   [Shared library directory]                        ├── room   ──────────────────────────── main.go  └─── matching.go
+   │                                                           ├── group  ──────────────────────────── main.go
+   ├─ bin/   [Built server binary directory]                   ├── field  ──────────────────────────── main.go
+   │                                                           └── custom ──────────────────────────── main.go
+   │
+   ├─ build.yml [Build configuration file for diarkis-cli]
+   │
+   └─ go.mod [Go module file for the project]
 ```
 
 # Server Entry Points
@@ -97,6 +105,26 @@ By default, there is MARS configuration JSON file: `configs/mars/main.json`
 Diarkis server needs to have health check. This template provides the source to build the health check binary.
 
 The build will be automatically executed when you execute our make commands.
+
+# Stress Test Bots
+
+Diarkis server template comes with simple bots for stress tests.
+
+All bots can be built using diarkis-cli
+
+## MatchMaker Sample Bot
+
+This bot uses sample custom commands that Diarkis server template implements.
+
+```
+bots/matchmaker/main.go
+```
+
+### How To Use MatchMaker Bot
+
+```
+./remote_bin/bot-matchmaker {HTTP endpoint:port} {How many bots to spawn}
+```
 
 # Commands
 
