@@ -71,7 +71,7 @@ func searchMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User
 		next(errors.New("Invalid payload"))
 		return
 	}
-	howmany := 10
+	howmany := 100
 	matching.Search(mmSearch.IDs, mmSearch.Props, howmany, func(err error, results []interface{}) {
 		if err != nil {
 			userData.ServerRespond([]byte(err.Error()), ver, cmd, server.Bad, true)
