@@ -22,7 +22,7 @@ const cmdAdd uint16 = 100
 const cmdSearch uint16 = 102
 const pushRoomFull uint16 = 103
 // waitingTime is in seconds
-const waitingTime int64 = 60
+const waitingTime int64 = 5
 
 var botCounter = 0
 var host = "127.0.0.1:7000"
