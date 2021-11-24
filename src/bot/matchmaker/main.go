@@ -93,13 +93,14 @@ func spawnUDPBot(id int) {
 func startBot(uid int, udpCli *udp.Client, tcpCli *tcp.Client) {
 	botCounter++
 	fmt.Printf("%v bot started ID:%v - Total bots :%v\n", proto, uid, botCounter)
-	// 0 ~ 5 = search
-	// 6     = add
-	// 10    = room full and disconnect
+	// 0 ~ 20 = search
+	// 21     = add
+	// 22     = wait
+	// 23     = room full and disconnect
 	currentState := -1
 	mutex.Lock()
 	if util.RandomInt(0, 99) < 30 {
-		states[uid] = 6
+		states[uid] = 21
 	} else {
 		states[uid] = 0
 	}
@@ -112,26 +113,26 @@ func startBot(uid int, udpCli *udp.Client, tcpCli *tcp.Client) {
 		}
 		fmt.Printf("Bot ID:%v - state is %v\n", uid, states[uid])
 		switch states[uid] {
-		case -1, 0, 1, 2, 3, 4, 5:
+		case -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20:
 			search(uid, udpCli, tcpCli)
-		case 6:
+		case 21:
 			add(uid, udpCli, tcpCli)
-		case 7:
+		case 22:
 			// We are waiting
 			go func() {
 				fmt.Printf("Bot ID:%v is now waiting and will finish in %v seconds\n", uid, waitingTime)
 				time.Sleep(time.Second * time.Duration(waitingTime))
 				mutex.Lock()
-				states[uid] = 10
+				states[uid] = 23
 				mutex.Unlock()
 			}()
-		case 10:
+		case 23:
 			// Bot disconnects
 			disconnect(uid, udpCli, tcpCli)
 		default:
 			fmt.Printf("Error corrupt state %v - Bot ID:%v does nothing...\n", states[uid], uid)
 			mutex.Lock()
-			states[uid] = 10
+			states[uid] = 23
 			mutex.Unlock()
 		}
 		currentState = states[uid]
@@ -185,13 +186,13 @@ func handleOnResponse(uid int, ver uint8, cmd uint16, status uint8, payload []by
 	switch cmd {
 	case cmdAdd:
 		if string(payload) == "OK" {
-			states[uid] = 7
+			states[uid] = 22
 		}
 	case cmdSearch:
 		if string(payload) == "Matching not found" {
 			states[uid] += 1
 		} else {
-			states[uid] = 7
+			states[uid] = 23
 		}
 	}
 }
@@ -206,7 +207,7 @@ func handleOnPush(uid int, ver uint8, cmd uint16, payload []byte) {
 	case pushRoomFull:
 		fmt.Printf("Bot ID:%v received room full notification\n", uid)
 		// The joined room is full
-		states[uid] = 10
+		states[uid] = 23
 	}
 }
 
