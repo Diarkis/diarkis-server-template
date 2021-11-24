@@ -168,6 +168,8 @@ func disconnect(uid int, udpCli *udp.Client, tcpCli *tcp.Client) {
 	case "tcp":
 		tcpCli.Disconnect()
 	}
+	// re-spawn bot
+	spawnUDPBot(uid)
 }
 
 func handleOnResponse(uid int, ver uint8, cmd uint16, status uint8, payload []byte) {
