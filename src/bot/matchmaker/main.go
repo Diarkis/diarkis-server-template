@@ -22,7 +22,7 @@ const cmdAdd uint16 = 100
 const cmdSearch uint16 = 102
 const pushRoomFull uint16 = 103
 // waitingTime is in seconds
-const waitingTime int64 = 5
+const waitingTime int64 = 30
 
 var botCounter = 0
 var host = "127.0.0.1:7000"
@@ -98,7 +98,11 @@ func startBot(uid int, udpCli *udp.Client, tcpCli *tcp.Client) {
 	// 10    = room full and disconnect
 	currentState := -1
 	mutex.Lock()
-	states[uid] = 0
+	if util.RandomInt(0, 99) < 30 {
+		states[uid] = 6
+	} else {
+		states[uid] = 0
+	}
 	mutex.Unlock()
 	for {
 		mutex.RLock()
@@ -115,7 +119,7 @@ func startBot(uid int, udpCli *udp.Client, tcpCli *tcp.Client) {
 		case 7:
 			// We are waiting
 			go func() {
-				fmt.Printf("Bot ID:%v is now waiting and will finish in 1 minute\n", uid)
+				fmt.Printf("Bot ID:%v is now waiting and will finish in %v seconds\n", uid, waitingTime)
 				time.Sleep(time.Second * time.Duration(waitingTime))
 				mutex.Lock()
 				states[uid] = 10
@@ -133,7 +137,7 @@ func startBot(uid int, udpCli *udp.Client, tcpCli *tcp.Client) {
 		currentState = states[uid]
 		fmt.Printf("Bot ID:%v state updated to %v\n", uid, currentState)
 		mutex.RUnlock()
-		time.Sleep(time.Millisecond * 100)
+		time.Sleep(time.Millisecond * 200)
 	}
 }
 
