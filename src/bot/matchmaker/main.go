@@ -111,7 +111,7 @@ func startBot(bot *botData) {
 	// 22     = wait
 	// 23     = room full and disconnect
 	currentState := -1
-	if util.RandomInt(0, 99) < 30 {
+	if util.RandomInt(0, 99) < 10 {
 		bot.state = 21
 	}
 	fmt.Printf("%v bot started ID:%v (state:%v) - Total bots :%v\n", proto, bot.uid, bot.state, botCounter)
@@ -160,9 +160,13 @@ func search(bot *botData) {
 	pkt := dpayload.PackMMSearch([]string{"RankMatch"}, searchProps)
 	switch proto {
 	case "udp":
-		bot.udp.RSend(cmdVer, cmdSearch, pkt)
+		if bot.udp != nil {
+			bot.udp.RSend(cmdVer, cmdSearch, pkt)
+		}
 	case "tcp":
-		bot.tcp.Send(cmdVer, cmdSearch, pkt)
+		if bot.udp != nil {
+			bot.tcp.Send(cmdVer, cmdSearch, pkt)
+		}
 	}
 }
 
@@ -174,9 +178,13 @@ func add(bot *botData) {
 	pkt := dpayload.PackMMAdd("RankMatch", fmt.Sprintf("%v", bot.uid), addProps,  []byte(fmt.Sprintf("My ID is %v", bot.uid)), uint64(60))
 	switch proto {
 	case "udp":
-		bot.udp.RSend(cmdVer, cmdAdd, pkt)
+		if bot.udp != nil {
+			bot.udp.RSend(cmdVer, cmdAdd, pkt)
+		}
 	case "tcp":
-		bot.tcp.Send(cmdVer, cmdAdd, pkt)
+		if bot.tcp != nil {
+			bot.tcp.Send(cmdVer, cmdAdd, pkt)
+		}
 	}
 }
 
@@ -188,9 +196,13 @@ func disconnect(bot *botData) {
 	fmt.Printf("Bot ID:%v finished its work and disconnects - Total bots :%v\n", bot.uid, botCounter)
 	switch proto {
 	case "udp":
-		bot.udp.Disconnect()
+		if bot.udp != nil {
+			bot.udp.Disconnect()
+		}
 	case "tcp":
-		bot.tcp.Disconnect()
+		if bot.tcp != nil {
+			bot.tcp.Disconnect()
+		}
 	}
 	go spawnUDPBot(bot.uid, false);
 	bot.udp = nil
