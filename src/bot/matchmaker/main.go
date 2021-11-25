@@ -122,7 +122,7 @@ func startBot(bot *botData) {
 			time.Sleep(time.Millisecond * time.Duration(interval))
 			continue
 		}
-		fmt.Printf("Bot ID:%v - state is %v\n", bot.uid, bot.state)
+		//fmt.Printf("Bot ID:%v - state is %v\n", bot.uid, bot.state)
 		switch bot.state {
 		case -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20:
 			fmt.Printf("Bot ID %v (state:%v) - search\n", bot.uid, bot.state)
@@ -132,22 +132,20 @@ func startBot(bot *botData) {
 			add(bot)
 		case 22:
 			// We are waiting
-			fmt.Printf("Bot ID:%v is now waiting and will finish in %v seconds... %v seconds to go\n",
-				bot.uid, waitingTime, (waitingTime * 1000) - waitCounter)
 			waitCounter += interval
 			if waitCounter >= waitingTime * 1000 {
 				bot.state = 23
 			}
 		case 23:
 			// Bot disconnects
-			fmt.Printf("Bot ID %v (state:%v) - disconnect\n", bot.uid, bot.state)
+			//fmt.Printf("Bot ID %v (state:%v) - disconnect\n", bot.uid, bot.state)
 			disconnect(bot)
 		default:
 			fmt.Printf("Error corrupt state %v - Bot ID:%v does nothing...\n", bot.state, bot.uid)
 			bot.state = 23
 		}
 		currentState = bot.state
-		fmt.Printf("Bot ID:%v state updated to %v\n", bot.uid, currentState)
+		//fmt.Printf("Bot ID:%v state updated to %v\n", bot.uid, currentState)
 		time.Sleep(time.Millisecond * time.Duration(interval))
 	}
 }
@@ -204,7 +202,7 @@ func disconnect(bot *botData) {
 			bot.tcp.Disconnect()
 		}
 	}
-	go spawnUDPBot(bot.uid, false);
+	go spawnUDPBot(bot.uid, true)
 	bot.udp = nil
 	bot.tcp = nil
 	bot.uid = -1
@@ -219,8 +217,6 @@ func handleOnResponse(bot *botData, ver uint8, cmd uint16, status uint8, payload
 	case cmdAdd:
 		if string(payload) == "OK" {
 			bot.state = 22
-		} else {
-			bot.state = 23
 		}
 		fmt.Printf("Bot ID %v added - state %v\n", bot.uid, bot.state)
 	case cmdSearch:
