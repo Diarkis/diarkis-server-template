@@ -13,7 +13,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -33,7 +32,14 @@ var sleepTime int64 = 60
 var searchProps = make(map[string]int)
 var addProps = make(map[string]int)
 var states = make(map[int]int)
-var mutex = new(sync.RWMutex)
+var newSpawns = make([]int, 0)
+
+type botData struct {
+	uid   int
+	state int
+	udp   *udp.Client
+	tcp   *tcp.Client
+}
 
 func main() {
 	if len(os.Args) < 2 {
@@ -49,8 +55,8 @@ func main() {
 	spawnBots()
 	for {
 		time.Sleep(time.Second * time.Duration(sleepTime))
-		if botCounter == 0 {
-			break
+		if botCounter <= 0 {
+			//break
 		}
 	}
 	fmt.Printf("All bots have finished their works - Exiting the process - Bye!\n")
@@ -59,14 +65,16 @@ func main() {
 
 func spawnBots() {
 	for i := 0; i < howmany; i++ {
-		go spawnUDPBot(i);
+		go spawnUDPBot(i, true);
 	}
 }
 
-func spawnUDPBot(id int) {
-	waitMin := 0
-	waitMax := 5000
-	time.Sleep(time.Millisecond * time.Duration(int64(util.RandomInt(waitMin, waitMax))))
+func spawnUDPBot(id int, needToWait bool) {
+	if needToWait {
+		waitMin := 0
+		waitMax := 5000
+		time.Sleep(time.Millisecond * time.Duration(int64(util.RandomInt(waitMin, waitMax))))
+	}
 	addr, sid, key, iv, mkey, err := auth(id)
 	if err != nil {
 		fmt.Printf("Auth error ID:%v - %v\n", id, err)
@@ -76,145 +84,159 @@ func spawnUDPBot(id int) {
 	udpSendInterval := int64(100)
 	udp.LogLevel(9)
 	cli := udp.New(rcvByteSize, udpSendInterval)
+
+	bot := new(botData)
+	bot.uid = id
+	bot.state = 0
+	bot.udp = cli
+
 	cli.SetEncryptionKeys(sid, key, iv, mkey)
 	cli.OnResponse(func(ver uint8, cmd uint16, status uint8, payload []byte) {
-		handleOnResponse(id, ver, cmd, status, payload)
+		handleOnResponse(bot, ver, cmd, status, payload)
 	})
 	cli.OnPush(func(ver uint8, cmd uint16, payload []byte) {
-		handleOnPush(id, ver, cmd, payload)
+		handleOnPush(bot, ver, cmd, payload)
 	})
 	cli.OnConnect(func() {
-		go startBot(id, cli, nil)
+		go startBot(bot)
 	})
-	fmt.Printf("Connecting to %v\n", addr)
+	fmt.Printf("Bot ID: %v - Connecting to %v\n", id, addr)
 	cli.Connect(addr)
 }
 
-func startBot(uid int, udpCli *udp.Client, tcpCli *tcp.Client) {
+func startBot(bot *botData) {
 	botCounter++
-	fmt.Printf("%v bot started ID:%v - Total bots :%v\n", proto, uid, botCounter)
 	// 0 ~ 20 = search
 	// 21     = add
 	// 22     = wait
 	// 23     = room full and disconnect
 	currentState := -1
-	mutex.Lock()
 	if util.RandomInt(0, 99) < 30 {
-		states[uid] = 21
-	} else {
-		states[uid] = 0
+		bot.state = 21
 	}
-	mutex.Unlock()
+	fmt.Printf("%v bot started ID:%v (state:%v) - Total bots :%v\n", proto, bot.uid, bot.state, botCounter)
+	waitCounter := int64(0)
+	interval := int64(200)
 	for {
-		mutex.RLock()
-		if currentState == states[uid] {
-			mutex.RUnlock()
+		if currentState < 22 && currentState == bot.state {
+			time.Sleep(time.Millisecond * time.Duration(interval))
 			continue
 		}
-		fmt.Printf("Bot ID:%v - state is %v\n", uid, states[uid])
-		switch states[uid] {
+		fmt.Printf("Bot ID:%v - state is %v\n", bot.uid, bot.state)
+		switch bot.state {
 		case -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20:
-			search(uid, udpCli, tcpCli)
+			fmt.Printf("Bot ID %v (state:%v) - search\n", bot.uid, bot.state)
+			search(bot)
 		case 21:
-			add(uid, udpCli, tcpCli)
+			fmt.Printf("Bot ID %v (state:%v) - add\n", bot.uid, bot.state)
+			add(bot)
 		case 22:
 			// We are waiting
-			go func() {
-				fmt.Printf("Bot ID:%v is now waiting and will finish in %v seconds\n", uid, waitingTime)
-				time.Sleep(time.Second * time.Duration(waitingTime))
-				mutex.Lock()
-				states[uid] = 23
-				mutex.Unlock()
-			}()
+			fmt.Printf("Bot ID:%v is now waiting and will finish in %v seconds... %v seconds to go\n",
+				bot.uid, waitingTime, (waitingTime * 1000) - waitCounter)
+			waitCounter += interval
+			if waitCounter >= waitingTime * 1000 {
+				bot.state = 23
+			}
 		case 23:
 			// Bot disconnects
-			disconnect(uid, udpCli, tcpCli)
+			fmt.Printf("Bot ID %v (state:%v) - disconnect\n", bot.uid, bot.state)
+			disconnect(bot)
 		default:
-			fmt.Printf("Error corrupt state %v - Bot ID:%v does nothing...\n", states[uid], uid)
-			mutex.Lock()
-			states[uid] = 23
-			mutex.Unlock()
+			fmt.Printf("Error corrupt state %v - Bot ID:%v does nothing...\n", bot.state, bot.uid)
+			bot.state = 23
 		}
-		currentState = states[uid]
-		fmt.Printf("Bot ID:%v state updated to %v\n", uid, currentState)
-		mutex.RUnlock()
-		time.Sleep(time.Millisecond * 200)
+		currentState = bot.state
+		fmt.Printf("Bot ID:%v state updated to %v\n", bot.uid, currentState)
+		time.Sleep(time.Millisecond * time.Duration(interval))
 	}
 }
 
-func search(uid int, udpCli *udp.Client, tcpCli *tcp.Client) {
-	fmt.Printf("MatchMaker search client ID:%v\n", uid)
+func search(bot *botData) {
+	if bot.state == 0 && bot.udp == nil && bot.tcp == nil {
+		return
+	}
+	fmt.Printf("MatchMaker search client ID:%v\n", bot.uid)
 	pkt := dpayload.PackMMSearch([]string{"RankMatch"}, searchProps)
 	switch proto {
 	case "udp":
-		udpCli.RSend(cmdVer, cmdSearch, pkt)
+		bot.udp.RSend(cmdVer, cmdSearch, pkt)
 	case "tcp":
-		tcpCli.Send(cmdVer, cmdSearch, pkt)
+		bot.tcp.Send(cmdVer, cmdSearch, pkt)
 	}
 }
 
-func add(uid int, udpCli *udp.Client, tcpCli *tcp.Client) {
-	fmt.Printf("MatchMaker add client ID:%v\n", uid)
-	pkt := dpayload.PackMMAdd("RankMatch", fmt.Sprintf("%v", uid), addProps,  []byte(fmt.Sprintf("My ID is %v", uid)), uint64(60))
+func add(bot *botData) {
+	if bot.state == 0 && bot.udp == nil && bot.tcp == nil {
+		return
+	}
+	fmt.Printf("MatchMaker add client ID:%v\n", bot.uid)
+	pkt := dpayload.PackMMAdd("RankMatch", fmt.Sprintf("%v", bot.uid), addProps,  []byte(fmt.Sprintf("My ID is %v", bot.uid)), uint64(60))
 	switch proto {
 	case "udp":
-		udpCli.RSend(cmdVer, cmdAdd, pkt)
+		bot.udp.RSend(cmdVer, cmdAdd, pkt)
 	case "tcp":
-		tcpCli.Send(cmdVer, cmdAdd, pkt)
+		bot.tcp.Send(cmdVer, cmdAdd, pkt)
 	}
 }
 
-func disconnect(uid int, udpCli *udp.Client, tcpCli *tcp.Client) {
+func disconnect(bot *botData) {
+	if bot.state == 0 && bot.udp == nil && bot.tcp == nil {
+		return
+	}
 	botCounter--
-	fmt.Printf("Bot ID:%v finished its work and disconnects - Total bots :%v\n", uid, botCounter)
+	fmt.Printf("Bot ID:%v finished its work and disconnects - Total bots :%v\n", bot.uid, botCounter)
 	switch proto {
 	case "udp":
-		udpCli.Disconnect()
+		bot.udp.Disconnect()
 	case "tcp":
-		tcpCli.Disconnect()
+		bot.tcp.Disconnect()
 	}
-	// re-spawn bot
-	spawnUDPBot(uid)
+	go spawnUDPBot(bot.uid, false);
+	bot.udp = nil
+	bot.tcp = nil
+	bot.uid = -1
+	bot.state = 0
 }
 
-func handleOnResponse(uid int, ver uint8, cmd uint16, status uint8, payload []byte) {
+func handleOnResponse(bot *botData, ver uint8, cmd uint16, status uint8, payload []byte) {
 	if ver != cmdVer {
 		return
 	}
-	mutex.Lock()
-	defer mutex.Unlock()
 	switch cmd {
 	case cmdAdd:
 		if string(payload) == "OK" {
-			states[uid] = 22
+			bot.state = 22
+		} else {
+			bot.state = 23
 		}
+		fmt.Printf("Bot ID %v added - state %v\n", bot.uid, bot.state)
 	case cmdSearch:
 		if string(payload) == "Matching not found" {
-			states[uid] += 1
+			bot.state += 1
 		} else {
-			states[uid] = 23
+			bot.state = 22
 		}
+		fmt.Printf("Bot ID %v search - state %v\n", bot.uid, bot.state)
 	}
 }
 
-func handleOnPush(uid int, ver uint8, cmd uint16, payload []byte) {
+func handleOnPush(bot *botData, ver uint8, cmd uint16, payload []byte) {
 	if ver != cmdVer {
 		return
 	}
-	mutex.Lock()
-	defer mutex.Unlock()
 	switch cmd {
 	case pushRoomFull:
-		fmt.Printf("Bot ID:%v received room full notification\n", uid)
+		fmt.Printf("Bot ID:%v received room full notification\n", bot.uid)
 		// The joined room is full
-		states[uid] = 23
+		bot.state = 23
 	}
 }
 
 // returns addr, sid, key, iv, mackey, error
 func auth(uid int) (string, []byte, []byte, []byte, []byte, error) {
 	url := fmt.Sprintf("http://%s/auth/%v", host, uid)
-	fmt.Printf("Connecting to HTTP: %s\n", url)
+	fmt.Printf("Bot ID: %v - Connecting to HTTP: %s\n", uid, url)
 	client := &http.Client{
 		Timeout: time.Second * 10,
 	}
@@ -225,7 +247,6 @@ func auth(uid int) (string, []byte, []byte, []byte, []byte, error) {
 	//req.Header.Add("ClientKey", clientKey)
 	resp, err := client.Do(req)
 	if err != nil {
-		resp.Body.Close()
 		return "", nil, nil, nil, nil, err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
