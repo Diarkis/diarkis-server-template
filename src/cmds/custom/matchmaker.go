@@ -50,6 +50,7 @@ func addToMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User,
 			return
 		}
 		if len(room.GetMemberIDs(roomID_)) == maxMembers {
+			Remove(mmAdd.ID, []string{ mmAdd.UID }, 2)
 			return
 		}
 		timeCnt = util.NowSeconds()
