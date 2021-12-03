@@ -123,6 +123,10 @@ func searchMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User
 					removeFromMM(mmSearch.IDs, uniqueID)
 					// try the next room
 					index++
+					if len(list) == index {
+						done(nil)
+						return
+					}
 					moveon(nil)
 					return
 				}
