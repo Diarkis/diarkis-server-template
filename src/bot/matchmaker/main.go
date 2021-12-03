@@ -26,9 +26,11 @@ const waitingTime int64 = 30
 var botCounter = 0
 var searchCnt = 0
 var matchedCnt = 0
+var completedCnt = 0
 var host = "127.0.0.1:7000"
 var proto = "udp" // udp or tcp
 var howmany = 10
+var maxmembers uint16 = 10
 // sleepTime is in seconds
 var sleepTime int64 = 10
 var searchProps = make(map[string]int)
@@ -65,9 +67,11 @@ func main() {
 	for {
 		time.Sleep(time.Second * time.Duration(sleepTime))
 		timestamp := util.ZuluTimeFormat(time.Now())
-		fmt.Printf("[%v] Bots %v - Searches %v - Matches %v\n", timestamp, botCounter, searchCnt, matchedCnt)
+		fmt.Printf("{ \"Time\":\"%v\" \"Bots\":%v, \"Searches\":%v, \"Matches\":%v, \"Completed\":%v }\n",
+			timestamp, botCounter, searchCnt, matchedCnt, uint16(completedCnt)/maxmembers)
 		searchCnt = 0
 		matchedCnt = 0
+		completedCnt = 0
 	}
 	fmt.Printf("All bots have finished their works - Exiting the process - Bye!\n")
 	os.Exit(0)
@@ -110,6 +114,20 @@ func spawnUDPBot(id int, needToWait bool) {
 	cli.OnConnect(func() {
 		go startBot(bot)
 	})
+	cli.OnDisconnect(func() {
+		botCounter--
+		if botCounter >= howmany {
+			return
+		}
+		spawnUDPBot(bot.uid, true)
+		/*
+		bot.udp = nil
+		bot.tcp = nil
+		bot.uid = -1
+		bot.state = 0
+		*/
+	})
+
 	//fmt.Printf("Bot ID: %v - Connecting to %v\n", id, addr)
 	cli.Connect(addr)
 }
@@ -184,7 +202,7 @@ func add(bot *botData) {
 		return
 	}
 	//fmt.Printf("MatchMaker add client ID:%v\n", bot.uid)
-	pkt := packet.PackMMAdd(profileID, fmt.Sprintf("%v", bot.uid), 10, false, addProps, []byte("metadata"), uint16(60))
+	pkt := packet.PackMMAdd(profileID, fmt.Sprintf("%v", bot.uid), maxmembers, false, addProps, []byte("metadata"), uint16(60))
 	switch proto {
 	case "udp":
 		if bot.udp != nil {
@@ -201,7 +219,6 @@ func disconnect(bot *botData) {
 	if bot.state == 0 && bot.udp == nil && bot.tcp == nil {
 		return
 	}
-	botCounter--
 	//fmt.Printf("Bot ID:%v finished its work and disconnects - Total bots :%v\n", bot.uid, botCounter)
 	switch proto {
 	case "udp":
@@ -213,11 +230,6 @@ func disconnect(bot *botData) {
 			bot.tcp.Disconnect()
 		}
 	}
-	go spawnUDPBot(bot.uid, true)
-	bot.udp = nil
-	bot.tcp = nil
-	bot.uid = -1
-	bot.state = 0
 }
 
 func handleOnResponse(bot *botData, ver uint8, cmd uint16, status uint8, payload []byte) {
@@ -253,6 +265,7 @@ func handleOnPush(bot *botData, ver uint8, cmd uint16, payload []byte) {
 		//fmt.Printf("Bot ID:%v received room full notification\n", bot.uid)
 		// The joined room is full
 		bot.state = 23
+		completedCnt++
 	}
 }
 
@@ -280,6 +293,9 @@ func auth(uid int) (string, []byte, []byte, []byte, []byte, error) {
 	data := make(map[string]interface{})
 	err = json.Unmarshal(body, &data)
 	if err != nil {
+		return "", nil, nil, nil, nil, err
+	}
+	if _, ok := data["sid"]; !ok {
 		return "", nil, nil, nil, nil, err
 	}
 	sid, err := hex.DecodeString(data["sid"].(string))
