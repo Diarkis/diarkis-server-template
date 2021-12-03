@@ -67,7 +67,7 @@ func main() {
 	for {
 		time.Sleep(time.Second * time.Duration(sleepTime))
 		timestamp := util.ZuluTimeFormat(time.Now())
-		fmt.Printf("{ \"Time\":\"%v\" \"Bots\":%v, \"Searches\":%v, \"Matches\":%v, \"Completed\":%v }\n",
+		fmt.Printf("{ \"Time\":\"%v\", \"Bots\":%v, \"Searches\":%v, \"Matches\":%v, \"Completed\":%v }\n",
 			timestamp, botCounter, searchCnt, matchedCnt, uint16(completedCnt)/maxmembers)
 		searchCnt = 0
 		matchedCnt = 0
