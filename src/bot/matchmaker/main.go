@@ -38,6 +38,7 @@ var addProps = make(map[string]int)
 var states = make(map[int]int)
 var newSpawns = make([]int, 0)
 var hosts int
+var interval int64
 var profileID = "test-matching-1"
 
 type botData struct {
@@ -48,17 +49,35 @@ type botData struct {
 }
 
 func main() {
-	if len(os.Args) < 3 {
-		fmt.Printf("Bot requires 2 parameters: {http host:port} {how many bots} {number of host}")
+	if len(os.Args) < 4 {
+		fmt.Printf("Bot requires 2 parameters: {http host:port} {how many bots} {number of host} {search interval in milliseconds}")
 		os.Exit(1)
 		return
 	}
 	host = os.Args[1]
-	howmany, _ = strconv.Atoi(os.Args[2])
-	hosts, _ = strconv.Atoi(os.Args[3])
-	fmt.Printf("Starting MatchMaker Bot %v - %v bots [hosts:%v per cent] - hosts:%v guests:%v\n",
+	howmanySource, err := strconv.Atoi(os.Args[2])
+	if err != nil {
+		fmt.Printf("How many bot parameter given is invalid %v\n", err)
+		os.Exit(1)
+		return
+	}
+	howmany = howmanySource
+	hosts, err = strconv.Atoi(os.Args[3])
+	if err != nil {
+		fmt.Printf("Ratio of hosts parameter given is invalid %v\n", err)
+		os.Exit(1)
+		return
+	}
+	intervalSource, err := strconv.Atoi(os.Args[4])
+	if err != nil {
+		fmt.Printf("Interval of searches parameter given is invalid %v\n", err)
+		os.Exit(1)
+		return
+	}
+	interval = int64(intervalSource)
+	fmt.Printf("Starting MatchMaker Bot %v - %v bots [hosts:%v per cent] - hosts:%v guests:%v search interval %vms\n",
 		proto, howmany, hosts, float64(howmany)*(float64(hosts)/float64(100)),
-		float64(howmany)-(float64(howmany)*(float64(hosts)/float64(100))))
+		float64(howmany)-(float64(howmany)*(float64(hosts)/float64(100))), interval)
 	searchProps["lvl"] = 5
 	searchProps["league"] = 1
 	addProps["lvl"] = 5
@@ -144,7 +163,6 @@ func startBot(bot *botData) {
 	}
 	//fmt.Printf("%v bot started ID:%v (state:%v) - Total bots :%v\n", proto, bot.uid, bot.state, botCounter)
 	waitCounter := int64(0)
-	interval := int64(200)
 	for {
 		if currentState < 22 && currentState == bot.state {
 			time.Sleep(time.Millisecond * time.Duration(interval))
