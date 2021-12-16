@@ -12,6 +12,8 @@ const helloCmdID = 10
 const pushCmdID = 11
 // Client error log
 const clientErrLog = 12
+// Resonance command ID
+const resonanceCmdID = 13
 // MatchMaker command IDs
 const matchmakerAdd = 100
 const matchmakerRm = 101
@@ -31,6 +33,8 @@ func Expose() {
 	server.HandleCommand(customVer, helloCmdID, afterHelloCmd)
 	server.HandleCommand(customVer, pushCmdID, pushCmd)
 	server.HandleCommand(customVer, pushCmdID, outputClientErrLog)
+	// defined in resonance.go
+	server.HandleCommand(customVer, resonanceCmdID, resonanceCmd)
 	// defined in matchmaker.go
 	server.HandleCommand(customVer, matchmakerAdd, addToMatchMaker)
 	server.HandleCommand(customVer, matchmakerSearch, searchMatchMaker)
