@@ -39,7 +39,7 @@ var states = make(map[int]int)
 var newSpawns = make([]int, 0)
 var hosts int
 var interval int64
-var profileID = "test-matching-1"
+var profileID = "RankMatch"
 
 type botData struct {
 	uid   int
@@ -78,10 +78,8 @@ func main() {
 	fmt.Printf("Starting MatchMaker Bot %v - %v bots [hosts:%v per cent] - hosts:%v guests:%v search interval %vms\n",
 		proto, howmany, hosts, float64(howmany)*(float64(hosts)/float64(100)),
 		float64(howmany)-(float64(howmany)*(float64(hosts)/float64(100))), interval)
-	searchProps["lvl"] = 5
-	searchProps["league"] = 1
-	addProps["lvl"] = 5
-	addProps["league"] = 1
+	searchProps["rank"] = 5
+	addProps["rank"] = 5
 	spawnBots()
 	for {
 		time.Sleep(time.Second * time.Duration(sleepTime))
