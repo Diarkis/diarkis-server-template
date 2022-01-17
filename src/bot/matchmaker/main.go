@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/Diarkis/diarkis/util"
 	"github.com/Diarkis/diarkis/client/go/udp"
@@ -27,6 +28,7 @@ var botCounter = 0
 var searchCnt = 0
 var matchedCnt = 0
 var completedCnt = 0
+var authErrCnt = 0
 var host = "127.0.0.1:7000"
 var proto = "udp" // udp or tcp
 var howmany = 10
@@ -86,11 +88,12 @@ func main() {
 	for {
 		time.Sleep(time.Second * time.Duration(sleepTime))
 		timestamp := util.ZuluTimeFormat(time.Now())
-		fmt.Printf("{ \"Time\":\"%v\", \"Bots\":%v, \"Searches\":%v, \"Matches\":%v, \"Completed\":%v }\n",
-			timestamp, botCounter, searchCnt, matchedCnt, uint16(completedCnt)/maxmembers)
+		fmt.Printf("{ \"Time\":\"%v\", \"Bots\":%v, \"Searches\":%v, \"Matches\":%v, \"Completed\":%v, \"AuthError\":%v }\n",
+			timestamp, botCounter, searchCnt, matchedCnt, uint16(completedCnt)/maxmembers, authErrCnt)
 		searchCnt = 0
 		matchedCnt = 0
 		completedCnt = 0
+		authErrCnt = 0
 	}
 	fmt.Printf("All bots have finished their works - Exiting the process - Bye!\n")
 	os.Exit(0)
@@ -110,7 +113,7 @@ func spawnUDPBot(id int, needToWait bool) {
 	}
 	addr, sid, key, iv, mkey, err := auth(id)
 	if err != nil {
-		fmt.Printf("Auth error ID:%v - %v\n", id, err)
+		authErrCnt++
 		return
 	}
 	rcvByteSize := 1400
@@ -202,7 +205,7 @@ func search(bot *botData) {
 		return
 	}
 	//fmt.Printf("MatchMaker search client ID:%v\n", bot.uid)
-	pkt := packet.PackMMSearch(100, true, []string{ profileID }, searchProps, []byte("Hello"))
+	pkt := packet.PackMMSearch(10, true, []string{ profileID }, searchProps, []byte("Hello"))
 	switch proto {
 	case "udp":
 		if bot.udp != nil {
@@ -306,6 +309,10 @@ func auth(uid int) (string, []byte, []byte, []byte, []byte, error) {
 	body, err := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
 	if err != nil {
+		return "", nil, nil, nil, nil, err
+	}
+	if resp.StatusCode > 300 {
+		err := errors.New(fmt.Sprintf("Error response status %v - body:%v", resp.StatusCode, string(body)))
 		return "", nil, nil, nil, nil, err
 	}
 	data := make(map[string]interface{})
