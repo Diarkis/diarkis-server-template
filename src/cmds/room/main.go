@@ -16,8 +16,6 @@ const onRoomOwnerChangeCmd uint16 = 100
 var logger = log.New("room")
 
 func Expose() {
-	room.ExposeCommands()
-	roomSupport.ExposeCommands()
 	// we broadcast user ID to room members when the client leaves unexpectedly
 	// The message will be propagated by OnMemberLeave even on the client
 	room.SetOnDiscardCustomMessage(onDiscardCustomMessage)
@@ -25,6 +23,9 @@ func Expose() {
 	room.SetOnRoomOwnerChange(onRoomOwnerChange)
 	// When a user joins a room, the user receives the room owner ID by message
 	room.AfterJoinRoomCmd(afterJoinRoom)
+	// expose commands
+	room.ExposeCommands()
+	roomSupport.ExposeCommands()
 	// set up custom mesh commands
 	meshCmds.Setup()
 }
