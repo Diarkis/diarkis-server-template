@@ -19,6 +19,9 @@ const STATUS_JOINING = 2
 const STATUS_JOINED = 3
 const STATUS_BROADCAST = 4
 
+const BUILTIN_CMD_VER = 1
+const CMD_RANDOM_JOIN_ROOM = 106
+
 // args
 var proto = "udp" // udp or tcp
 var host = "127.0.0.1:7000"
@@ -123,6 +126,9 @@ func spawnTCPBot(id int, needToWait bool) {
 	})
 
 	cli.Connect(addr)
+	bot.room = new(room.Room)
+	bot.room.SetupAsTCP(bot.tcp)
+	bot.room.SetupOnJoinEvent(BUILTIN_CMD_VER, CMD_RANDOM_JOIN_ROOM)
 }
 
 func spawnUDPBot(id int, needToWait bool) {
@@ -166,6 +172,10 @@ func spawnUDPBot(id int, needToWait bool) {
 	})
 
 	cli.Connect(addr)
+	bot.room = new(room.Room)
+	bot.room.SetupAsUDP(bot.udp)
+	bot.room.SetupOnJoinEvent(BUILTIN_CMD_VER, CMD_RANDOM_JOIN_ROOM)
+	
 }
 
 func startBot(bot *botData) {
