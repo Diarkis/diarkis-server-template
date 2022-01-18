@@ -126,6 +126,9 @@ func spawnTCPBot(id int, needToWait bool) {
 	})
 
 	cli.Connect(addr)
+	bot.group = new(group.Group)
+	bot.group.SetupAsTCP(bot.tcp)
+	bot.group.SetupOnJoinEvent(BUILTIN_CMD_VER, CMD_RANDOM_JOIN_GROUP)
 }
 
 func spawnUDPBot(id int, needToWait bool) {
@@ -171,14 +174,14 @@ func spawnUDPBot(id int, needToWait bool) {
 
 
 	cli.Connect(addr)
-
+	bot.group = new(group.Group)
+	bot.group.SetupAsUDP(bot.udp)
+	bot.group.SetupOnJoinEvent(BUILTIN_CMD_VER, CMD_RANDOM_JOIN_GROUP)
 }
 
 func startBot(bot *botData) {
 	botCounter++
-	bot.group = new(group.Group)
-	bot.group.SetupAsUDP(bot.udp)
-	bot.group.SetupOnJoinEvent(BUILTIN_CMD_VER, CMD_RANDOM_JOIN_GROUP)
+
 	if util.RandomInt(0, 99) < bots {
 		bot.state = STATUS_AFTER_START
 	}
