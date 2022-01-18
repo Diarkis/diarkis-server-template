@@ -19,6 +19,9 @@ const STATUS_JOINING = 2
 const STATUS_JOINED = 3
 const STATUS_BROADCAST = 4
 
+const BUILTIN_CMD_VER = 1
+const CMD_RANDOM_JOIN_GROUP = 114
+
 // args
 var proto = "udp" // udp or tcp
 var host = "127.0.0.1:7000"
@@ -147,6 +150,7 @@ func spawnUDPBot(id int, needToWait bool) {
 	bot.udp = cli
 
 	cli.SetEncryptionKeys(sid, key, iv, mkey)
+
 	cli.OnResponse(func(ver uint8, cmd uint16, status uint8, payload []byte) {
 		handleOnResponse(bot, ver, cmd, status, payload)
 	})
@@ -165,11 +169,16 @@ func spawnUDPBot(id int, needToWait bool) {
 		spawnUDPBot(bot.uid, true)
 	})
 
+
 	cli.Connect(addr)
+
 }
 
 func startBot(bot *botData) {
 	botCounter++
+	bot.group = new(group.Group)
+	bot.group.SetupAsUDP(bot.udp)
+	bot.group.SetupOnJoinEvent(BUILTIN_CMD_VER, CMD_RANDOM_JOIN_GROUP)
 	if util.RandomInt(0, 99) < bots {
 		bot.state = STATUS_AFTER_START
 	}
@@ -212,11 +221,13 @@ func searchAndJoin(bot *botData) {
 		groupCli.SetupAsTCP(bot.tcp)
 	}
 	joinMessage := []byte("joinMessage")
-	groupCli.JoinRandom(10, 60, joinMessage, 200)
+	groupCli.JoinRandom(60, joinMessage, 200)
 	bot.group = groupCli
 
-	groupCli.OnJoin(func(success bool,createdTime uint){
+	groupCli.OnJoin(func(success bool, groupID string){
 		joinedCnt++
+		fmt.Println(success, groupID)
+		bot.state = STATUS_BROADCAST
 		if success {
 			bot.state = STATUS_BROADCAST
 		}
@@ -225,7 +236,7 @@ func searchAndJoin(bot *botData) {
 		fmt.Println(message)
 	})
 	groupCli.OnMemberBroadcast(func(bytes []byte) {
-		// fmt.Println("received packet. size: ", len(bytes))
+		fmt.Println("received packet. size: ", len(bytes))
 	})
 }
 
