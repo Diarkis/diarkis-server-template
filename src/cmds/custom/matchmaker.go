@@ -42,7 +42,7 @@ func addToMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User,
 	metadata["uniqueID"] = mmAdd.UID
 	metadata["roomID"] = roomID
 	metadata["maxMembers"] = maxMembers
-	matching.Add(mmAdd.ID, mmAdd.UID, mmAdd.Props, metadata, mmAdd.TTL, 2)
+	matching.Add(mmAdd.ID, mmAdd.UID, mmAdd.Tag, mmAdd.Props, metadata, mmAdd.TTL, 2)
 	// update MatchMaker add every 40 seconds
 	timeCnt := util.NowSeconds()
 	room.SetOnTick(roomID, func(roomID_ string) {
@@ -58,7 +58,7 @@ func addToMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User,
 		metadata["uniqueID"] = mmAdd.UID
 		metadata["roomID"] = roomID
 		metadata["maxMembers"] = maxMembers
-		matching.Add(mmAdd.ID, mmAdd.UID, mmAdd.Props, metadata, mmAdd.TTL, 2)
+		matching.Add(mmAdd.ID, mmAdd.UID, mmAdd.Tag, mmAdd.Props, metadata, mmAdd.TTL, 2)
 	})
 	// response for matchmaking
 	userData.ServerRespond([]byte("OK"), ver, cmd, server.Ok, true)
@@ -73,7 +73,7 @@ func searchMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User
 		return
 	}
 	howmany := 100
-	matching.Search(mmSearch.IDs, mmSearch.Props, howmany, func(err error, results []interface{}) {
+	matching.Search(mmSearch.IDs, mmSearch.Tag, mmSearch.Props, howmany, func(err error, results []interface{}) {
 		if err != nil {
 			userData.ServerRespond([]byte(err.Error()), ver, cmd, server.Bad, true)
 			next(err)
