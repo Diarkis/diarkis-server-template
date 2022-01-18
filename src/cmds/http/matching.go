@@ -93,7 +93,7 @@ func addToMatchMaker(res *http.Response, req *http.Request, params *http.Params,
 	}
 	metadata := make(map[string]interface{})
 	err = json.Unmarshal([]byte(metadataJSON), &metadata)
-	matching.Add(mmID, uniqueID, data, metadata, ttl, 2)
+	matching.Add(mmID, uniqueID, "", data, metadata, ttl, 2)
 	res.Respond("OK", http.Ok)
 	next(nil)
 }
@@ -167,7 +167,7 @@ func searchMatchMaker(res *http.Response, req *http.Request, params *http.Params
 		next(err)
 		return
 	}
-	matching.Search(mmIDList, props, limit, func(err error, results []interface{}) {
+	matching.Search(mmIDList, "", props, limit, func(err error, results []interface{}) {
 		if err != nil {
 			res.Respond(err.Error(), http.Bad)
 			next(err)
