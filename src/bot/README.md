@@ -10,7 +10,15 @@ This directory contains bots.
 # example
 cd room
 go build 
-./room localhost:7000 5 10 100 # this means 5 bot clients send 10 byte packet per 100ms.
+./room localhost:7000 5 10 100 # this means 5 bot clients send 10 byte packet to room per 100ms.
+```
+
+# group bot
+```
+# example
+cd group
+go build 
+./group localhost:7000 5 10 100 # this means 5 bot clients send 10 byte packet to group per 100ms.
 ```
 
 # resonance bot
