@@ -112,9 +112,9 @@ Diarkis server template comes with simple bots for stress tests.
 
 All bots can be built using diarkis-cli
 
-## MatchMaker Sample Bot
+## MatchMaker Bot
 
-This bot uses sample custom commands that Diarkis server template implements.
+This bot uses MatchMaker built-in commands to perform search and add.
 
 ```
 bots/matchmaker/main.go
@@ -123,7 +123,14 @@ bots/matchmaker/main.go
 ### How To Use MatchMaker Bot
 
 ```
-./remote_bin/bot-matchmaker {HTTP endpoint:port} {How many bots to spawn}
+./remote_bin/bot-matchmaker {HTTP endpoint:port} {How many bots to spawn} {Raito of hosts from 0% to 100%} {Search interval in milliseconds}
+```
+
+Example:
+
+```
+# Bot executable binary     Target host    Number of bots  Host ratio (30%)  Search interval (500ms)
+./remote_bin/bot-matchmaker 127.0.0.1:7000 1000            30                500
 ```
 
 # Commands
