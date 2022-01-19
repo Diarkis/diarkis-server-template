@@ -21,8 +21,11 @@ func Expose() {
 	room.SetOnDiscardCustomMessage(onDiscardCustomMessage)
 	// Sends a custom broadcast to all members when the room owner changes
 	room.SetOnRoomOwnerChange(onRoomOwnerChange)
-	// When a user joins a room, the user receives the room owner ID by message
-	room.AfterJoinRoomCmd(afterJoinRoom)
+	// When a new room is create, we setup on join event to sync owner ID by message
+	room.AfterCreateRoomCmd(afterCreateRoom)
+	// When a user performs random join and the server creates a new room, we setup on join event
+	// to sync owner ID by message
+	roomSupport.AfterRandomRoomCmd(afterRandomJoin)
 	// expose commands
 	room.ExposeCommands()
 	roomSupport.ExposeCommands()
@@ -50,20 +53,41 @@ func onRoomOwnerChange(params interface{}) {
 	syncRoomOwnerID(roomID, ownerID)
 }
 
-func afterJoinRoom(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
+func afterCreateRoom(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
 	roomID := room.GetRoomID(userData)
 	if roomID == "" {
 		// user is not in the room
 		next(nil)
 		return
 	}
-	ownerID := room.GetRoomOwnerID(roomID)
-	if ownerID == "" {
-		// there is no owner yet...
+	setupOnJoinCallback(roomID)
+}
+
+func afterRandomJoin(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
+	roomID := room.GetRoomID(userData)
+	if roomID == "" {
+		// user is not in the room
 		next(nil)
 		return
 	}
-	syncRoomOwnerID(roomID, ownerID)
+	// first byte is a flag to tell use either create or join
+	if payload[0] != 0x00 {
+		// it was join
+		next(nil)
+		return
+	}
+	setupOnJoinCallback(roomID)
+}
+
+func setupOnJoinCallback(roomID string) {
+	room.SetOnJoinCompleteByID(roomID, func(rid string, ud *user.User) {
+		ownerID := room.GetRoomOwnerID(roomID)
+		if ownerID == "" {
+			// there is no owner yet...
+			return
+		}
+		syncRoomOwnerID(roomID, ownerID)
+	})
 }
 
 func syncRoomOwnerID(roomID string, ownerID string) {
