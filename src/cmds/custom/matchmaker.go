@@ -117,7 +117,7 @@ func searchMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User
 			roomID := item["roomID"].(string)
 			logger.Sys("Try to join room %v", roomID)
 			room.Join(roomID, userData, util.CmdBuiltInVer, util.CmdJoinRoom, []byte(userData.ID),
-			func(err error, memberIDs []string, ownerID string, createdTime int64, props map[string]interface{}) {
+			func(err error, memberIDs []string, ownerID string, createdTime int64) {
 				if err != nil {
 					// discard stale room ID
 					removeFromMM(mmSearch.IDs, uniqueID)
