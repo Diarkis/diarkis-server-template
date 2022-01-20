@@ -203,7 +203,7 @@ func search(bot *botData) {
 		return
 	}
 	//fmt.Printf("MatchMaker search client ID:%v\n", bot.uid)
-	pkt := packet.PackMMSearch(10, true, []string{ profileID }, searchProps, []byte("Hello"))
+	pkt := packet.PackMMSearch(10, true, []string{ profileID }, "", searchProps, []byte("Hello"))
 	switch proto {
 	case "udp":
 		if bot.udp != nil {
@@ -221,7 +221,7 @@ func add(bot *botData) {
 		return
 	}
 	//fmt.Printf("MatchMaker add client ID:%v\n", bot.uid)
-	pkt := packet.PackMMAdd(profileID, fmt.Sprintf("%v", bot.uid), maxmembers, false, addProps, []byte("metadata"), uint16(60))
+	pkt := packet.PackMMAdd(profileID, fmt.Sprintf("%v", bot.uid), "", maxmembers, false, addProps, []byte("metadata"), uint16(60))
 	switch proto {
 	case "udp":
 		if bot.udp != nil {

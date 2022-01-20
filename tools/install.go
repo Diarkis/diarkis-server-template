@@ -80,6 +80,14 @@ func copyDirectory(pkg string, src string, dest string) error {
 				continue
 			}
 		}
+		if entry.Name() == "go.mod" {
+			_, err := os.Stat(destPath)
+			if err == nil {
+				fmt.Printf("Project go.mod found at %s - Skip installing\n", destPath)
+				// the project already has build.yml - skip
+				continue
+			}
+		}
 		stat, ok := fileInfo.Sys().(*syscall.Stat_t)
 		if !ok {
 			return fmt.Errorf("Failed to get raw syscall.Stat_t data for '%s'", sourcePath)
