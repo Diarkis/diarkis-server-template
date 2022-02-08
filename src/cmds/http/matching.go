@@ -20,11 +20,11 @@ func exposeMatchMaker(rootpath string) {
 }
 
 func defineMatchMakerRules() {
-	// rank will match rank range of 10. i.e. 0 to 10, 11 to 20, 21 to 30...
+	// rank will match rank range of 10. i.e. 0 to 10, 11 to 20, 21 to 30	.
 	rankRule := make(map[string]int)
 	rankRule["rank"] = 10
 	matching.Define("rank", rankRule)
-	// socre will match score range of 1000. i.e. 0 to 1000, 1001 to 2000...
+	// socre will match score range of 1000. i.e. 0 to 1000, 1001 to 2000	.
 	scoreRule := make(map[string]int)
 	scoreRule["score"] = 1000
 	matching.Define("score", scoreRule)
@@ -36,6 +36,12 @@ func defineMatchMakerRules() {
 	rateAndPlayRule["rate"] = 1
 	rateAndPlayRule["play"] = 1
 	matching.Define("RateAndPlay", rateAndPlayRule)
+	rankProps := make(map[string]int)
+	rankProps["rank"] = 10
+	matching.Define("RankMatch", rankProps)
+	rank2Props := make(map[string]int)
+	rank2Props["rank"] = 50
+	matching.Define("RankMatch2", rank2Props)
 }
 
 func addToMatchMaker(res *http.Response, req *http.Request, params *http.Params, next func(error)) {
