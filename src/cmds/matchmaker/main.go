@@ -19,9 +19,8 @@ func Expose(rootpath string) {
 		return &matching.TicketParams{
 			ProfileIDs:     []string{"RankMatch", "RankMatch2"},
 			MaxMembers:     2,
-			SearchTimeout:  30,  // 30s
 			SearchInterval: 100, // 100ms
-			AddTimeout:     60,  // 1m
+			TicketDuration: 60,  // 1m
 			HowMany:        20,
 			// Change here as you see fit according to your application needs
 			Tag: "",
