@@ -96,6 +96,7 @@ func main() {
 		data["Success"] = ticketSuccessCnt
 		data["Rate"] = int(float64(ticketSuccessCnt)/float64(ticketCnt)*float64(100))
 		logmap = append(logmap, data)
+		timedoutCnt = 0
 		ticketCnt = 0
 		ticketSuccessCnt = 0
 	}
