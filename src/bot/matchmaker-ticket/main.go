@@ -9,6 +9,7 @@ import (
 //	"github.com/Diarkis/diarkis/client/go/tcp"
 	"github.com/Diarkis/diarkis/client/go/modules/matchmaker"
 	"github.com/Diarkis/diarkis/util"
+	v4 "github.com/Diarkis/diarkis/uuid/v4"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -32,11 +33,16 @@ var serverType string = ""
 // total number of bots
 var totalBots = 0
 var botCnt = 0
+var clientTimeout int64 = 90 // 90s for a bot to timeout and die no matter what
 // interval in seconds to add bots.
 // Bots will be added upto totalBots per interval.
 var interval int64 = 100
 // log map to create a JSON data when process is terminated
 var logmap = make([]map[string]int, 0)
+// total count of tickets issued
+var ticketTotalCnt = 0
+// total count of successful tickets
+var successTicketTotalCnt = 0
 
 func main() {
 	if len(os.Args) < 4 {
@@ -67,16 +73,18 @@ func main() {
 	for running {
 		time.Sleep(time.Second * 5)
 		cnt++
-		if cnt < 12 {
+		if cnt < 6 {
 			continue
 		}
 		cnt = 0
 		elapsed := util.NowSeconds() - start
 		fmt.Printf("=============\n")
 		fmt.Printf("Time elapsed       %v seconds\n", elapsed)
-		fmt.Printf("Number of tickets  %v\n", ticketCnt)
-		fmt.Printf("Successful tickets %v\n", ticketSuccessCnt)
-		fmt.Printf("Success Rate       %v percent\n", int(float64(ticketSuccessCnt)/float64(ticketCnt)*float64(100)))
+		fmt.Printf("Number of tickets  %v - Total:%v\n", ticketCnt, ticketTotalCnt)
+		fmt.Printf("Successful tickets %v - Total:%v\n", ticketSuccessCnt, successTicketTotalCnt)
+		fmt.Printf("Success Rate       %v percent - Total:%v percent\n",
+			int(float64(ticketSuccessCnt)/float64(ticketCnt)*float64(100)),
+			int(float64(successTicketTotalCnt)/float64(ticketTotalCnt)*float64(100)))
 		fmt.Printf("=============\n")
 		data := make(map[string]int)
 		data["Time"] = int(elapsed)
@@ -84,6 +92,8 @@ func main() {
 		data["Success"] = ticketSuccessCnt
 		data["Rate"] = int(float64(ticketSuccessCnt)/float64(ticketCnt)*float64(100))
 		logmap = append(logmap, data)
+		ticketTotalCnt += ticketCnt
+		successTicketTotalCnt += ticketSuccessCnt
 		ticketCnt = 0
 		ticketSuccessCnt = 0
 	}
@@ -112,23 +122,28 @@ func handleSignal(ch chan os.Signal) {
 }
 
 func spawnBots() {
-	id := 0
 	for true {
-		for i := 0; i < totalBots; i++ {
-			id++
-			go spawnBot(id)
+		if totalBots - botCnt <= 0 {
+			time.Sleep(time.Second * time.Duration(interval))
+			continue
+		}
+		fmt.Printf("Bots to spawn %v\n", totalBots - botCnt)
+		for i := 0; i < totalBots - botCnt; i++ {
+			uuid, _ := v4.New()
+			spawnBot(uuid.String)
 			time.Sleep(time.Millisecond * 100)
 		}
 		time.Sleep(time.Second * time.Duration(interval))
 	}
 }
 
-func spawnBot(id int) {
+func spawnBot(id string) {
 	addr, sid, key, iv, mkey, err := endpoint(id)
 	if err != nil {
 		fmt.Printf("Endpoint error => %v\n", err)
 		return
 	}
+	dead := false
 	rcvByteSize := 1400
 	udpSendInterval := int64(100)
 	udp.LogLevel(9)
@@ -136,6 +151,7 @@ func spawnBot(id int) {
 	cli.SetEncryptionKeys(sid, key, iv, mkey)
 	cli.OnDisconnect(func() {
 		botCnt--
+		dead = true
 	})
 	cli.OnConnect(func() {
 		botCnt++
@@ -153,8 +169,8 @@ func spawnBot(id int) {
 }
 
 // returns addr, sid, key, iv, mackey, error
-func endpoint(uid int) (string, []byte, []byte, []byte, []byte, error) {
-	url := fmt.Sprintf("http://%s/endpoint/type/%s/user/%v", host, serverType, uid)
+func endpoint(uid string) (string, []byte, []byte, []byte, []byte, error) {
+	url := fmt.Sprintf("http://%s/endpoint/type/%s/user/%s", host, serverType, uid)
 	// fmt.Printf("Bot ID: %v - Connecting to HTTP: %s\n", uid, url)
 	client := &http.Client{
 		Timeout: time.Second * 10,
