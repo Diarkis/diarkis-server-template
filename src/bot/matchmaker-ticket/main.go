@@ -33,6 +33,7 @@ var serverType string = ""
 // total number of bots
 var totalBots = 0
 var botCnt = 0
+var timedoutCnt = 0
 var clientTimeout int64 = 90 // 90s for a bot to timeout and die no matter what
 // interval in seconds to add bots.
 // Bots will be added upto totalBots per interval.
@@ -78,8 +79,11 @@ func main() {
 		}
 		cnt = 0
 		elapsed := util.NowSeconds() - start
+		ticketTotalCnt += ticketCnt
+		successTicketTotalCnt += ticketSuccessCnt
 		fmt.Printf("=============\n")
 		fmt.Printf("Time elapsed       %v seconds\n", elapsed)
+		fmt.Printf("Number of timeouts %v\n", timedoutCnt)
 		fmt.Printf("Number of tickets  %v - Total:%v\n", ticketCnt, ticketTotalCnt)
 		fmt.Printf("Successful tickets %v - Total:%v\n", ticketSuccessCnt, successTicketTotalCnt)
 		fmt.Printf("Success Rate       %v percent - Total:%v percent\n",
@@ -92,8 +96,6 @@ func main() {
 		data["Success"] = ticketSuccessCnt
 		data["Rate"] = int(float64(ticketSuccessCnt)/float64(ticketCnt)*float64(100))
 		logmap = append(logmap, data)
-		ticketTotalCnt += ticketCnt
-		successTicketTotalCnt += ticketSuccessCnt
 		ticketCnt = 0
 		ticketSuccessCnt = 0
 	}
@@ -165,6 +167,15 @@ func spawnBot(id string) {
 		ticketCnt++
 		mm.IssueTicket()
 	})
+	go func () {
+		time.Sleep(time.Second * time.Duration(clientTimeout))
+		if dead {
+			return
+		}
+		botCnt--
+		timedoutCnt++
+		cli.Disconnect()
+	}()
 	cli.Connect(addr)
 }
 
