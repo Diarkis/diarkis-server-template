@@ -1,7 +1,6 @@
 package dmcmds
 
 import (
-	"fmt"
 	"github.com/Diarkis/diarkis/dm"
 )
 
