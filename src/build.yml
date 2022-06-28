@@ -25,6 +25,9 @@ buildSettings:
     health-check:
       target: healthcheck/main.go
       output: remote_bin/health-check
+    ms:
+      target: mars-stats/main.go
+      output: remote_bin/ms
 diarkis:
   project_id: {{PROJECT_ID}}
   builder_token: {{BUILD_TOKEN}}
