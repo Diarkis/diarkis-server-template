@@ -8,7 +8,7 @@ import (
 	"github.com/Diarkis/diarkis/room"
 )
 
-const sampleTicketType uint8 = 100
+const sampleTicketType uint8 = 0
 
 var logger = log.New("matching")
 
@@ -17,7 +17,7 @@ func Expose(rootpath string) {
 	matching.Setup(fmt.Sprintf("%s/configs/shared/matching.json", rootpath))
 
 	// Set up matching ticket
-	matching.SetOnIssueTicket(func(userData *user.User) *matching.TicketParams {
+	matching.SetOnIssueTicket(sampleTicketType, func(userData *user.User) *matching.TicketParams {
 		return &matching.TicketParams{
 			ProfileIDs:     []string{"RankMatch", "RankMatch2"},
 			MaxMembers:     2,
@@ -30,7 +30,9 @@ func Expose(rootpath string) {
 			Properties: map[string]int{"rank": 1},
 		}
 	})
-	matching.SetOnTicketMatch(sampleTicketType, func(userData *user.User, roomID string, memberIDs []string) bool {
+	matching.SetOnTicketMatch(sampleTicketType,
+		func(t *matching.Ticket, owner, userData *user.User, roomID string, memberIDs []string) bool {
+
 		// add custom logic to decide matchmaking completion here
 		return false
 	})
