@@ -1,4 +1,4 @@
-namespace: aws
+namespace: gcp
 bases:
   - ../../base
 
@@ -12,21 +12,20 @@ patches:
 
 images:
 - name: udp
-  newName: AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/udp
+  newName: asia.gcr.io/diarkis-development/udp
   newTag: latest
 - name: tcp
-  newName: AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/tcp
+  newName: asia.gcr.io/diarkis-development/tcp
   newTag: latest
 - name: mars
-  newName: AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/mars
+  newName: asia.gcr.io/diarkis-development/mars
   newTag: latest
-- name: udp
-  newName: AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/ws
-  newTag: latest  
 - name: http
-  newName: AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/http
+  newName: asia.gcr.io/diarkis-development/http      
   newTag: latest
-  
+- name: ws
+  newName: asia.gcr.io/diarkis-development/ws
+  newTag: latest  
   
 configMapGenerator:
 - name: shared-conf
@@ -42,6 +41,10 @@ configMapGenerator:
   behavior: replace
   files:
     - http/conf/main.json
+- name: mars-conf
+  behavior: replace
+  files:
+    - mars/conf/default.conf.json
     
 - name: udp-conf
   behavior: replace  

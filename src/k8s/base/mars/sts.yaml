@@ -16,6 +16,9 @@ spec:
       containers:
       - name: mars
         image: mars
+        env:
+        - name: DIARKIS_PROJECT_ID
+          value: SAMPLE_PROJECT_ID
         ports:
         - containerPort: 6779
           name: mars
@@ -24,6 +27,29 @@ spec:
           mountPath: /bin/mars
         - name: hc-conf
           mountPath: /bin/tools/configs
+        - name: varlogcontainers
+          mountPath: /var/log/containers
+          readOnly: true          
+      - name: log-collector
+        image: fluent/fluent-bit:1.9.3
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /tmp/fluentd.json
+        volumeMounts:
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+        - name: varlogcontainers
+          mountPath: /var/log/containers
+          readOnly: true
+        - name: varlogpods
+          mountPath: /var/log/pods
+          readOnly: true          
+        - name: fluentd-cred
+          mountPath: /tmp/
+          readOnly: true
+        - name: fluent-bit-conf
+          mountPath: /fluent-bit/etc/
       volumes:
         - name: mars-conf
           configMap:
@@ -31,3 +57,18 @@ spec:
         - name: hc-conf
           configMap:
             name: hc-conf
+        - name: fluent-bit-conf
+          configMap:
+            name: fluent-bit-conf
+        - name: varlogcontainers
+          hostPath:
+            path: /var/log/containers
+        - name: varlibdockercontainers
+          hostPath:
+            path: /var/lib/docker/containers
+        - name: varlogpods
+          hostPath:
+            path: /var/log/pods
+        - name: fluentd-cred
+          secret:
+            secretName: fluentd-cred

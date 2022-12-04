@@ -15,14 +15,7 @@ spec:
     spec:
       containers:
       - name: mars
-        ports:
-        - containerPort: 6779
-          name: mars
-        volumeMounts:
-        - name: mars-conf
-          mountPath: /bin/mars
-        - name: hc-conf
-          mountPath: /bin/tools/configs
+        images: mars
       volumes:
         - name: mars-conf
           configMap:
