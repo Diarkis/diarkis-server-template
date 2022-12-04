@@ -61,6 +61,8 @@ func afterCreateRoom(ver uint8, cmd uint16, payload []byte, userData *user.User,
 		return
 	}
 	setupOnJoinCallback(roomID)
+	ownerID := room.GetRoomOwnerID(roomID)
+	syncRoomOwnerID(roomID, ownerID)
 }
 
 func afterRandomJoin(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {

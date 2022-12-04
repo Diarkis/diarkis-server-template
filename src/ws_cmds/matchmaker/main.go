@@ -1,4 +1,4 @@
-package matchmakercmds
+package roomcmds
 
 import (
 	"fmt"

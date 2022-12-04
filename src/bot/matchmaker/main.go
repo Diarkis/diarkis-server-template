@@ -52,7 +52,7 @@ type botData struct {
 
 func main() {
 	if len(os.Args) < 4 {
-		fmt.Printf("Bot requires 2 parameters: {http host:port} {how many bots} {number of host} {search interval in milliseconds}")
+		fmt.Printf("Bot requires 4 parameters: {http host:port} {how many bots} {number of host} {search interval in milliseconds}\n")
 		os.Exit(1)
 		return
 	}

@@ -18,6 +18,7 @@ func main() {
 	log.Setup(fmt.Sprintf("%s/configs/shared/log.json", rootpath))
 	mesh.Setup(fmt.Sprintf("%s/configs/shared/mesh.json", rootpath))
 	http.SetupAsAuthServer(fmt.Sprintf("%s/configs/http/main.json", rootpath))
+	http.SetAllowOrigin("*")
 	cmds.Setup(rootpath)
 	cmds.ExposeHTTP()
 	diarkis.Start()

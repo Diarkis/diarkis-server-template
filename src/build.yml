@@ -1,6 +1,6 @@
 buildSettings:
   root: .
-  goVersion: 1.16.5
+  goVersion: 1.18
   env:
     GOOS:
     GOARCH:
@@ -25,6 +25,9 @@ buildSettings:
     health-check:
       target: healthcheck/main.go
       output: remote_bin/health-check
+    ms:
+      target: mars-stats/main.go
+      output: remote_bin/ms
 diarkis:
   project_id: {{PROJECT_ID}}
   builder_token: {{BUILD_TOKEN}}

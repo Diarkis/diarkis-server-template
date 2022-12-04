@@ -5,6 +5,7 @@ import (
 	roomcmds "{0}/cmds/room"
 	groupcmds "{0}/cmds/group"
 	fieldcmds "{0}/cmds/field"
+	dmcmds "{0}/cmds/dm"
 	matchmakercmds "{0}/cmds/matchmaker"
 	customcmds "{0}/cmds/custom"
 )
@@ -23,6 +24,7 @@ func ExposeServer() {
 	roomcmds.Expose()
 	groupcmds.Expose(rootpath)
 	fieldcmds.Expose(rootpath)
+	dmcmds.Expose(rootpath)
 	matchmakercmds.Expose(rootpath)
 	customcmds.Expose()
 }
