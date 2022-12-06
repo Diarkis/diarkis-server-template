@@ -1,0 +1,62 @@
+namespace: gcp
+bases:
+  - ../../base
+
+# build target
+patches:
+  - http/deploy.yaml
+  - http/ingress.yaml
+  - http/svc.yaml
+  - udp/deploy.yaml
+  - tcp/deploy.yaml
+
+images:
+- name: udp
+  newName: asia.gcr.io/diarkis-development/udp
+  newTag: latest
+- name: tcp
+  newName: asia.gcr.io/diarkis-development/tcp
+  newTag: latest
+- name: mars
+  newName: asia.gcr.io/diarkis-development/mars
+  newTag: latest
+- name: http
+  newName: asia.gcr.io/diarkis-development/http      
+  newTag: latest
+- name: ws
+  newName: asia.gcr.io/diarkis-development/ws
+  newTag: latest  
+  
+configMapGenerator:
+- name: shared-conf
+  behavior: replace
+  files:
+    - shared/conf/field.json
+    - shared/conf/group.json
+    - shared/conf/log.json
+    - shared/conf/matching.json
+    - shared/conf/mesh.json
+    
+- name: http-conf
+  behavior: replace
+  files:
+    - http/conf/main.json
+- name: mars-conf
+  behavior: replace
+  files:
+    - mars/conf/default.conf.json
+    
+- name: udp-conf
+  behavior: replace  
+  files:
+    - udp/conf/main.json
+
+- name: tcp-conf
+  behavior: replace  
+  files:
+    - tcp/conf/main.json
+
+- name: ws-conf
+  behavior: replace  
+  files:
+    - ws/conf/main.json

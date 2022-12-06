@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "diarkis-enterprise-portal",
+  "private_key_id": "6bea280c8ab11b9f1b5066b9db6f57eb6397a0d6",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCUet+VH1kS2u/q\nFNkA15S9Rp8/VmpOIemMLmQMd9u5VuBC7/fZlFrJCif3brV7iFNTcMIXHw36WXaW\nL3rDrmcrRmzFhYTEACDCW7fan9lARfcm1tmrg/DCm4UYpNZDcZ2c9a/g9/mmvNbJ\neWznZAEm5dUoPBVKWv0/4TcPQBxPlZ4BGWjojq5fCXAB+bbaYsKUmht2/dTxPqoA\n32ELWUEwsjO7S6GlaNz3BuMx5JXuMhIti6eZRbCxTNHwyJBWKp7jQOeHmnkwWKX8\nXsq3h9QQrhy81kApp+ND92p4Fx1TbyMkWMQm4paH31RdOY3OUOxjZRK1Ud+kFDoY\ndgdDv7KrAgMBAAECggEAQEFqh6TQzeWchM8v1/rznfO1j9nsWFK5uNYMqw6lsnAD\nzkP+HRVkMnNoN16cQFEPSmFWRV5FlM1pkfYLKSrM7//iq5osCgxKIQJDLuQVRwjg\nO9knyt9m7jkSYMdZCEffXyE901xNGFjJlNgtBngTPYuh8u8JgaudxCrJQprKha+/\nnaOdsMObyGeEznCknqJWsH0FcW2I/MdTgg0qiTfpF3Qi8YEzlxlZYD6+3BOTOhEb\nXfNCclVW6KpYuUClVpy+1SKysNutcndglx3dcssDggRxAHZzeL7xcUsTWkDjtE6w\ncC2XYwiEImhvLUNI6pCKcx6ienJ3cand5rlvJMK+9QKBgQDKHI8szFXi8QGgArJf\nUL7R9jdgulb5azYx7u8IW5B48ofoibkcjTPAaUR/HVr09D3ivIRvmNjWF3nsU/5l\n0B5LdFhb1S5FvRHGys8fh1hHbx3A6RHyQCtzdeEp+5J5GvdASG+Q9dQDC0LCC46v\ns6TUgrTq3n6kPwMyxT5RVf2z5QKBgQC8EZs3AJ8FlhYr5P++n/C3An/LeOC7BFcP\nATrEhUjLkfxvufVwQSyJaQsuyTIMVrNnbT/h5hRNszCi4m3P/w8LF8XDqy4jQ8p7\n74sIeUydqwKp0MQXwumxsxWjBO5Ek26YisFI9R0wLzOFwKoabtarmLPS7YW13yv5\n4lFg0VuDTwKBgCMWxjyu1RJraS7QiQtHR3nIV2DxuPvggy40H0fCLdjxsmrKzlqI\noT18iSnQfOQeK0hcFloRnUO+G6rOAlLGyRusfVKkNj5hTt7GgyMkKk1smyvMyxLV\n1TVcd9UEGi/wYJDGgqgWJdLJd7Ocsg8LD0jd0G8eZbo6PmHoIKOaXEuJAoGBALOO\nr72c1zbzK+nusonilGV2emLe3tlPdHs79kro4i6SDAzz47SwVQBAjU+3AhSrto/Z\ny7M3A02H9ridLLD4WPmDUerWBa/fqnQXqYuGnDKwslNFoeL50js5uz+wlnhctqvn\nVlD8zUhS2IMsBnxENKsSmSWaZx3UnFzwyjeAyzmbAoGBAJNHs4agw6U2BfL8CUcv\no9HrD6G1smvW7om/rFurTvgj8JRs9MwbEGB4yuSpgUmp6sjIwKnvM6Z8C7q2YI4Z\nHfJpdrhS3eIbBxq7mPKy2KsJeCT+ouPPGvEVTdhrCF/OGPDJJQtWOiPJgKqCvdYh\nonMDt6S1515Zvjzz07IGs1OS\n-----END PRIVATE KEY-----\n",
+  "client_email": "fluentd@diarkis-enterprise-portal.iam.gserviceaccount.com",
+  "client_id": "103271265827074430225",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/fluentd%40diarkis-enterprise-portal.iam.gserviceaccount.com"
+}

@@ -1,0 +1,5 @@
+{
+    "nic": "eth0",
+    "marsAddress": "mars.aws.svc.cluster.local",
+    "marsPort": "6779"
+}

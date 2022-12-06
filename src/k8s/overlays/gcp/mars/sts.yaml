@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mars
+spec:
+  serviceName: "mars"
+  replicas: 1
+  selector:
+    matchLabels:
+      component: mars
+  template:
+    metadata:
+      labels:
+        component: mars
+    spec:
+      containers:
+      - name: mars
+        images: mars
+      volumes:
+        - name: mars-conf
+          configMap:
+            name: mars-conf
+        - name: hc-conf
+          configMap:
+            name: hc-conf
