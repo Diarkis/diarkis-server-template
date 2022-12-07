@@ -27,7 +27,8 @@ func Expose(rootpath string) {
 			// Change here as you see fit according to your application needs
 			Tag: "",
 			// Change here as you see fit according to your application needs
-			Properties: map[string]int{"rank": 1},
+			AddProperties: map[string]int{"rank": 1},
+			SearchProperties: map[string][]int{"rank": []int{1, 2, 3, 4, 5}},
 		}
 	})
 	matching.SetOnTicketMatch(sampleTicketType,
