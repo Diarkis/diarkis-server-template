@@ -1,6 +1,6 @@
 buildSettings:
   root: .
-  goVersion: 1.16.5
+  goVersion: 1.18
   env:
     CGO_ENABLED: 0
     CGO_CFLAGS: -I${PROJECT_DIR}
