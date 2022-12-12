@@ -1,23 +1,33 @@
-.PHONY: init
-init: # download diarkis-cli and mars binary
-	./script/install_tools.sh
+PHONY: help
+help:
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+## Set default command of make to help, so that running make will output help texts
+.DEFAULT_GOAL := help
+
+DIARKIS_CLI = ./diarkis-cli/os/linux/bin/diarkis-cli
+
+ifeq ($(shell uname), Darwin)
+	DIARKIS_CLI = ./diarkis-cli/os/mac/bin/diarkis-cli
+endif
 
 .PHONY: build-local
 build-local:
-	./diarkis-cli/bin/diarkis-cli build -c local-build.yaml --host builder.diarkis.io
+	echo "Build server binaries"
+	rm -rfv remote_bin/*
+	$(DIARKIS_CLI) build -c local-build.yaml --host builder.diarkis.io
+	chmod -R 700 remote_bin/
 
 .PHONY: build-container
-build-container: 
+build-container: ## Build container for AWS
 	./diarkis-cli/bin/diarkis-cli build -c container-build.yaml --host builder.diarkis.io
 	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/http
 	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/udp
 	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/tcp
 	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/mars
 
-.DEFAULT_GOAL := build-container
-
 .PHONY: push-container
-push-container:
+push-container: ## Push container to AWS
 	docker push AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/http
 	docker push AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/udp
 	docker push AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/tcp
