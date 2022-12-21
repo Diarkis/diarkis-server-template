@@ -45,6 +45,11 @@ configMapGenerator:
   behavior: replace
   files:
     - mars/conf/default.conf.json
+
+- name: fluent-bit-conf
+  behavior: merge
+  files:
+    - mars/conf/input-kubernetes.conf
     
 - name: udp-conf
   behavior: replace  
