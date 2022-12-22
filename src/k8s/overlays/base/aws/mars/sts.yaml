@@ -17,7 +17,7 @@ spec:
       - name: mars
         env:
         - name: DIARKIS_PROJECT_ID
-          value: SAMPLE_PROJECT_ID
+          value: __SAMPLE_PROJECT_ID__
         ports:
         - containerPort: 6779
           name: mars

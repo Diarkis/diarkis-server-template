@@ -1,6 +1,6 @@
-namespace: gcp
+namespace: __NAMESPACE__
 bases:
-  - ../../base
+  - ../../../base
 
 # build target
 patches:
@@ -9,23 +9,22 @@ patches:
   - http/svc.yaml
   - udp/deploy.yaml
   - tcp/deploy.yaml
+  - mars/sts.yaml
 
 images:
 - name: udp
-  newName: asia.gcr.io/diarkis-development/udp
+  newName: __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/udp
   newTag: latest
 - name: tcp
-  newName: asia.gcr.io/diarkis-development/tcp
+  newName: __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/tcp
   newTag: latest
 - name: mars
-  newName: asia.gcr.io/diarkis-development/mars
+  newName: __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/mars
   newTag: latest
 - name: http
-  newName: asia.gcr.io/diarkis-development/http      
+  newName: __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/http
   newTag: latest
-- name: ws
-  newName: asia.gcr.io/diarkis-development/ws
-  newTag: latest  
+  
   
 configMapGenerator:
 - name: shared-conf
@@ -41,15 +40,6 @@ configMapGenerator:
   behavior: replace
   files:
     - http/conf/main.json
-- name: mars-conf
-  behavior: replace
-  files:
-    - mars/conf/default.conf.json
-
-- name: fluent-bit-conf
-  behavior: merge
-  files:
-    - mars/conf/input-kubernetes.conf
     
 - name: udp-conf
   behavior: replace  
@@ -61,7 +51,12 @@ configMapGenerator:
   files:
     - tcp/conf/main.json
 
-- name: ws-conf
-  behavior: replace  
+- name: fluent-bit-conf
+  behavior: merge
   files:
-    - ws/conf/main.json
+    - mars/conf/input-kubernetes.conf
+
+- name: mars-conf
+  behavior: replace
+  files:
+    - mars/conf/default.conf.json

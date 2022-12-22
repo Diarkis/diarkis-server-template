@@ -1,0 +1,5 @@
+{
+    "nic": "eth0",
+    "marsAddress": "mars.__NAMESPACE__.svc.cluster.local",
+    "marsPort": "6779"
+}
