@@ -15,6 +15,9 @@ spec:
     spec:
       containers:
       - name: mars
+        env:
+        - name: DIARKIS_PROJECT_ID
+          value: __SAMPLE_PROJECT_ID__
         ports:
         - containerPort: 6779
           name: mars
@@ -30,3 +33,4 @@ spec:
         - name: hc-conf
           configMap:
             name: hc-conf
+

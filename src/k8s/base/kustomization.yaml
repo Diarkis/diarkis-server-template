@@ -61,7 +61,6 @@ configMapGenerator:
 - name: fluent-bit-conf
   files:
     - mars/conf/fluent-bit.conf
-    - mars/conf/input-kubernetes.conf
     - mars/conf/parsers.conf
     - mars/conf/filter-kubernetes.conf
     - mars/conf/output-stackdriver.conf

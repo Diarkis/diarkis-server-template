@@ -1,6 +1,6 @@
 namespace: aws
 bases:
-  - ../../base
+  - ../../../base
 
 # build target
 patches:
@@ -20,6 +20,9 @@ images:
 - name: mars
   newName: AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/mars
   newTag: latest
+- name: udp
+  newName: AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/ws
+  newTag: latest  
 - name: http
   newName: AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/http
   newTag: latest
@@ -49,3 +52,8 @@ configMapGenerator:
   behavior: replace  
   files:
     - tcp/conf/main.json
+
+- name: ws-conf
+  behavior: replace  
+  files:
+    - ws/conf/main.json
