@@ -5,7 +5,6 @@ import (
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/matching"
 	"github.com/Diarkis/diarkis/user"
-	"github.com/Diarkis/diarkis/room"
 )
 
 const sampleTicketType uint8 = 0
@@ -37,8 +36,8 @@ func Expose(rootpath string) {
 		// add custom logic to decide matchmaking completion here
 		return false
 	})
-	matching.SetOnTicketComplete(sampleTicketType, func(roomID string, userData *user.User) []byte {
-		memberIDs := room.GetMemberIDs(roomID)
+	matching.SetOnTicketComplete(sampleTicketType, func(ticketProps *matching.TicketProperties, owner *user.User) []byte {
+		memberIDs := matching.GetTicketMemberIDs(sampleTicketType, owner)
 		return []byte(fmt.Sprintf("Ticket matchmaking complete => %v", memberIDs))
 	})
 
