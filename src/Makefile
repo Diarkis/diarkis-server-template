@@ -15,7 +15,7 @@ endif
 build-local: ## Build server binary
 	echo "Build server binaries"
 	rm -rfv remote_bin/*
-	$(DIARKIS_CLI) build -c local-build.yaml --host builder.diarkis.io
+	$(DIARKIS_CLI) build -c local-build.yml --host builder.diarkis.io
 	chmod -R 700 remote_bin/
 
 .PHONY: build-container
