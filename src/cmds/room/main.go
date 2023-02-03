@@ -46,10 +46,7 @@ func onDiscardCustomMessage(roomID string, userID string, sid string) []byte {
 	return bytes
 }
 
-func onRoomOwnerChange(params interface{}) {
-	data := params.(map[string]string)
-	roomID := data["roomID"]
-	ownerID := data["ownerID"]
+func onRoomOwnerChange(roomID string, ownerID string) {
 	syncRoomOwnerID(roomID, ownerID)
 }
 
