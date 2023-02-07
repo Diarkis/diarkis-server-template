@@ -1,6 +1,6 @@
 buildSettings:
   root: .
-  goVersion: 1.18
+  goVersion: 1.19
   env:
     GOOS:
     GOARCH:
