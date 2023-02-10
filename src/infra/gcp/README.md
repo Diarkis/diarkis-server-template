@@ -32,7 +32,7 @@ gcloud compute --project=$PROJECT_NAME firewall-rules create diarkis-ingress-all
 network tag は diarkis という名前で設定していきます
 
 ## インフラ構築手順2 - GCR の有効化及び設定
-GCR は Diarki のコンテナイメージを配置する場所として今回使用しますので、有効化と Docker の設定を行います。  
+GCR は Diarkis のコンテナイメージを配置する場所として今回使用しますので、有効化と Docker の設定を行います。  
 また CloudDNSはkubernetes クラスターで使用するので、有効化します。  
 まず https://console.cloud.google.com/flows/enableapi?apiid=containerregistry.googleapis.com にアクセスして対象プロジェクトの GCR API を有効化します。  
 次に、https://console.cloud.google.com/apis/enableflow?apiid=dns.googleapis.com にアクセスして CloudDNS を有効化します。
@@ -49,11 +49,11 @@ Diarkis を動作させるのにはそれぞれの Node が PublicIP を持つ�
 |  option  |  値  | 詳細 |
 | ---- | ---- | ---- |
 | --tags | "diarkis" | 手順１で作成した firewall との紐付けに使用します。 |
-| --enable-stackdriver-kubernetes |  | mars がモニタリングに使用します。 |
-| --enable-autoscaling |  | autoscale が必要なため有効化します。 |
+| --enable-stackdriver-kubernetes |  | モニタリングに使用するため有効化します。 |
+| --enable-autoscaling |  | Node を固定する必要が無ければ有効化してください。 |
 | --enable-dataplane-v2 |  | パフォーマンス向上のため有効化します。 |
-| --cluster-dns | clouddns | mars の名前解決に必要なため有効化します。 | 
-| --cluster-dns-scope | vpc | vpc スコープを設定します。 |
+| --cluster-dns | clouddns | DNS の可用性向上のため有効化します。 | 
+| --cluster-dns-scope | vpc | VPC の用途によって切り替えてください。 |
 | --cluster-dns-domain | diarkis.cluster | 各 DNS レコードの suffix を設定します。 |
 
 コマンド例：
