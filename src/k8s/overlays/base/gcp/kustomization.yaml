@@ -13,18 +13,20 @@ patches:
 
 images:
 - name: udp
-  newName: asia.gcr.io/__GCP_ACCOUNT_ID__/udp
+  newName: asia.gcr.io/__GCP_PROJECT_ID__/udp
   newTag: latest
 - name: tcp
-  newName: asia.gcr.io/__GCP_ACCOUNT_ID__/tcp
+  newName: asia.gcr.io/__GCP_PROJECT_ID__/tcp
   newTag: latest
 - name: mars
-  newName: asia.gcr.io/__GCP_ACCOUNT_ID__/mars
+  newName: asia.gcr.io/__GCP_PROJECT_ID__/mars
   newTag: latest
 - name: http
-  newName: asia.gcr.io/__GCP_ACCOUNT_ID__/http
+  newName: asia.gcr.io/__GCP_PROJECT_ID__/http      
   newTag: latest
-  
+- name: ws
+  newName: asia.gcr.io/__GCP_PROJECT_ID__/ws
+  newTag: latest  
   
 configMapGenerator:
 - name: shared-conf
