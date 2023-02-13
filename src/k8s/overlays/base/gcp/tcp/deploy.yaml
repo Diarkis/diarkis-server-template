@@ -23,4 +23,4 @@ spec:
           privileged: false
         env:
           - name: DIARKIS_CLOUD_ENV
-            value: GCP
+            value: AWS
