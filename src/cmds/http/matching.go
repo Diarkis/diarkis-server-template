@@ -29,9 +29,6 @@ func defineMatchMakerRules() {
 	scoreRule["score"] = 1000
 	matching.Define("score", scoreRule)
 	// sample for UDP and TCP server
-	rankRule2 := make(map[string]int)
-	rankRule2["rank"] = 5
-	matching.Define("RankMatch", rankRule2)
 	rateAndPlayRule := make(map[string]int)
 	rateAndPlayRule["rate"] = 1
 	rateAndPlayRule["play"] = 1
@@ -39,9 +36,12 @@ func defineMatchMakerRules() {
 	rankProps := make(map[string]int)
 	rankProps["rank"] = 10
 	matching.Define("RankMatch", rankProps)
-	rank2Props := make(map[string]int)
-	rank2Props["rank"] = 50
-	matching.Define("RankMatch2", rank2Props)
+	rank20Props := make(map[string]int)
+	rank20Props["rank"] = 20
+	matching.Define("RankMatch20", rank20Props)
+	rank50Props := make(map[string]int)
+	rank50Props["rank"] = 50
+	matching.Define("RankMatch50", rank50Props)
 }
 
 func addToMatchMaker(res *http.Response, req *http.Request, params *http.Params, next func(error)) {

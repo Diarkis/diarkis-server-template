@@ -15,9 +15,7 @@ Only HTTP server is required in the cluster and the rest of the servers should b
    │            │
    │            ├──── tcp/main.go       [TCP server main]
    │            │
-   │            ├──── connector/main.go [Connector server main]
-   │            │
-   │            └──── ws/main.go        [WebSocket server main]
+   │            └──── connector/main.go [Connector server main]
    │
    ├─ bot/ [Bot clients for stress test]
    │
@@ -35,13 +33,9 @@ Only HTTP server is required in the cluster and the rest of the servers should b
    │            │
    │            ├──── tcp/      [TCP configuration directory]  ──────── main.json
    │            │
-   │            ├──── connector [Connector configuration directory] ─── main.json
-   │            │
-   │            └──── ws/       [WebSocket configuration directory] ─── main.json
+   │            └──── connector [Connector configuration directory] ─── main.json
    │
    ├─ cmds/  [Custom client command directory] ────────────────┬── main.go [Entry point for all cmds]
-   │                                                           │
-   ├─ ws_cmds/ [Custom client command directory for WebSocket] │
    │                                                           │
    │                                                           ├── http   ──────────────────────────────────────┬─── main.go
    ├─ lib/   [Shared library directory]                        ├── room   ──────────────────────────── main.go  └─── matching.go
@@ -53,6 +47,32 @@ Only HTTP server is required in the cluster and the rest of the servers should b
    │
    └─ go.mod [Go module file for the project]
 ```
+
+# Building Server Binaries
+
+Use the following commands to build the server binaries:
+
+## Build Servers for Local Use
+
+The following command will be building the servers for your local machine.
+
+```
+make local-build
+```
+
+### local-build.yml
+
+This file controls which server binaries to build, which Go version to use, and which architecture and OS to build the servers for etc.
+
+### Start a Server locally
+
+The following command will start the binary on your local machine.
+
+```
+make server target=$(udp|tcp|http|mars)
+```
+
+**NOTE** You must have MARS and HTTP server running in order to create Diarkis server cluster properly.
 
 # Server Entry Points
 
@@ -72,12 +92,6 @@ servers/udp/main.go
 
 ```
 servers/tcp/main.go
-```
-
-## WebSocket server
-
-```
-servers/ws/main.go
 ```
 
 ## Connector server

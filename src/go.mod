@@ -1,7 +1,7 @@
 module {0}
 
-go 1.19
+go 1.20.3
 
 require (
-	github.com/Diarkis/diarkis v0.9.9
+	github.com/Diarkis/diarkis v0.9.22
 )

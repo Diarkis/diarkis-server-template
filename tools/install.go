@@ -17,7 +17,7 @@ var buildToken = ""
 func main() {
 	cwd, err := os.Getwd()
 	if err != nil {
-		fmt.Printf("Path failed %v\n", err)
+		fmt.Printf("Path failed \x1b[0;91m %v \x1b[0m\n", err)
 		os.Exit(1)
 		return
 	}
@@ -32,29 +32,29 @@ func main() {
 	}
 	list := strings.Split(dest, "/")
 	pkg := list[len(list) - 1]
-	fmt.Printf("Installing the template as package %s to %s\n", pkg, dest)
+	fmt.Printf("\x1b[0;90m Installing the template as package %s to %s \x1b[0m\n", pkg, dest)
 	_, err = os.Stat(dest)
 	if err != nil {
 		if os.IsNotExist(err) {
 			err = os.Mkdir(dest, os.FileMode(0777))
 			if err != nil {
-				fmt.Printf("Error %v\n", err)
+				fmt.Printf("Error \x1b[0;91m %v \x1b[0m\n", err)
 				os.Exit(1)
 			}
 		} else {
-			fmt.Printf("Error %v\n", err)
+			fmt.Printf("Error \x1b[0;91m %v \x1b[0m\n", err)
 			os.Exit(1)
 		}
 	}
 	err = copyDirectory(pkg, src, dest)
 	if err != nil {
-		fmt.Printf("Error %v\n", err)
+		fmt.Printf("Error \x1b[0;91m %v \x1b[0m\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("Installation of template completed - %v\n", dest)
+	fmt.Printf("Installation of template completed - \x1b[0;32m %v \x1b[0m\n", dest)
 	err = os.Chdir(dest)
 	if err != nil {
-		fmt.Printf("Error %v\n", err)
+		fmt.Printf("Error \x1b[0;91m %v \x1b[0m\n", err)
 		os.Exit(1)
 	}
 	os.Exit(0)
@@ -80,6 +80,14 @@ func copyDirectory(pkg string, src string, dest string) error {
 				continue
 			}
 		}
+		if entry.Name() == "local-build.yml" {
+			_, err := os.Stat(destPath)
+			if err == nil {
+				fmt.Printf("Project local-build.yml found at %s - Skip installing\n", destPath)
+				// the project already has local-build.yml - skip
+				continue
+			}
+		}
 		if entry.Name() == "go.mod" {
 			_, err := os.Stat(destPath)
 			if err == nil {
@@ -90,7 +98,7 @@ func copyDirectory(pkg string, src string, dest string) error {
 		}
 		stat, ok := fileInfo.Sys().(*syscall.Stat_t)
 		if !ok {
-			return fmt.Errorf("Failed to get raw syscall.Stat_t data for '%s'", sourcePath)
+			return fmt.Errorf("Failed to get raw syscall.Stat_t data for \x1b[0;91m %v \x1b[0m", sourcePath)
 		}
 		switch fileInfo.Mode() & os.ModeType{
 		case os.ModeDir:
@@ -124,7 +132,7 @@ func copyDirectory(pkg string, src string, dest string) error {
 }
 
 func copyFile(pkg string, srcFile string, dstFile string) error {
-	fmt.Printf("Installing from %v to %v\n", srcFile, dstFile)
+	fmt.Printf("\x1b[0;90m Installing from %v to %v \x1b[0m\n", srcFile, dstFile)
 	out, err := os.Create(dstFile)
 	if err != nil {
 		return err
@@ -172,7 +180,7 @@ func createIfNotExists(dir string, perm os.FileMode) error {
 		return nil
 	}
 	if err := os.MkdirAll(dir, perm); err != nil {
-		return fmt.Errorf("failed to create directory: '%s', error: '%s'", dir, err.Error())
+		return fmt.Errorf("Failed to create directory: '%s', Error:\x1b[0;91m %v \x1b[0m", dir, err.Error())
 	}
 
 	return nil

@@ -12,11 +12,21 @@ ifeq ($(shell uname), Darwin)
 endif
 
 .PHONY: build-local
-build-local: ## Build server binary
+build-local: ## Build server binary for local use
 	echo "Build server binaries"
 	rm -rfv remote_bin/*
 	$(DIARKIS_CLI) build -c local-build.yml --host builder.diarkis.io
 	chmod -R 700 remote_bin/
+
+.PHONY: server
+server: ## Start a server locally: [ target=mars ] [ target=http ] [ target=udp ] [ target=tcp ]
+	echo "Starting $(target) server..."
+
+ifeq ($(target), mars)
+	./remote_bin/$(target) ./configs/mars/main.json
+else
+	./remote_bin/$(target)
+endif
 
 .PHONY: build-container
 build-container: ## Build container for AWS
