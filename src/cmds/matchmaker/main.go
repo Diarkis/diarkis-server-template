@@ -37,7 +37,7 @@ func Expose(rootpath string) {
 		return false
 	})
 	matching.SetOnTicketComplete(sampleTicketType, func(ticketProps *matching.TicketProperties, owner *user.User) []byte {
-		memberIDs := matching.GetTicketMemberIDs(sampleTicketType, owner)
+		memberIDs, _ := matching.GetTicketMemberIDs(sampleTicketType, owner)
 		return []byte(fmt.Sprintf("Ticket matchmaking complete => %v", memberIDs))
 	})
 
