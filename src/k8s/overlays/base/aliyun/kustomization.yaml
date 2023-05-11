@@ -1,14 +1,14 @@
-namespace: aws
-bases:
+namespace: aliyun
+resources:
   - ../../../base
 
 # build target
 patches:
-  - http/deploy.yaml
-  - http/ingress.yaml
-  - http/svc.yaml
-  - udp/deploy.yaml
-  - tcp/deploy.yaml
+- path: http/deploy.yaml
+- path: http/ingress.yaml
+- path: http/svc.yaml
+- path: udp/deploy.yaml
+- path: tcp/deploy.yaml
 
 images:
 - name: udp
