@@ -48,7 +48,7 @@ func Expose(rootpath string) {
 		index := 1
 
 		for i := 0; i < len(memberIDs); i++ {
-			memberIDs[index] = memberIDs[i]
+			list[index] = memberIDs[i]
 			index++
 		}
 
