@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/matching"
+	"github.com/Diarkis/diarkis/packet"
 	"github.com/Diarkis/diarkis/user"
 )
 
