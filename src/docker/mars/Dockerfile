@@ -1,5 +1,5 @@
 FROM alpine:latest
 
-COPY mars-server /go/bin/
+COPY mars /go/bin/
 
-CMD ["/go/bin/mars-server"]
+CMD ["/go/bin/mars"]
