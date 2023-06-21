@@ -22,10 +22,10 @@ buildSettings:
       output: remote_bin/ws
     mars:
       target: mars/main.go
-      output: remote_bin/mars-server
+      output: remote_bin/mars
     health-check:
       target: healthcheck/main.go
       output: remote_bin/health-check
 diarkis:
-  project_id: 5770990600
-  builder_token: 4a8b5d4a-344b-4fea-dffa-51133054283b
+  project_id: {{PROJECT_ID}}
+  builder_token: {{BUILD_TOKEN}}
