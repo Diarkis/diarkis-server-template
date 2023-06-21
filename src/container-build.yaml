@@ -22,7 +22,7 @@ buildSettings:
       output: remote_bin/ws
     mars:
       target: mars/main.go
-      output: remote_bin/mars-server
+      output: remote_bin/mars
     health-check:
       target: healthcheck/main.go
       output: remote_bin/health-check
