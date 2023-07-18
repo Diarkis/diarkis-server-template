@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/matching"
-	"github.com/Diarkis/diarkis/packet"
 	"github.com/Diarkis/diarkis/user"
 )
 
@@ -19,7 +18,7 @@ func Expose(rootpath string) {
 	// Set up matching ticket
 	matching.SetOnIssueTicket(sampleTicketType, func(userData *user.User) *matching.TicketParams {
 		return &matching.TicketParams{
-			ProfileIDs:     []string{"RankMatch", "RankMatch20", "RankMatch50"},
+			ProfileIDs:     []string{"RankMatch", "RankMatch2"},
 			MaxMembers:     2,
 			SearchInterval: 100, // 100ms
 			TicketDuration: 60,  // 1m
@@ -39,20 +38,7 @@ func Expose(rootpath string) {
 	})
 	matching.SetOnTicketComplete(sampleTicketType, func(ticketProps *matching.TicketProperties, owner *user.User) []byte {
 		memberIDs, _ := matching.GetTicketMemberIDs(sampleTicketType, owner)
-
-		list := make([]string, len(memberIDs) + 1)
-
-		// the first element is the owner user ID
-		list[0] = owner.ID
-
-		index := 1
-
-		for i := 0; i < len(memberIDs); i++ {
-			list[index] = memberIDs[i]
-			index++
-		}
-
-		return packet.StringListToBytes(list)
+		return []byte(fmt.Sprintf("Ticket matchmaking complete => %v", memberIDs))
 	})
 
 	// Expose built-in commands to the client
