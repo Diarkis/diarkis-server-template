@@ -18,7 +18,7 @@ func Expose(rootpath string) {
 	// Set up matching ticket
 	matching.SetOnIssueTicket(sampleTicketType, func(userData *user.User) *matching.TicketParams {
 		return &matching.TicketParams{
-			ProfileIDs:     []string{"RankMatch", "RankMatch2"},
+			ProfileIDs:     []string{"RankMatch"},
 			MaxMembers:     2,
 			SearchInterval: 100, // 100ms
 			TicketDuration: 60,  // 1m
