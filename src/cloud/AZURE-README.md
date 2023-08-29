@@ -28,13 +28,19 @@ az aks get-credentials --resource-group ${RESOURCE_GROUP} --name diarkis-sample
 ```
 cp build.yml build.linux.yml
 ```
+<<<<<<< HEAD
 
+=======
+>>>>>>> 9b97a23 (merge infra template)
 とし。build.linux.yml内でGOOSとGOARCHを下記のように設定する。
 ```
   env:
     GOOS: linux
     GOARCH: amd64
+<<<<<<< HEAD
     CGO_ENABLED: 0
+=======
+>>>>>>> 9b97a23 (merge infra template)
 ```
 
 server-templateから生成した project の root から下記を実行します。

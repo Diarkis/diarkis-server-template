@@ -78,7 +78,6 @@ gcloud container clusters get-credentials $CLUSTER_NAME --project $PROJECT_NAME
 ```
 cp build.yml build.linux.yml
 ```
-
 とし。build.linux.yml内でGOOSとGOARCHを下記のように設定する。
 ```
   env:
@@ -127,4 +126,3 @@ $ kubectl get ing -n dev0
 $ curl {http ingress の EXTERNAL-IP}:7000/auth/1 # 本来は、"GET /auth/{user id}"でリクエストいただく想定です。今回は動作確認のため"/auth/1"で挙動確認しております。
 {"TCP":"xxxx.bc.googleusercontent.com:7200","UDP":"yyyy.bc.googleusercontent.com:7100","sid":"xxxxx","encryptionKey":"xxxxx","encryptionIV":"xxxxx","encryptionMacKey":"xxxxx"}
 ```
-
