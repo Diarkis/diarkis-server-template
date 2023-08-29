@@ -28,7 +28,8 @@ az aks get-credentials --resource-group ${RESOURCE_GROUP} --name diarkis-sample
 ```
 cp build.yml build.linux.yml
 ```
-とし、build.linux.yml を下記のように設定する。
+
+とし。build.linux.yml内でGOOSとGOARCHを下記のように設定する。
 ```
   env:
     GOOS: linux
