@@ -33,7 +33,7 @@ run-docker: ## Run Diarkis locally with docker-compose
 	docker-compose up -d
 
 .PHONY: stop-docker
-run-docker: ## Stop Diarkis
+stop-docker: ## Stop Diarkis
 	docker-compose down
 
 .PHONY: build-container
