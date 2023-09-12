@@ -14,6 +14,9 @@ make build-local
 make run-docker
 ```
 
+**IMPORTANT**
+7000/7200/TCP and 6779/7100/UDP must be open on the host side.
+
 # Stop Diarkis
 ```
 make stop-docker
