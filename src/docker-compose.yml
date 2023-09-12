@@ -6,7 +6,7 @@ services:
     build:
       context: ./remote_bin
       dockerfile: ../docker/mars/Dockerfile
-    image: diarkis-local/mars:latest
+    image: "${AWS_ACCOUNT_NUM:-diarkis-local}.dkr.ecr.ap-northeast-1.amazonaws.com/mars"
     ports:
       - target: 6779
         published: 6779
@@ -19,7 +19,7 @@ services:
     build:
       context: ./remote_bin
       dockerfile: ../docker/http/Dockerfile
-    image: diarkis-local/http:latest
+    image: "${AWS_ACCOUNT_NUM:-diarkis-local}.dkr.ecr.ap-northeast-1.amazonaws.com/http"
     depends_on:
       - mars
     ports:
@@ -40,7 +40,7 @@ services:
     build:
       context: ./remote_bin
       dockerfile: ../docker/udp/Dockerfile
-    image: diarkis-local/udp:latest
+    image: "${AWS_ACCOUNT_NUM:-diarkis-local}.dkr.ecr.ap-northeast-1.amazonaws.com/udp"
     depends_on:
       - mars
     ports:
@@ -68,7 +68,7 @@ services:
     build:
       context: ./remote_bin
       dockerfile: ../docker/tcp/Dockerfile
-    image: diarkis-local/tcp:latest
+    image: "${AWS_ACCOUNT_NUM:-diarkis-local}.dkr.ecr.ap-northeast-1.amazonaws.com/tcp"
     ports:
       - target: 7200
         published: 7200
