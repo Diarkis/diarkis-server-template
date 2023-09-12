@@ -1,0 +1,49 @@
+version: "3.8"
+
+services:
+  mars:
+    build:
+      context: ./remote_bin
+      dockerfile: ../docker/mars/Dockerfile
+    image: diarkis-local/mars:latest
+    ports:
+      - 6779:6779/udp
+    volumes:
+      - ./docker/configs/mars/main.json:/bin/mars/default.conf.json
+  http:
+    build:
+      context: ./remote_bin
+      dockerfile: ../docker/http/Dockerfile
+    depends_on:
+      - mars
+    image: diarkis-local/http:latest
+    ports:
+      - 7000:7000/tcp
+    volumes:
+      - ./docker/configs:/configs
+  udp:
+    build:
+      context: ./remote_bin
+      dockerfile: ../docker/udp/Dockerfile
+    depends_on:
+      - mars
+    image: diarkis-local/udp:latest
+    ports:
+      - 7100:7100/udp
+    volumes:
+      - ./docker/configs:/configs
+    environment:
+      - DIARKIS_CLOUD_ENV=127.0.0.1
+  tcp:
+    depends_on:
+      - mars
+    build:
+      context: ./remote_bin
+      dockerfile: ../docker/tcp/Dockerfile
+    image: diarkis-local/tcp:latest
+    ports:
+      - 7200:7200/tcp
+    volumes:
+      - ./docker/configs:/configs
+    environment:
+      - DIARKIS_CLOUD_ENV=127.0.0.1
