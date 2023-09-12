@@ -1,5 +1,6 @@
 version: "3.8"
-
+# refer ./docker/README.md to see how to run this
+name: diarkis
 services:
   mars:
     build:
@@ -7,33 +8,60 @@ services:
       dockerfile: ../docker/mars/Dockerfile
     image: diarkis-local/mars:latest
     ports:
-      - 6779:6779/udp
+      - target: 6779
+        published: 6779
+        protocol: udp
     volumes:
-      - ./docker/configs/mars/main.json:/bin/mars/default.conf.json
+      - type: bind
+        source: ./docker/configs/mars/main.json
+        target: /bin/mars/default.conf.json
   http:
     build:
       context: ./remote_bin
       dockerfile: ../docker/http/Dockerfile
+    image: diarkis-local/http:latest
     depends_on:
       - mars
-    image: diarkis-local/http:latest
     ports:
-      - 7000:7000/tcp
+      - target: 7000
+        published: 7000
+        protocol: tcp
     volumes:
-      - ./docker/configs:/configs
+      - type: bind
+        source: ./docker/configs
+        target: /configs
+    healthcheck:
+      test: "wget http://localhost:7000/hello -O /dev/null"
+      start_period: "1s"
+      retries: 3
+      timeout: "5s"
+      interval: "10s"
   udp:
     build:
       context: ./remote_bin
       dockerfile: ../docker/udp/Dockerfile
+    image: diarkis-local/udp:latest
     depends_on:
       - mars
-    image: diarkis-local/udp:latest
     ports:
-      - 7100:7100/udp
+      - target: 7100
+        published: 7100
+        protocol: udp
     volumes:
-      - ./docker/configs:/configs
+      - type: bind
+        source: ./docker/configs
+        target: /configs
+      - type: bind
+        source: ./docker/configs/shared/health-check.json
+        target: /bin/tools/configs/health-check.json
     environment:
       - DIARKIS_CLOUD_ENV=127.0.0.1
+    healthcheck:
+      test: "sh -c '/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) in && /go/bin/health-check $(cat /tmp/DIARKIS_PUBLIC_ADDR) out'"
+      start_period: "3s"
+      retries: 3
+      timeout: "5s"
+      interval: "10s"
   tcp:
     depends_on:
       - mars
@@ -42,8 +70,21 @@ services:
       dockerfile: ../docker/tcp/Dockerfile
     image: diarkis-local/tcp:latest
     ports:
-      - 7200:7200/tcp
+      - target: 7200
+        published: 7200
+        protocol: tcp
     volumes:
-      - ./docker/configs:/configs
+      - type: bind
+        source: ./docker/configs
+        target: /configs
+      - type: bind
+        source: ./docker/configs/shared/health-check.json
+        target: /bin/tools/configs/health-check.json
     environment:
       - DIARKIS_CLOUD_ENV=127.0.0.1
+    healthcheck:
+      test: "sh -c '/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) in'"
+      start_period: "3s"
+      retries: 3
+      timeout: "5s"
+      interval: "10s"
