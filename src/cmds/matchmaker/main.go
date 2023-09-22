@@ -37,6 +37,8 @@ func Expose(rootpath string) {
 		return false
 	})
 	matching.SetOnTicketComplete(sampleTicketType, func(ticketProps *matching.TicketProperties, owner *user.User) []byte {
+		memberIDs, _ := matching.GetTicketMemberIDs(sampleTicketType, owner)
+
 		list := make([]string, len(memberIDs) + 1)
 
 		// the first element is the owner user ID
