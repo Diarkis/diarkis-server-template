@@ -6,6 +6,7 @@ import (
 	"github.com/Diarkis/diarkis/matching"
 	"github.com/Diarkis/diarkis/packet"
 	"github.com/Diarkis/diarkis/user"
+	"github.com/Diarkis/diarkis/util"
 )
 
 const sampleTicketType uint8 = 0
@@ -22,6 +23,8 @@ func Expose(rootpath string) {
 			ProfileIDs:     []string{"RankMatch"},
 			MaxMembers:     2,
 			SearchInterval: 100, // 100ms
+			SearchTries: uint8(util.RandomInt(0, 300)),
+			EmptySearches: 3,
 			TicketDuration: 60,  // 1m
 			HowMany:        20,
 			// Change here as you see fit according to your application needs
