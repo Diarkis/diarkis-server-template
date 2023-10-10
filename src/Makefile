@@ -29,12 +29,12 @@ else
 endif
 
 .PHONY: run-docker
-run-docker: ## Run Diarkis locally with docker-compose
-	docker-compose up -d
+run-docker: ## Run Diarkis locally with docker compose
+	docker compose up -d
 
 .PHONY: stop-docker
 stop-docker: ## Stop Diarkis
-	docker-compose down
+	docker compose down
 
 .PHONY: build-container
 build-container: ## Build container for AWS
