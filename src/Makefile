@@ -28,6 +28,14 @@ else
 	./remote_bin/$(target)
 endif
 
+.PHONY: run-docker
+run-docker: ## Run Diarkis locally with docker compose
+	docker compose up -d
+
+.PHONY: stop-docker
+stop-docker: ## Stop Diarkis
+	docker compose down
+
 .PHONY: build-container
 build-container: ## Build container for AWS
 	$(DIARKIS_CLI) build -c container-build.yaml --host v2.builder.diarkis.io
