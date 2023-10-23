@@ -1,13 +1,14 @@
 package cmds
 
 import (
-	httpcmds "{0}/cmds/http"
-	roomcmds "{0}/cmds/room"
-	groupcmds "{0}/cmds/group"
-	fieldcmds "{0}/cmds/field"
-	dmcmds "{0}/cmds/dm"
-	matchmakercmds "{0}/cmds/matchmaker"
 	customcmds "{0}/cmds/custom"
+	dmcmds "{0}/cmds/dm"
+	fieldcmds "{0}/cmds/field"
+	groupcmds "{0}/cmds/group"
+	httpcmds "{0}/cmds/http"
+	matchmakercmds "{0}/cmds/matchmaker"
+	p2pcmds "{0}/cmds/p2p"
+	roomcmds "{0}/cmds/room"
 )
 
 var rootpath string
@@ -26,5 +27,6 @@ func ExposeServer() {
 	fieldcmds.Expose(rootpath)
 	dmcmds.Expose(rootpath)
 	matchmakercmds.Expose(rootpath)
+	p2pcmds.Expose()
 	customcmds.Expose()
 }
