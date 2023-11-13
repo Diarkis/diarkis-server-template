@@ -50,3 +50,11 @@ cd dm
 go build
 ./dm host=$(HTTP host) protocol=$(UDP or TCP) bots=$(how many bots) size=$(message size) interval=$(message send interval in milliseconds)
 ```
+
+# field bot
+
+```
+# example
+cd field
+./field %(http host) $(how many bots) $(protocol: UDP or TCP) $(update interval in milliseconds) $(map size) $(movement range)
+```
