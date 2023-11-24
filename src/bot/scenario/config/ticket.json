@@ -1,0 +1,28 @@
+{
+  "OneTicket": {
+    "ticketType": 0
+  },
+  "RandomTicket": {
+    "ticketType": {
+      "isRandom": true,
+      "options": [
+        0,
+        1
+      ]
+    }
+  },
+  "RatedTicket": {
+    "ticketType": {
+      "options": [
+        0,
+        1,
+        2
+      ],
+      "optionRates": [
+        0.8,
+        0.15,
+        0.05
+      ]
+    }
+  }
+}

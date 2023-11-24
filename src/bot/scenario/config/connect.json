@@ -1,0 +1,14 @@
+{
+  "ConnectUDP": {
+    "serverType": "UDP",
+    "userID": {
+      "isRandom": true
+    }
+  },
+  "ConnectTRN": {
+    "serverType": "TRN",
+    "userID": {
+      "isRandom": true
+    }
+  }
+}
