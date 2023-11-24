@@ -82,7 +82,11 @@ func onReady(next func(error)) {
 		}
 	case "in":
 		data := make(map[string]interface{})
-		data["message"] = "HELLO"
+		data["meshOnly"] = true
+		mesh.SendRequest(util.MeshHealthCheck, addr, data, onMeshHealthCheck)
+	case "mars":
+		data := make(map[string]interface{})
+		data["meshOnly"] = false
 		mesh.SendRequest(util.MeshHealthCheck, addr, data, onMeshHealthCheck)
 	}
 	next(nil)
