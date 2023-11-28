@@ -4,6 +4,7 @@ import (
 	"github.com/Diarkis/diarkis/groupSupport" // if you do not need group module, comment out this line
 	"github.com/Diarkis/diarkis/roomSupport"  // if you do not need room module, comment out this line
 	"github.com/Diarkis/diarkis/server/http"
+	dmcmds "{0}/cmds/dm"
 )
 
 func Expose(rootpath string) {
@@ -17,6 +18,8 @@ func Expose(rootpath string) {
 	groupSupport.DefineGroupSupport()
 	// custom room operations
 	exposeRoom(rootpath)
+	// if you do not need dm module, comment out this line
+	dmcmds.Expose(rootpath)
 }
 
 func handleHello(res *http.Response, req *http.Request, params *http.Params, next func(error)) {
