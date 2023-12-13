@@ -10,8 +10,10 @@ import (
 const customVer = 2
 const helloCmdID = 10
 const pushCmdID = 11
+
 // Client error log
 const clientErrLog = 12
+
 // MatchMaker command IDs
 const matchmakerAdd = 100
 const matchmakerRm = 101
@@ -41,7 +43,7 @@ func Expose() {
 
 func helloCmd(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
 	logger.Debug("Hello command has received %#v from the client SID:%s - UID:%s", payload, userData.SID, userData.ID)
-	// if this is executed as UDP, reliable = true means sending the packet as RRUDP
+	// if this is executed as UDP, reliable = true means sending the packet as RUDP
 	reliable := true
 	// we send a response back to the client with the byte array sent from the client
 	userData.ServerRespond(payload, ver, cmd, server.Ok, reliable)
@@ -56,7 +58,7 @@ func afterHelloCmd(ver uint8, cmd uint16, payload []byte, userData *user.User, n
 
 func pushCmd(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
 	logger.Debug("Push command has received %#v from the client SID:%s - UID:%s", payload, userData.SID, userData.ID)
-	// if this is executed as UDP, reliable = true means sending the packet as RRUDP
+	// if this is executed as UDP, reliable = true means sending the packet as RUDP
 	reliable := true
 	// we send a push packet to the client that sent the data to this command
 	userData.ServerPush(ver, cmd, payload, reliable)

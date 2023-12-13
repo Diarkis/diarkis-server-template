@@ -6,9 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/Diarkis/diarkis/matching"
 	"github.com/Diarkis/diarkis/server/http"
-	"strings"
 )
 
 func exposeMatchMaker(rootpath string) {
@@ -20,11 +21,11 @@ func exposeMatchMaker(rootpath string) {
 }
 
 func defineMatchMakerRules() {
-	// rank will match rank range of 10. i.e. 0 to 10, 11 to 20, 21 to 30	.
+	// rank will match rank range of 10. i.e. 0 to 10, 11 to 20, 21 to 30...
 	rankRule := make(map[string]int)
 	rankRule["rank"] = 10
 	matching.Define("rank", rankRule)
-	// socre will match score range of 1000. i.e. 0 to 1000, 1001 to 2000	.
+	// score will match score range of 1000. i.e. 0 to 1000, 1001 to 2000...
 	scoreRule := make(map[string]int)
 	scoreRule["score"] = 1000
 	matching.Define("score", scoreRule)
