@@ -55,6 +55,12 @@ spec:
           privileged: true
       containers:
       - name: udp
+        startupProbe:
+          exec:
+            command:
+              - sh
+              - -c
+              - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) mars && /go/bin/health-check $(cat /tmp/DIARKIS_PUBLIC_ADDR) out"
         readinessProbe:
           exec:
             command:
