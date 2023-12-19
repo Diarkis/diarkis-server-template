@@ -58,6 +58,12 @@ spec:
 
       containers:
       - name: tcp
+        startupProbe:
+          exec:
+            command:
+              - sh
+              - -c
+              - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) mars"
         readinessProbe:
           exec:
             command:
