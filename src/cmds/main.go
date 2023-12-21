@@ -19,6 +19,8 @@ func Setup(rpath string) {
 
 func ExposeHTTP() {
 	httpcmds.Expose(rootpath)
+	dmcmds.Expose(rootpath)
+	fieldcmds.Expose(rootpath)
 }
 
 func ExposeServer() {
