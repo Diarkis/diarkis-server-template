@@ -95,4 +95,3 @@ kind: ConfigMap
 metadata:
   name: bot-conf
   namespace: bot
-

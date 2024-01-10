@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"strings"
-
 	"{0}/bot/scenario/lib/report"
 
 	"github.com/Diarkis/diarkis/util"
@@ -31,11 +30,14 @@ func handleRun(w http.ResponseWriter, r *http.Request) {
 	buf := new(bytes.Buffer)
 	io.Copy(buf, body)
 
-	json.Unmarshal(buf.Bytes(), &scenarioSettings)
+	// Parse Settings (like duration to run scenario)
+	json.Unmarshal(buf.Bytes(), &ss)
+	// Keep json body
+	json.Unmarshal(buf.Bytes(), &gp.Raw.ParamsFromAPI)
 
 	w.WriteHeader(http.StatusCreated)
 	fmt.Fprint(w, "Scenario Started\n")
-	logger.Info("Starting Scenario [%s] with parameters [%s] ", scenarioSettings.ScenarioName, scenarioSettings.ScenarioPattern)
+	logger.Info("Starting Scenario [%s] with parameters [%s] ", ss.ScenarioName, ss.ScenarioPattern)
 
 	go run()
 
@@ -46,23 +48,10 @@ func handleGetMetrics(w http.ResponseWriter, r *http.Request) {
 	// body := r.Body
 	// defer body.Close()
 
-	callCnt := report.GetCallCommandMetrics()
-	for ver, cmds := range callCnt {
-		for cmd, m := range cmds {
-			// TODO: use {} rather than name all
-			fmt.Fprint(w, "# HELP COMMAND_CALL_COUNT_VER_%d_CMD_%d Call count for each commands\n", ver, cmd)
-			fmt.Fprint(w, "# TYPE COMMAND_CALL_COUNT_VER_%d_CMD_%d counter\n", ver, cmd)
-			fmt.Fprint(w, "COMMAND_CALL_COUNT_VER_%d_CMD_%d %d\n", ver, cmd, m.GetTotal())
-
-		}
-	}
-
-	// // todo
-	// pushCnt := report.GetPushMetrics()
-	// // todo
-	// resCnt := report.GetResponseMetrics()
-
-	w.WriteHeader(http.StatusOK)
+	metrics := report.GetPrometheusMetrics()
+	fmt.Fprint(w, metrics)
+	logger.Sys("Get Metrics Called...")
+	// w.WriteHeader(http.StatusOK)
 
 }
 
@@ -79,7 +68,6 @@ func listen() error {
 	http.Handle("/", String("hello"))
 	http.HandleFunc("/run/", handleRun)
 	http.HandleFunc("/metrics/", handleGetMetrics)
-	// todo: dynamic port
 	logger.Info("Bot server started. listening %s ...", host)
 	http.ListenAndServe(host, nil)
 	return nil

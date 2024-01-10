@@ -17,9 +17,9 @@ import (
 	"github.com/Diarkis/diarkis/util"
 )
 
-var commonParams map[string]any
-var scenarioParams map[string]any
-var gp = scenarios.GlobalParams{
+// var commonParams map[string]any
+// var scenarioParams map[string]any
+var gp = &scenarios.GlobalParams{
 	Host:            "localhost:7000",
 	ReceiveByteSize: 1400,
 	UDPSendInterval: 100,
@@ -27,8 +27,9 @@ var gp = scenarios.GlobalParams{
 	LogLevel: 20,
 }
 
-var config string = "config"
+var config string = "./bot/scenario/config"
 
+// Settings that can be changed as an argument for cli
 type ScenarioSettings struct {
 	ScenarioName    string `json:"type"`
 	ScenarioPattern string `json:"run"`
@@ -37,7 +38,7 @@ type ScenarioSettings struct {
 	Interval        int    `json:"interval"`
 }
 
-var scenarioSettings *ScenarioSettings
+var ss *ScenarioSettings
 
 // var scenarioName, scenarioPattern string
 // var howmany, duration, interval int
@@ -47,27 +48,28 @@ var logger = log.New("BOT/MAIN")
 
 func load() error {
 	// read flags
-	// var serverMode int
-	// flag.StringVar(&config, "config", "config", "Directory for config files.")
-	flag.StringVar(&scenarioSettings.ScenarioName, "type", "Connect", "Scenario name that you implement and defined in ScenarioList.")
-	flag.StringVar(&scenarioSettings.ScenarioPattern, "run", "ConnectUDP", "Scenario instance that is defined as 'hint' in Json file.")
-	flag.IntVar(&scenarioSettings.HowMany, "howmany", -1, "The number of clients to join matching.")
-	flag.IntVar(&scenarioSettings.Duration, "duration", -1, "Duration to run the scenario in seconds.")
-	flag.IntVar(&scenarioSettings.Interval, "interval", -1, "Interval to create scenario clients in millisecond.")
-	// flag.BoolVar(&serverMode, "serverMode", false, "Set true to run this as a server mode to wait for the scenario input from http.")
+	flag.StringVar(&ss.ScenarioName, "type", "Connect", "Scenario name that you implement and defined in ScenarioList.")
+	flag.StringVar(&ss.ScenarioPattern, "run", "ConnectUDP", "Scenario instance that is defined as 'hint' in Json file.")
+	flag.IntVar(&ss.HowMany, "howmany", -1, "The number of clients to join matching.")
+	flag.IntVar(&ss.Duration, "duration", -1, "Duration to run the scenario in seconds.")
+	flag.IntVar(&ss.Interval, "interval", -1, "Interval to create scenario clients in millisecond.")
 	flag.Parse()
 	return nil
 }
 func setup() error {
 	// get scenario
-	scenarioFactory_, ok := scenarios.ScenarioFactoryList[scenarioSettings.ScenarioName]
+	scenarioFactory_, ok := scenarios.ScenarioFactoryList[ss.ScenarioName]
 	if !ok {
-		return util.NewError("No Scenario named \"%v\". Please check 'ScenarioList' in bot/scenario/scenarios/main.go", scenarioSettings.ScenarioName)
+		return util.NewError("No Scenario named \"%v\". Please check 'ScenarioList' in bot/scenario/scenarios/main.go", ss.ScenarioName)
 	}
 	scenarioFactory = &scenarioFactory_
 
 	// read config files
 	filepath.Walk(config, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			logger.Error("Cannot read file. path:%v", path)
+			return err
+		}
 		filename := info.Name()
 		logger.Debug("Reading file \"%s\" ...", filename)
 		if strings.HasSuffix(filename, ".json") {
@@ -76,47 +78,55 @@ func setup() error {
 				return err
 			}
 			logger.Debug("File Contents: %v", string(raw))
-			json.Unmarshal(raw, &commonParams)
-			scenarioParamsIf, ok := commonParams[scenarioSettings.ScenarioPattern]
+			json.Unmarshal(raw, &gp.Raw.CommonParams)
+			scenarioParamsIf, ok := gp.Raw.CommonParams[ss.ScenarioPattern]
 			if ok {
-				scenarioParams = scenarioParamsIf.(map[string]any)
+				gp.Raw.ScenarioParams = scenarioParamsIf.(map[string]any)
 			}
 		}
 		return nil
 	})
-	if scenarioParams == nil {
-		logger.Warn("No Scenario Parameter [%s] found in json files. Using only global parameters.", scenarioSettings.ScenarioPattern)
+	if gp.Raw.ScenarioParams == nil {
+		logger.Warn("No Scenario Parameter [%s] found in json files. Using only global parameters.", ss.ScenarioPattern)
 	}
 
 	// set global params
-	globalParamsBytes, _ := scenarios.GenerateParams(0, commonParams, scenarioParams)
+	globalParamsBytes, _ := scenarios.GenerateParams(0, gp.Raw.CommonParams, gp.Raw.ScenarioParams, gp.Raw.ParamsFromAPI)
 	err := json.Unmarshal(globalParamsBytes, &gp)
+
+	logger.Sys("Parsed global params. %#v", gp)
+
 	if err != nil {
 		return util.StackError(util.NewError("Failed to pars common params. %v", err.Error()))
 	}
 
 	// set log level
 	udp.LogLevel(gp.LogLevel)
+	if gp.MetricsInterval >= 0 {
+		report.Interval = gp.MetricsInterval
+	}
 
 	// value from args will be prioritized
-	// todo: review
-	if scenarioSettings.HowMany >= 0 {
-		gp.HowMany = scenarioSettings.HowMany
+	if ss.HowMany >= 0 {
+		gp.HowMany = ss.HowMany
 	}
-	if scenarioSettings.Duration >= 0 {
-		gp.Duration = scenarioSettings.Duration
+	if ss.Duration >= 0 {
+		gp.Duration = ss.Duration
 	}
-	if scenarioSettings.Interval >= 0 {
-		gp.Interval = scenarioSettings.Interval
+	if ss.Interval >= 0 {
+		gp.Interval = ss.Interval
 	}
-	gp.RawConfigs.CommonParams = commonParams
-	gp.RawConfigs.ScenarioParams = scenarioParams
+	// gp.Raw.CommonParams = commonParams
+	// gp.Raw.ScenarioParams = scenarioParams
 
-	logger.Info("Setup done. commonParams:%+v scenarioParams:%+v", commonParams, scenarioParams)
+	logger.Info("Setup done. CommonParams:%+v ScenarioParams:%+v ParamsFromAPI:%+v", gp.Raw.CommonParams, gp.Raw.ScenarioParams, gp.Raw.ParamsFromAPI)
 	return nil
 }
 
 func start() error {
+	report.ResetAllMetrics()
+	scenarios.InitScenario(gp)
+
 	clients := make([]*scenarios.Scenario, gp.HowMany)
 	// create bot clients
 	var wg sync.WaitGroup
@@ -128,14 +138,14 @@ func start() error {
 			clients[i] = &scenarioClient
 
 			// set scenario params
-			scenarioParamsBytes, _ := scenarios.GenerateParams(i, commonParams, scenarioParams)
+			scenarioParamsBytes, _ := scenarios.GenerateParams(i, gp.Raw.CommonParams, gp.Raw.ScenarioParams, gp.Raw.ParamsFromAPI)
 			scenarioClient.ParseParam(i, scenarioParamsBytes)
 
 			// execute scenario
-			err := scenarioClient.Run(&gp)
+			err := scenarioClient.Run(gp)
 			if err != nil {
 				logger.Error(util.StackError(util.NewError("Scenario execution failed. %v", err.Error())))
-				// todo: report.IncrementScenarioError()
+				report.IncrementScenarioError()
 			}
 		}(i)
 		time.Sleep(time.Millisecond * time.Duration(gp.Interval))
@@ -151,15 +161,17 @@ func start() error {
 	// loop again to call scenario end callback
 	for i := 0; i <= gp.HowMany-1; i++ {
 		(*clients[i]).OnScenarioEnd()
-		globalReport, report := (*clients[i]).WriteReport()
-		// todo: merge
-		logger.Notice("global:%+v individual:%+v", globalReport, report)
 	}
 
-	// logger.Notice("Report: %+v", report.GetAllCommandMetrics())
-	// todo: merge
-	report.PrintCustomMetrics()
-	report.PrintAllCommandMetrics()
+	report.StopAllMetrics()
+	if gp.Duration < report.Interval {
+		logger.Warn("The scenario did not run enough time to correct metrics. The metrics below might not be what you expect. Scenario Duration: %d, Report Interval: %d", gp.Duration, report.Interval)
+	}
+	report.PrintAllMetrics()
+	inputs := scenarios.CollectInputParameters(gp.InputKeysForReport, gp.Raw.CommonParams, gp.Raw.ScenarioParams, gp.Raw.ParamsFromAPI)
+	scenarioName := strings.Join([]string{ss.ScenarioName, ss.ScenarioPattern}, "-")
+	report.WriteCSV(scenarioName, inputs)
+
 	return nil
 }
 
@@ -179,8 +191,8 @@ func run() error {
 }
 
 func main() {
-	scenarioSettings = &ScenarioSettings{HowMany: -1, Interval: -1, Duration: -1}
-	isServerMode := util.GetEnv("BOT_SEVER_MODE")
+	ss = &ScenarioSettings{HowMany: -1, Interval: -1, Duration: -1}
+	isServerMode := util.GetEnv("BOT_SERVER_MODE")
 	configPath := util.GetEnv("BOT_CONFIG")
 	if configPath != "" {
 		config = configPath

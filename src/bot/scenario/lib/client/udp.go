@@ -1,20 +1,26 @@
 package bot_client
 
 import (
-
 	// todo: replace after upgrading to 1.21
-	"{0}/bot/scenario/lib/report"
-
 	"golang.org/x/exp/slices"
+
+	"{0}/bot/scenario/lib/report"
 
 	"github.com/Diarkis/diarkis/client/go/udp"
 	"github.com/Diarkis/diarkis/server"
 	"github.com/Diarkis/diarkis/util"
 )
 
+// UDPClient wraps udp.Client in Diarkis core
+// It contains
 type UDPClient struct {
 	*TransportClient
-	client *udp.Client
+	client       *udp.Client
+	lastActivity struct {
+		kind string
+		ver  uint8
+		cmd  uint16
+	}
 }
 
 type HandlerType int
@@ -34,15 +40,6 @@ const (
 
 func NewUDPClient(userID string, endpoint string, credentials *Credentials, rcvMaxSize int, interval int64) (*UDPClient, error) {
 	dUDPClient := udp.New(rcvMaxSize, interval)
-
-	dUDPClient.OnResponse(func(ver uint8, cmd uint16, status uint8, payload []byte) {
-		report.IncrementResponseMetrics(ver, cmd)
-		logger.Sysu(userID, util.StrConcat("\x1b[38;5;53m", "Response received, ver: %d, cmd: %d, status: %v, payload: %s (0x%x)", "\x1b[0m"), ver, cmd, status, string(payload), payload)
-	})
-	dUDPClient.OnPush(func(ver uint8, cmd uint16, payload []byte) {
-		report.IncrementPushMetrics(ver, cmd)
-		logger.Sysu(userID, util.StrConcat("\x1b[38;5;53m", "Push received,     ver: %d, cmd: %d, payload: %s (0x%x)", "\x1b[0m"), ver, cmd, string(payload), payload)
-	})
 	udpClient := &UDPClient{
 		TransportClient: &TransportClient{
 			userID:      userID,
@@ -51,6 +48,21 @@ func NewUDPClient(userID string, endpoint string, credentials *Credentials, rcvM
 		},
 		client: dUDPClient,
 	}
+
+	dUDPClient.OnResponse(func(ver uint8, cmd uint16, status uint8, payload []byte) {
+		report.IncrementResponseMetrics(ver, cmd)
+		udpClient.setLastActivity("Response", ver, cmd)
+		if status == ResponseOk {
+			logger.Sysu(userID, util.StrConcat("\x1b[38;5;27m", "Response received, ver: %d, cmd: %d, status: %v, payload: %s (0x%x)", "\x1b[0m"), ver, cmd, status, string(payload), payload)
+		} else {
+			logger.Erroru(userID, util.StrConcat("\x1b[38;5;27m", "Response received, ver: %d, cmd: %d, status: %v, payload: %s (0x%x)", "\x1b[0m"), ver, cmd, status, string(payload), payload)
+		}
+	})
+	dUDPClient.OnPush(func(ver uint8, cmd uint16, payload []byte) {
+		report.IncrementPushMetrics(ver, cmd)
+		udpClient.setLastActivity("Push", ver, cmd)
+		logger.Sysu(userID, util.StrConcat("\x1b[38;5;27m", "Push received,     ver: %d, cmd: %d, payload: %s (0x%x)", "\x1b[0m"), ver, cmd, string(payload), payload)
+	})
 
 	return udpClient, nil
 }
@@ -72,15 +84,19 @@ func (c *UDPClient) Disconnect() {
 }
 
 func (c *UDPClient) Send(ver uint8, cmd uint16, payload []byte) {
-	logger.Sysu(c.userID, util.StrConcat("\x1b[38;5;21m", "Sending Command,   ver: %d, cmd: %d, payload: %s (0x%x)", "\x1b[0m"), ver, cmd, string(payload), payload)
+	logger.Sysu(c.userID, util.StrConcat("\x1b[38;5;219m", "Sending Command,   ver: %d, cmd: %d, payload: %s (0x%x)", "\x1b[0m"), ver, cmd, string(payload), payload)
 	report.IncrementCallCommandMetrics(ver, cmd)
+	report.TouchAsActiveUser(c.userID)
 	c.client.Send(ver, cmd, payload)
+	c.setLastActivity("Send", ver, cmd)
 }
 
 func (c *UDPClient) RSend(ver uint8, cmd uint16, payload []byte) {
-	logger.Sysu(c.userID, util.StrConcat("\x1b[38;5;21m", "RSending Command,  ver: %d, cmd: %d, payload: %s (0x%x)", "\x1b[0m"), ver, cmd, string(payload), payload)
+	logger.Sysu(c.userID, util.StrConcat("\x1b[38;5;219m", "RSending Command,  ver: %d, cmd: %d, payload: %s (0x%x)", "\x1b[0m"), ver, cmd, string(payload), payload)
 	report.IncrementCallCommandMetrics(ver, cmd)
+	report.TouchAsActiveUser(c.userID)
 	c.client.RSend(ver, cmd, payload)
+	c.setLastActivity("Send", ver, cmd)
 }
 
 func (c *UDPClient) OnPush(callback func(uint8, uint16, []byte)) {
@@ -91,6 +107,7 @@ func (c *UDPClient) OnResponse(callback func(uint8, uint16, uint8, []byte)) {
 	c.client.OnResponse(callback)
 }
 
+// RegisterOnPush registers a callback which is triggered when the client gets a server push for specified ver and cmd.
 func (c *UDPClient) RegisterOnPush(ver uint8, cmd uint16, cb func([]byte)) {
 	c.OnPush(func(ver_ uint8, cmd_ uint16, payload []byte) {
 		if ver_ == ver && cmd_ == cmd {
@@ -99,6 +116,7 @@ func (c *UDPClient) RegisterOnPush(ver uint8, cmd uint16, cb func([]byte)) {
 	})
 }
 
+// RegisterOnResponse registers a callback which is triggered when the client gets a response for specified ver and cmd.
 func (c *UDPClient) RegisterOnResponse(ver uint8, cmd uint16, statuses []uint8, cb func([]byte)) {
 	c.OnResponse(func(ver_ uint8, cmd_ uint16, status uint8, payload []byte) {
 		if ver_ == ver && cmd_ == cmd && slices.Contains(statuses, status) {
@@ -125,6 +143,7 @@ func (c *UDPClient) RegisterHandler(handlerType HandlerType, ver uint8, cmd uint
 	}
 }
 
+// SendRequest sends a command to the server and waits for the response.
 func (c *UDPClient) SendRequest(ver uint8, cmd uint16, payload []byte, cb func(uint8, []byte)) {
 	// type response struct {
 	// 	status  uint8
@@ -143,4 +162,20 @@ func (c *UDPClient) SendRequest(ver uint8, cmd uint16, payload []byte, cb func(u
 	// res := <-ch
 	// c.client.RemoveOnResponse(onResponse)
 	// return res.status, res.payload
+}
+
+func (c *UDPClient) GetLowLevelClient() *udp.Client {
+	return c.client
+
+}
+
+func (c *UDPClient) setLastActivity(kind string, ver uint8, cmd uint16) {
+	c.lastActivity.ver = ver
+	c.lastActivity.cmd = cmd
+	c.lastActivity.kind = kind
+}
+
+// GetLastActivity returns what command the client got/pushed last
+func (c *UDPClient) GetLastActivity() (string, uint8, uint16) {
+	return c.lastActivity.kind, c.lastActivity.ver, c.lastActivity.cmd
 }

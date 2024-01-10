@@ -2,119 +2,487 @@ package report
 
 import (
 	"fmt"
-	"os"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"{0}/bot/scenario/lib/log"
+
+	"github.com/Diarkis/diarkis/util"
 )
 
-const interval = 2
+// 15 is default scraping interval for prometheus
+const Interval = 15
 
 var logger = log.New("BOT/REPORT")
 
 type Report map[string]int
 type metrics struct {
-	total atomic.Uint32
+	name    string
+	running bool
+	sync.RWMutex
+	// a number of metrics elements while scenario is being executed
+	counter atomic.Uint32
+	// a number of metrics elements in the current `interval`
+	gauge atomic.Uint32
+	// an array for elements
+	values []float64
+	// total values while scenario is being executed
+	total float64
+	// total values in the current `interval`
+	subTotal float64
 }
 
-func NewMetrics() *metrics {
-	m := metrics{}
+func NewMetrics(name string) *metrics {
+	m := metrics{name: name}
 	go m.start()
 	return &m
 }
 
 func (m *metrics) start() {
+	m.running = true
+	var prevCount uint32
+	var prevTotal float64
 	for {
-		// mean
-		time.Sleep(interval * time.Second)
+		time.Sleep(time.Duration(Interval) * time.Second)
+		if !m.running {
+			break
+		}
+		var total float64
+		m.RLock()
+		for _, v := range m.values {
+			total += v
+		}
+
+		count := uint32(len(m.values))
+		m.RUnlock()
+
+		m.Lock()
+		m.total = total
+		m.subTotal = total - prevTotal
+		m.Unlock()
+
+		m.gauge.Store(count - prevCount)
+
+		m.counter.Store(count)
+
+		prevCount = count
+		prevTotal = total
 	}
 }
-func (m *metrics) Add(delta uint32) {
-	logger.Notice("%#v", m)
-	m.total.Add(delta)
-}
-func (m *metrics) GetTotal() uint32 {
-	return m.total.Load()
+
+func (m *metrics) Stop() {
+	m.stop()
 }
 
+func (m *metrics) stop() {
+	m.running = false
+
+	var total float64
+	m.RLock()
+	for _, v := range m.values {
+		total += v
+	}
+
+	count := uint32(len(m.values))
+	m.RUnlock()
+
+	m.Lock()
+	m.total = total
+	m.Unlock()
+
+	m.counter.Store(count)
+
+}
+func (m *metrics) Add(delta float64) {
+	m.Lock()
+	defer m.Unlock()
+
+	m.values = append(m.values, delta)
+}
+func (m *metrics) GetTotalCount() uint32 {
+	return m.counter.Load()
+}
+func (m *metrics) GetSubTotalCount() uint32 {
+	return m.gauge.Load()
+}
+
+func (m *metrics) GetTotal() float64 {
+	m.RLock()
+	defer m.RUnlock()
+	return m.total
+}
+
+func (m *metrics) GetSubTotal() float64 {
+	m.RLock()
+	defer m.RUnlock()
+	return m.subTotal
+}
+
+func (m *metrics) GetAverage() float64 {
+	m.RLock()
+	defer m.RUnlock()
+
+	total := m.GetTotal()
+	totalCount := m.GetTotalCount()
+	if totalCount == 0 {
+		return 0.0
+	}
+	return total / float64(totalCount)
+}
+
+func (m *metrics) GetIntervalAverage() float64 {
+	m.RLock()
+	defer m.RUnlock()
+	subTotal := m.GetSubTotalCount()
+	if subTotal == 0 {
+		return 0.0
+	}
+	return m.subTotal / float64(subTotal)
+}
+func (m *metrics) Reset() {
+	m.counter.Store(0)
+	m.gauge.Store(0)
+	m.values = []float64{}
+	m.total = 0
+	m.subTotal = 0
+}
+
+// // // // // // CCU // // // // // //
+type ActiveUsers struct {
+	sync.RWMutex
+	list  map[string]time.Time
+	gauge atomic.Int32
+}
+
+var activeUsers = &ActiveUsers{list: map[string]time.Time{}}
+
+//	func (au *ActiveUsers) Increment() {
+//		if au.m == nil {
+//			au.m = NewMetrics()
+//		}
+//		au.m.counter.Add(1)
+//	}
+func IsActive(userID string) bool {
+	lastTouched := activeUsers.list[userID]
+	duration := time.Since(lastTouched)
+
+	return duration < time.Second*time.Duration(Interval)
+}
+func TouchAsActiveUser(userID string) {
+	activeUsers.RLock()
+	now := time.Now()
+
+	if lastTouched, ok := activeUsers.list[userID]; !ok || lastTouched.Add(time.Second*time.Duration(Interval)).Before(now) {
+		activeUsers.gauge.Add(1)
+	}
+	activeUsers.RUnlock()
+
+	activeUsers.Lock()
+	activeUsers.list[userID] = now
+	activeUsers.Unlock()
+
+	decrement := func() {
+		time.Sleep(time.Second * time.Duration(Interval))
+		if lastTouched := activeUsers.list[userID]; lastTouched.Equal(now) {
+			activeUsers.Lock()
+			activeUsers.gauge.Add(-1)
+			activeUsers.Unlock()
+		}
+	}
+	go decrement()
+}
+
+func (au *ActiveUsers) GetMetrics() string {
+	label := fmt.Sprintf("Bot_Active_Users_%dseconds", Interval)
+	var metrics string
+	metrics += fmt.Sprintf("# HELP %s number of users that issued a command in %d seconds\n", label, Interval)
+	metrics += fmt.Sprintf("# TYPE %s gauge\n", label)
+	metrics += fmt.Sprintf("%s %d\n", label, au.gauge.Load())
+
+	return metrics
+}
+func (au *ActiveUsers) Stop() {
+	// do nothing as this does not have a loop to stop
+}
+
+func (au *ActiveUsers) GetAsKV(kv *KeyValue) {
+	(*kv)["active-users"] = au.gauge.Load()
+}
+
+func (au *ActiveUsers) Print() {
+	logger.Notice("active users %d", au.gauge.Load())
+}
+
+// // // // // // ScenarioError // // // // // //
+type ScenarioError struct {
+	sync.RWMutex
+	m *metrics
+}
+
+var scenarioError = &ScenarioError{}
+
+// func (se *ScenarioError) Increment() {
+// 	if se.m == nil {
+// 		se.m = NewMetrics()
+// 	}
+// 	se.m.counter.Add(1)
+// }
+
+func IncrementScenarioError() {
+	if scenarioError.m == nil {
+		scenarioError.m = NewMetrics("error")
+	}
+	scenarioError.m.counter.Add(1)
+}
+
+// func ResetScenarioError() {
+// 	scenarioError.m = &metrics{}
+// }
+
+func (se *ScenarioError) Reset() {
+	se.m = &metrics{}
+}
+
+// // // // // // Custom Metrics // // // // // //
 type CustomMetrics struct {
-	counter map[string]*metrics
+	sync.RWMutex
+	m map[string]map[string]*metrics
 }
 
 var customMetrics = &CustomMetrics{
-	counter: map[string]*metrics{},
+	m: map[string]map[string]*metrics{},
 }
 
 func NewCustomMetrics() *CustomMetrics {
 	cm := CustomMetrics{
-		counter: map[string]*metrics{},
+		m: map[string]map[string]*metrics{},
 	}
 	return &cm
 }
 
-func (cm *CustomMetrics) Increment(key string) {
-	if _, ok := cm.counter[key]; !ok {
-		cm.counter[key] = NewMetrics()
+// Increment adds 1 to a metrics value to the specified name and key.
+// It will be collected and calculated for total, average and subtotal for a specific period.
+func (cm_ *CustomMetrics) Increment(name, key string) {
+	increment := func(cm *CustomMetrics) {
+		cm.Lock()
+		if _, ok := cm.m[name]; !ok {
+			cm.m[name] = map[string]*metrics{}
+		}
+		if _, ok := cm.m[name][key]; !ok {
+			cm.m[name][key] = NewMetrics(fmt.Sprintf("custom-%s-%s", name, key))
+		}
+		// cm.m[name][key].counter.Add(1)
+		cm.m[name][key].Add(1.0)
+		cm.Unlock()
 	}
-	cm.counter[key].Add(1)
 
-	if _, ok := customMetrics.counter[key]; !ok {
-		customMetrics.counter[key] = NewMetrics()
-	}
-	customMetrics.counter[key].Add(1)
+	// individual
+	increment(cm_)
+	// total
+	increment(customMetrics)
 }
 
+// Add adds a metrics value to the specified name and key.
+// It will be collected and calculated for total, average and subtotal for a specific period.
+func (cm *CustomMetrics) Add(name, key string, value float64) {
+	increment := func(cm *CustomMetrics) {
+		cm.Lock()
+		if _, ok := cm.m[name]; !ok {
+			cm.m[name] = map[string]*metrics{}
+		}
+		if _, ok := cm.m[name][key]; !ok {
+			cm.m[name][key] = NewMetrics(fmt.Sprintf("custom-%s-%s", name, key))
+		}
+		cm.m[name][key].Add(value)
+		cm.Unlock()
+	}
+
+	// individual
+	increment(cm)
+	// total
+	increment(customMetrics)
+}
+
+// Print outputs metrics to the log
 func (cm *CustomMetrics) Print() {
-	for key, c := range cm.counter {
-		logger.Info("key:%s call count:%d", key, c.total.Load())
+	for name, keys := range cm.m {
+		logger.Notice("metrics %s", name)
+		for key, m := range keys {
+			total := m.GetTotal()
+			average := m.GetAverage()
+			hasZeroDecimal := func(f float64) bool {
+				return f == float64(int(f))
+			}
+			if (average == 1.0 || average == 0.0) && hasZeroDecimal(total) {
+				logger.Notice(" key:%s total:%d", key, int(total))
+			} else {
+				logger.Notice(" key:%s total:%v  average:%v", key, total, average)
+			}
+		}
 	}
 }
+
+func (cm *CustomMetrics) GetAsKV(kv *KeyValue) {
+	for name, keys := range cm.m {
+		for k, m := range keys {
+			key := name
+			if k != "" {
+				key = strings.Join([]string{name, k}, "-")
+			}
+
+			var value any
+			average := m.GetAverage()
+			total := m.GetTotal()
+			hasZeroDecimal := func(f float64) bool {
+				return f == float64(int(f))
+			}
+			if (average == 1.0 || average == 0.0) && hasZeroDecimal(total) {
+				value = total
+			} else {
+				key += "-average"
+				value = average
+			}
+
+			(*kv)[key] = value
+			logger.Debug("Getting custom metrics as key value key:%s value:%v", key, value)
+		}
+	}
+	logger.Debug("Returning merged key value for custom metrics :%+v", *kv)
+}
+
+// GetMetrics returns a string for Prometheus metrics
+func (cm *CustomMetrics) GetMetrics() string {
+	var c strings.Builder
+	var g strings.Builder
+	var a strings.Builder
+	if cm != nil && len(cm.m) > 0 {
+		for name, keys := range cm.m {
+			counterLabel := fmt.Sprintf("Bot_Custom_Metrics_%s_total", name)
+			gaugeLabel := fmt.Sprintf("Bot_Custom_Metrics_%s_%dseconds", name, Interval)
+			averageLabel := fmt.Sprintf("Bot_Custom_Metrics_%s_average", name)
+			fmt.Fprintf(&c, "# HELP %s total value for custom metrics\n", counterLabel)
+			fmt.Fprintf(&c, "# TYPE %s counter\n", counterLabel)
+			fmt.Fprintf(&g, "# HELP %s total value for custom metrics %s in %d seconds\n", gaugeLabel, name, Interval)
+			fmt.Fprintf(&g, "# TYPE %s gauge\n", gaugeLabel)
+			fmt.Fprintf(&a, "# HELP %s average value for custom metrics %s in %d seconds\n", averageLabel, name, Interval)
+			fmt.Fprintf(&a, "# TYPE %s gauge\n", averageLabel)
+			for key, m := range keys {
+
+				var labelMatcher string
+				if key != "" {
+					labelMatcher = fmt.Sprintf("{key=\"%s\"}", key)
+				}
+				m.RLock()
+				fmt.Fprintf(&c, "%s%s %f\n", counterLabel, labelMatcher, m.GetTotal())
+				fmt.Fprintf(&g, "%s%s %f\n", gaugeLabel, labelMatcher, m.GetSubTotal())
+				fmt.Fprintf(&a, "%s%s %f\n", averageLabel, labelMatcher, m.GetIntervalAverage())
+				m.RUnlock()
+			}
+		}
+	}
+	return util.StrConcat(g.String(), c.String(), a.String())
+}
+
+// Stop stops metrics loop that is set as Interval
+func (cm *CustomMetrics) Stop() {
+
+	if cm != nil && len(cm.m) > 0 {
+		for _, keys := range cm.m {
+			for _, m := range keys {
+				m.Stop()
+			}
+		}
+	}
+}
+
 func PrintCustomMetrics() {
 	if customMetrics == nil {
-		logger.Notice("Nothing called")
+		logger.Warn("Nothing called")
 		return
 	}
-	for key, m := range customMetrics.counter {
-		logger.Notice("key:%s call count:%d", key, m.total.Load())
-
-	}
+	customMetrics.Print()
 }
 
+// // // // // // Command Metrics // // // // // //
 type CommandMetrics struct {
 	sync.RWMutex
-	cType   string
-	counter map[uint8]map[uint16]*metrics
+	cType string
+	m     map[uint8]map[uint16]*metrics
 	// metrics map[uint8]map[uint16]struct {
 	// 	counter  atomic.Uint32
 	// 	duration time.Duration
 	// }
 }
 
-var callCommandMetrics = &CommandMetrics{cType: "send"}
-var pushCommandMetrics = &CommandMetrics{cType: "push"}
-var responseCommandMetrics = &CommandMetrics{cType: "response"}
+var callCommandMetrics = &CommandMetrics{cType: "Send"}
+var pushCommandMetrics = &CommandMetrics{cType: "Push"}
+var responseCommandMetrics = &CommandMetrics{cType: "Response"}
 
 func (cm *CommandMetrics) Increment(ver uint8, cmd uint16) {
 	cm.Lock()
 	defer cm.Unlock()
-	if cm.counter == nil {
-		cm.counter = map[uint8]map[uint16]*metrics{}
+
+	if cm.m == nil {
+		cm.m = map[uint8]map[uint16]*metrics{}
 	}
-	if _, ok := cm.counter[ver]; !ok {
-		cm.counter[ver] = map[uint16]*metrics{}
+	if _, ok := cm.m[ver]; !ok {
+		cm.m[ver] = map[uint16]*metrics{}
 	}
-	if _, ok := cm.counter[ver][cmd]; !ok {
-		cm.counter[ver][cmd] = NewMetrics()
+	if _, ok := cm.m[ver][cmd]; !ok {
+		cm.m[ver][cmd] = NewMetrics(fmt.Sprintf("command-%d-%d", ver, cmd))
 	}
-	cm.counter[ver][cmd].total.Add(1)
+	cm.m[ver][cmd].Add(1.0)
 }
 
 func (cm *CommandMetrics) Print() {
-	for ver, cmds := range cm.counter {
+	for ver, cmds := range cm.m {
 		for cmd, m := range cmds {
-			logger.Notice("[%s]	ver:%d cmd:%d count:%d", cm.cType, ver, cmd, m.total.Load())
+			// logger.Notice(m.values)
+			logger.Notice("[%s]	ver:%d cmd:%d count:%d", cm.cType, ver, cmd, m.GetTotalCount())
+		}
+	}
+}
+
+func (cm *CommandMetrics) GetAsKV(kv *KeyValue) {
+	for ver, cmds := range cm.m {
+		for cmd, m := range cmds {
+			key := fmt.Sprintf("ver%d-cmd%d-%s", ver, cmd, cm.cType)
+			value := m.GetTotal()
+			(*kv)[key] = int(value)
+			logger.Debug("Getting command metrics as key value key:%s value:%v", key, value)
+		}
+	}
+	logger.Debug("Returning merged key value :%+v", *kv)
+}
+
+func (cm *CommandMetrics) GetMetrics() string {
+	var g strings.Builder
+	var c strings.Builder
+	if cm != nil && len(cm.m) > 0 {
+		gaugeLabel := fmt.Sprintf("Bot_Command_%s_%dseconds", cm.cType, Interval)
+		counterLabel := fmt.Sprintf("Bot_Command_%s_total", cm.cType)
+		fmt.Fprintf(&g, "# HELP %s sub total %s count for each commands in %d seconds\n", gaugeLabel, cm.cType, Interval)
+		fmt.Fprintf(&g, "# TYPE %s gauge\n", gaugeLabel)
+		fmt.Fprintf(&c, "# HELP %s total %s count for each commands\n", counterLabel, cm.cType)
+		fmt.Fprintf(&c, "# TYPE %s counter\n", counterLabel)
+		for ver, cmds := range cm.m {
+			for cmd, m := range cmds {
+				fmt.Fprintf(&g, "%s{ver=\"%d\",cmd=\"%d\"} %d\n", gaugeLabel, ver, cmd, m.GetSubTotalCount())
+				fmt.Fprintf(&c, "%s{ver=\"%d\",cmd=\"%d\"} %d\n", counterLabel, ver, cmd, m.GetTotalCount())
+			}
+		}
+	}
+	return util.StrConcat(g.String(), c.String())
+}
+
+func (cm *CommandMetrics) Stop() {
+	if cm != nil && len(cm.m) > 0 {
+		for _, cmds := range cm.m {
+			for _, m := range cmds {
+				m.Stop()
+			}
 		}
 	}
 }
@@ -130,221 +498,88 @@ func IncrementResponseMetrics(ver uint8, cmd uint16) {
 }
 
 func GetCallCommandMetrics() map[uint8]map[uint16]*metrics {
-	return callCommandMetrics.counter
+	return callCommandMetrics.m
 }
 func GetPushMetrics() map[uint8]map[uint16]*metrics {
-	return pushCommandMetrics.counter
+	return pushCommandMetrics.m
 }
 func GetResponseMetrics() map[uint8]map[uint16]*metrics {
-	return responseCommandMetrics.counter
+	return responseCommandMetrics.m
 }
 
-func PrintAllCommandMetrics() {
-	callCommandMetrics.Print()
-	pushCommandMetrics.Print()
-	responseCommandMetrics.Print()
+type KeyValue map[string]any
+type MetricsCollector interface {
+	Print()
+	GetAsKV(kv *KeyValue)
+	GetMetrics() string
+	Stop()
+	// Reset()
 }
 
-type APIMetrics struct {
+// metrics' that implement collector
+var allMetrics = []MetricsCollector{
+	activeUsers,
+	callCommandMetrics,
+	pushCommandMetrics,
+	responseCommandMetrics,
+	customMetrics,
 }
 
-type statistic struct {
-	userId         string
-	startTime      time.Time
-	duration       time.Duration
-	scenarioReport any
-}
-
-type report struct {
-	Name       string
-	startTime  time.Time
-	statistics []*statistic
-}
-
-var uidMap struct {
-	sync.RWMutex
-	IDs map[string]string
-}
-
-func NewReport(name string) *report {
-	rpt := new(report)
-
-	logger.Info("generating report.... %v", name)
-	rpt.Name = name
-	rpt.startTime = time.Now()
-	return rpt
-}
-
-func (rpt *report) Start(apiID uint16, userId string, startTime_ time.Time) *statistic {
-	sts := new(statistic)
-	if startTime_.IsZero() {
-		sts.startTime = time.Now()
-	} else {
-		sts.startTime = startTime_
-	}
-	sts.userId = userId
-	logger.Info("starting statistic.... %v", sts)
-	return sts
-
-}
-
-func (rpt *report) Write(sts *statistic, scenarioReport any) {
-	sts.duration = time.Since(sts.startTime)
-	sts.scenarioReport = scenarioReport
-	rpt.statistics = append(rpt.statistics, sts)
-	logger.Info("adding statistic.... %v", sts)
-}
-
-func (rpt *report) AppendUID(uid string, cosmosID string) {
-	uidMap.Lock()
-	if uidMap.IDs == nil {
-		uidMap.IDs = map[string]string{}
-	}
-	uidMap.IDs[uid] = cosmosID
-	uidMap.Unlock()
-}
-
-func (rpt *report) WriteUserIDMap() {
-	file, err := os.Create("/tmp/usermap.csv")
-	if err != nil {
-		logger.Error(err)
-	}
-	defer file.Close()
-	logger.Notice(uidMap.IDs)
-	for uid, cid := range uidMap.IDs {
-		file.WriteString(fmt.Sprintf("%v,%v\n", uid, cid))
+func PrintAllMetrics() {
+	for _, metrics := range allMetrics {
+		metrics.Print()
 	}
 }
 
-// func (rpt *report) PrintResult(totalCnt int, errCnt int) {
-// 	logger.Info("Report Result: %v", rpt)
-// 	var totalMatching int
-// 	var totalTicketError uint
-// 	var latestStartTime time.Time
-// 	var matchingRate float32
-// 	var avrDuration time.Duration
-// 	var minDuration time.Duration
-// 	var maxDuration time.Duration
-// 	var durations time.Duration
+func WriteCSV(name string, inputs ...map[string]string) {
+	var keys []string
+	var values []string
+	for _, input := range inputs {
+		for k, v := range input {
+			keys = append(keys, k)
+			values = append(values, v)
+		}
+	}
 
-// 	for _, sts := range rpt.statistics {
-// 		logger.Info("userId: %v", sts.userId)
-// 		logger.Info(" started:	%v", sts.startTime)
-// 		logger.Info(" took:		%v", sts.duration)
-// 		if flags, ok := sts.scenarioReport.(load.MatchingFlags); ok {
-// 			values := reflect.ValueOf(flags)
-// 			keys := values.Type()
-// 			for i := 0; i < values.NumField(); i++ {
-// 				key := keys.Field(i).Name
-// 				value := values.Field(i).Interface()
-// 				logger.Info(" %v:		%v", key, value)
-// 			}
-// 			// individual report statistics
-// 			for _, duration := range flags.MatchingDurations {
-// 				durations = durations + duration
-// 				if minDuration == 0 || duration < minDuration {
-// 					minDuration = duration
-// 				}
-// 				if maxDuration < duration {
-// 					maxDuration = duration
-// 				}
-// 			}
-// 			totalMatching = totalMatching + len(flags.MatchingDurations)
-// 			totalTicketError = totalTicketError + uint(flags.IsTicketError.Load())
-// 			if sts.startTime.After(latestStartTime) {
-// 				latestStartTime = sts.startTime
-// 			}
-// 		}
+	var kv = KeyValue{}
+	for _, metrics := range allMetrics {
+		metrics.GetAsKV(&kv)
+	}
+	for key, value := range kv {
+		keys = append(keys, key)
+		values = append(values, fmt.Sprintf("%v", value))
+	}
+	header := strings.Join(keys, ",")
+	data := strings.Join(values, ",")
+	output := strings.Join([]string{header, data}, "\n")
 
-// 	}
+	filename := "Bot_Report"
+	filename += name
+	filename += "_"
+	filename += time.Now().Format("20060102150405")
+	logger.Info("Writing report to csv file. file name:%s, data: \n%s", filename, output)
+	util.WriteToTmp(filename, output)
+}
 
-// 	clientCount := len(rpt.statistics)
-// 	if totalMatching != 0 {
-// 		avrDuration = time.Duration(int(durations) / totalMatching)
-// 	}
-// 	if clientCount != 0 {
-// 		matchingRate = float32(totalMatching) / float32(clientCount)
-// 	}
+func ResetAllMetrics() {
+	callCommandMetrics.m = map[uint8]map[uint16]*metrics{}
+	pushCommandMetrics.m = map[uint8]map[uint16]*metrics{}
+	responseCommandMetrics.m = map[uint8]map[uint16]*metrics{}
+	customMetrics.m = map[string]map[string]*metrics{}
+	scenarioError.Reset()
+}
 
-// 	errorRate := float32(errCnt) / float32(totalCnt)
-// 	fmt.Printf("~~~~~~~~~~~~~~~~~~~~~~~~ report summary ~~~~~~~~~~~~~~~~~~~~~~~~ \n")
-// 	fmt.Printf("time: %v \n", time.Since(rpt.startTime))
-// 	fmt.Printf("client count: %v  \n", clientCount)
-// 	fmt.Printf("all clients spawned in: %v  \n", latestStartTime.Sub(rpt.startTime))
-// 	fmt.Printf("error rate for target API: %.2f％ \n", errorRate*100)
-// 	fmt.Println()
-// 	fmt.Printf("total matching: %v \n", totalMatching/2)
-// 	fmt.Printf("total ticket error: %v \n", totalTicketError)
-// 	fmt.Printf("matching rate: %.3f times / client \n", matchingRate)
-// 	fmt.Printf("average matching duration: %v \n", avrDuration)
-// 	fmt.Printf("minimum matching duration: %v \n", minDuration)
-// 	fmt.Printf("maximum matching duration: %v \n", maxDuration)
-// 	fmt.Printf("~~~~~~~~~~~~~~~~~~~~~~~~ report summary ~~~~~~~~~~~~~~~~~~~~~~~~ \n")
+func StopAllMetrics() {
+	for _, metrics := range allMetrics {
+		metrics.Stop()
+	}
+}
 
-// }
+func GetPrometheusMetrics() string {
+	var output string
+	for _, metrics := range allMetrics {
+		output += metrics.GetMetrics()
+	}
 
-// func (rpt *report) PrintSessionResult(totalCnt int, errCnt int, createRate float64) {
-// 	logger.Info("Report Result: %v", rpt)
-// 	var totalSession uint32
-// 	var latestStartTime time.Time
-// 	var requestCount int
-// 	totalRtt := map[uint16]time.Duration{}
-// 	apiCall := map[uint16]int{}
-// 	errorCounts := map[uint16]uint32{}
-
-// 	for _, sts := range rpt.statistics {
-// 		logger.Info("userId: %v", sts.userId)
-// 		logger.Info(" started:	%v", sts.startTime)
-// 		logger.Info(" took:		%v", sts.duration)
-// 		if flags, ok := sts.scenarioReport.(load.SessionFlags); ok {
-// 			values := reflect.ValueOf(flags)
-// 			keys := values.Type()
-// 			for i := 0; i < values.NumField(); i++ {
-// 				key := keys.Field(i).Name
-// 				value := values.Field(i).Interface()
-// 				logger.Info(" %v:		%v", key, value)
-// 			}
-// 			// individual report statistics
-// 			totalSession = totalSession + flags.IsCreatedSession.Load()
-
-// 			for apiID, rtts := range flags.RTT {
-// 				for _, rtt := range rtts {
-// 					totalRtt[apiID] = totalRtt[apiID] + rtt
-// 					apiCall[apiID]++
-// 					requestCount++
-// 				}
-// 			}
-// 			for apiID, cnt := range flags.ErrorCount {
-// 				errorCounts[apiID] = errorCounts[apiID] + cnt
-// 			}
-// 			if sts.startTime.After(latestStartTime) {
-// 				latestStartTime = sts.startTime
-// 			}
-// 		}
-// 	}
-
-// 	clientCount := len(rpt.statistics)
-// 	duration := time.Since(rpt.startTime)
-// 	rps := float32(requestCount) / (float32(duration) / float32(time.Second))
-// 	fmt.Printf("~~~~~~~~~~~~~~~~~~~~~~~~ report summary ~~~~~~~~~~~~~~~~~~~~~~~~ \n")
-// 	fmt.Printf("time: %v \n", duration)
-// 	fmt.Printf("client count: %v  \n", clientCount)
-// 	fmt.Printf("session create rate: %.1f%%  \n", createRate*100)
-// 	fmt.Printf("all clients spawned in: %v  \n", latestStartTime.Sub(rpt.startTime))
-// 	fmt.Println()
-// 	fmt.Printf("total session created: %v \n", totalSession)
-// 	fmt.Printf("RPS (Cosmos): %.2f times / second\n", rps)
-// 	fmt.Printf("Average RTT:\n")
-// 	for apiID, rtt := range totalRtt {
-// 		apiIDstr := fmt.Sprintf("%d", apiID)
-// 		fmt.Printf("   [%d]%s: %v\n", apiID, strings.Repeat(" ", 5-len(apiIDstr)), rtt/time.Duration(apiCall[apiID]))
-// 	}
-// 	fmt.Printf("Error Rate:\n")
-// 	for apiID, callCount := range apiCall {
-// 		apiIDstr := fmt.Sprintf("%d", apiID)
-// 		errorCount := errorCounts[apiID]
-// 		fmt.Printf("   [%d]%s: %.3f%% (%d times called)\n", apiID, strings.Repeat(" ", 5-len(apiIDstr)), float32(errorCount)/float32(callCount), callCount)
-// 	}
-// 	fmt.Printf("~~~~~~~~~~~~~~~~~~~~~~~~ report summary ~~~~~~~~~~~~~~~~~~~~~~~~ \n")
-
-// }
+	return output
+}

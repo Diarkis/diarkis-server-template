@@ -2,10 +2,13 @@ package scenarios
 
 import (
 	"encoding/json"
+	"fmt"
+	"math"
 	"math/rand"
 	"strconv"
 	"time"
 
+	bot_client "{0}/bot/scenario/lib/client"
 	"{0}/bot/scenario/lib/log"
 	"{0}/bot/scenario/lib/report"
 
@@ -13,32 +16,47 @@ import (
 	uuidv4 "github.com/Diarkis/diarkis/uuid/v4"
 )
 
+type Common struct {
+	globalParams *GlobalParams
+	client       *bot_client.UDPClient
+	metrics      *report.CustomMetrics
+	UID          string
+}
+
 type GlobalParams struct {
-	ScenarioName    string `json:"scenarioName"`
-	ScenarioPattern string `json:"scenarioPattern"`
-	Host            string `json:"host"`
-	Interval        int    `json:"interval"`
-	Duration        int    `json:"duration"`
-	HowMany         int    `json:"howmany"`
-	LogLevel        int    `json:"logLevel"`
-	ReceiveByteSize int    `json:"receiveByteSize"`
-	UDPSendInterval int64  `json:"udpSendInterval"`
-	RawConfigs      struct {
+	ScenarioName       string         `json:"scenarioName"`
+	ScenarioPattern    string         `json:"scenarioPattern"`
+	Host               string         `json:"host"`
+	Interval           int            `json:"interval"`
+	Duration           int            `json:"duration"`
+	HowMany            int            `json:"howmany"`
+	LogLevel           int            `json:"logLevel"`
+	ReceiveByteSize    int            `json:"receiveByteSize"`
+	UDPSendInterval    int64          `json:"udpSendInterval"`
+	MetricsInterval    int            `json:"metricsInterval"`
+	Configs            map[string]int `json:"configs"`
+	InputKeysForReport []string       `json:"keysForReport"`
+	Raw                struct {
 		CommonParams   map[string]any
 		ScenarioParams map[string]any
+		ParamsFromAPI  map[string]any
 	}
 }
 
+// Scenario represents a scenario for a specific task.
 type Scenario interface {
-	// GetName() string
+	// Run should perform the scenario's main logic.
+	// It gives globalParams as a struct that is used for the running scenario.
+	// It is shared with all scenarios
 	Run(globalParams *GlobalParams) error
-	// todo: @params: error:
+
+	// ParseParam should parse and sets the scenario-specific parameters from given params.
+	// It gives the index of which describes the number of clients and the raw parameter data as input.
 	ParseParam(index int, params []byte) error
-	// todo: doc
+
+	// OnScenarioEnd is called when the scenario execution has completed.
+	// Implementations of this method should handle any necessary cleanup or finalization.
 	OnScenarioEnd() error
-	// should return global report and individual report.
-	// todo: readme
-	WriteReport() (*report.Report, map[string]*report.Report)
 }
 
 var logger = log.New("BOT/SCENARIO")
@@ -58,14 +76,23 @@ var ScenarioFactoryList map[string]func() Scenario = map[string]func() Scenario{
 // }
 
 type ApiParamAttributes struct {
-	DefaultValue any    `json:"defaultValue"`
-	Options      []any  `json:"options"`
-	OptionRates  []any  `json:"optionRates"`
+	DefaultValue any   `json:"defaultValue"`
+	Options      []any `json:"options"`
+	OptionRates  []any `json:"optionRates"`
+	Range        struct {
+		Min int `json:"min"`
+		Max int `json:"max"`
+	} `json:"range"`
 	IsRandom     bool   `json:"isRandom"`
 	IsSequential bool   `json:"isSequential"`
 	Type         string `json:"type"`
 }
 
+func (ap *ApiParamAttributes) isRangeSet() bool {
+	return ap.Range.Min != 0 && ap.Range.Max != 0
+}
+
+// set index if you intend to generate "isSequential" value
 func GenerateParams(index int, params ...map[string]any) ([]byte, error) {
 	ret := map[string]any{}
 	uuid, _ := uuidv4.New()
@@ -119,7 +146,13 @@ func GenerateParams(index int, params ...map[string]any) ([]byte, error) {
 					// set sequential value for int value
 					baseValue, ok := apiParam.DefaultValue.(float64)
 					if ok {
-						ret[key] = index + int(baseValue)
+						v := int(baseValue)
+						if apiParam.isRangeSet() {
+							delta := apiParam.Range.Max - apiParam.Range.Min + 1
+							ret[key] = int(math.Mod(float64(v), float64(delta))) + apiParam.Range.Min
+							continue
+						}
+						ret[key] = index + v
 						continue
 					}
 
@@ -128,16 +161,26 @@ func GenerateParams(index int, params ...map[string]any) ([]byte, error) {
 					if ok {
 						baseValue, err := strconv.Atoi(baseValueStr)
 						if err == nil {
+							if apiParam.isRangeSet() {
+								delta := apiParam.Range.Max - apiParam.Range.Min + 1
+								ret[key] = int(math.Mod(float64(baseValue), float64(delta))) + apiParam.Range.Min
+								continue
+							}
 							ret[key] = strconv.Itoa(index + baseValue)
 							continue
 						}
 					}
-
 					ret[key] = index
+				} else if apiParam.isRangeSet() {
+					// generate a value within the range
+					ret[key] = util.RandomInt(apiParam.Range.Min, apiParam.Range.Max)
 				} else {
-
 					// default value
-					ret[key] = apiParam.DefaultValue
+					if apiParam.DefaultValue != nil {
+						ret[key] = apiParam.DefaultValue
+					} else {
+						ret[key] = param
+					}
 
 				}
 				if apiParam.Type != "" {
@@ -154,18 +197,56 @@ func GenerateParams(index int, params ...map[string]any) ([]byte, error) {
 	return bytes, nil
 }
 
-func DynamicCast(sType string, target any) any {
-	// todo: cover other types
-	switch sType {
-	case "uint8":
-		if iValue, ok := target.(float64); ok {
-			return uint8(iValue)
-		}
-	case "uint32":
-		if iValue, ok := target.(float64); ok {
-			return uint32(iValue)
+func CollectInputParameters(keys []string, params ...map[string]any) map[string]string {
+	ret := map[string]string{}
+	for _, input := range params {
+		for _, key := range keys {
+			if paramIf, ok := input[key]; ok {
+				if param, ok := paramIf.(map[string]any); ok {
+
+					apiParam := ApiParamAttributes{}
+					jsonParams, err := json.Marshal(param)
+					if err != nil {
+						continue
+					}
+					err = json.Unmarshal(jsonParams, &apiParam)
+					if err != nil {
+						continue
+					}
+					if apiParam.IsRandom {
+						ret[key] = "Random"
+						continue
+					}
+					if apiParam.IsSequential {
+						ret[key] = "Sequential"
+						continue
+					}
+					if apiParam.isRangeSet() {
+						ret[key] = fmt.Sprintf("Range [%d-%d]", apiParam.Range.Min, apiParam.Range.Max)
+					}
+					ret[key] = fmt.Sprintf("%v", paramIf)
+				} else {
+					ret[key] = fmt.Sprintf("%v", paramIf)
+				}
+
+			}
 		}
 	}
+	return ret
+}
+
+func DynamicCast(sType string, target any) any {
+	// todo: cover other types
+	// switch sType {
+	// case "uint8":
+	// 	if iValue, ok := target.(float64); ok {
+	// 		return uint8(iValue)
+	// 	}
+	// case "uint32":
+	// 	if iValue, ok := target.(float64); ok {
+	// 		return uint32(iValue)
+	// 	}
+	// }
 	return target
 
 }

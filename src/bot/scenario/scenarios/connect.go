@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	bot_client "{0}/bot/scenario/lib/client"
-	"{0}/bot/scenario/lib/report"
 )
 
 type ConnectParams struct {
@@ -50,8 +49,4 @@ func (s *ConnectScenario) Run(globalParams *GlobalParams) error {
 
 func (s *ConnectScenario) OnScenarioEnd() error {
 	return nil
-}
-
-func (s *ConnectScenario) WriteReport() (*report.Report, map[string]*report.Report) {
-	return nil, nil
 }

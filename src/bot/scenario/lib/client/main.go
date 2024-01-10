@@ -3,7 +3,6 @@ package bot_client
 import (
 	"strconv"
 	"strings"
-
 	"{0}/bot/scenario/lib/log"
 
 	"github.com/Diarkis/diarkis/util"
@@ -11,6 +10,7 @@ import (
 
 var logger = log.New("BOT/CLI")
 
+// NewAndConnect gets an endpoint for the transport and connect it.
 func NewAndConnect(host string, userID string, serverType string, httpRequestBody any, rcvMaxSize int, interval int64) (*HTTPClient, *UDPClient, error) {
 
 	httpClient := NewHTTPClient(host, userID)

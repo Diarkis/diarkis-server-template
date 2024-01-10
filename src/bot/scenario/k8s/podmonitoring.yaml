@@ -1,0 +1,12 @@
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: prom-monitoring
+spec:
+  selector:
+    matchLabels:
+      component: bot
+  endpoints:
+    - port: bot
+      path: /metrics
+      interval: 15s

@@ -76,12 +76,11 @@ func (hc *HTTPClient) Connect(serverType string, requestBody any) (int, error) {
 		if err != nil {
 			return 0, err
 		}
+		req.Header.Set("Content-Type", "application/json")
 	}
 	if err != nil {
 		return 0, err
 	}
-
-	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

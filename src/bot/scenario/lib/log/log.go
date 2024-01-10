@@ -26,42 +26,52 @@ func appendUIDAsPrefix(userID string, vals ...interface{}) []interface{} {
 	return vals
 }
 
+// Verboseu outputs log with UID as prefix
 func (sl ScenarioLogger) Verboseu(userID string, vals ...interface{}) {
 	sl.Verbose(appendUIDAsPrefix(string(userID), vals...)...)
 }
 
+// Networkf outputs log with UID as prefix
 func (sl ScenarioLogger) Networkf(userID string, vals ...interface{}) {
 	sl.Network(appendUIDAsPrefix(string(userID), vals...)...)
 }
 
+// Sysu outputs log with UID as prefix
 func (sl ScenarioLogger) Sysu(userID string, vals ...interface{}) {
 	sl.Sys(appendUIDAsPrefix(string(userID), vals...)...)
 }
 
+// Traceu outputs log with UID as prefix
 func (sl ScenarioLogger) Traceu(userID string, vals ...interface{}) {
 	sl.Trace(appendUIDAsPrefix(string(userID), vals...)...)
 }
 
+// Debugu outputs log with UID as prefix
 func (sl ScenarioLogger) Debugu(userID string, vals ...interface{}) {
 	sl.Debug(appendUIDAsPrefix(string(userID), vals...)...)
 }
 
+// Infou outputs log with UID as prefix
 func (sl ScenarioLogger) Infou(userID string, vals ...interface{}) {
 	sl.Info(appendUIDAsPrefix(string(userID), vals...)...)
 }
 
+// Noticeu outputs log with UID as prefix
 func (sl ScenarioLogger) Noticeu(userID string, vals ...interface{}) {
 	sl.Notice(appendUIDAsPrefix(string(userID), vals...)...)
 }
 
+// Warnu outputs log with UID as prefix
 func (sl ScenarioLogger) Warnu(userID string, vals ...interface{}) {
 	sl.Warn(appendUIDAsPrefix(string(userID), vals...)...)
 }
 
+// Erroru outputs log with UID as prefix
 func (sl ScenarioLogger) Erroru(userID string, vals ...interface{}) {
 	sl.Error(appendUIDAsPrefix(string(userID), vals...)...)
 }
 
+// Fatalu outputs log with UID as prefix
 func (sl ScenarioLogger) Fatalu(userID string, vals ...interface{}) {
 	sl.Fatal(appendUIDAsPrefix(string(userID), vals...)...)
 }
