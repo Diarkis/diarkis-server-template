@@ -3,6 +3,7 @@
   "_host": "http.dev0.svc.cluster.local",
   "interval": 500,
   "duration": 0,
+  "idleDuration": 20,
   "logLevel": 20,
   "serverType": "UDP",
   "receiveByteSize": 1400,

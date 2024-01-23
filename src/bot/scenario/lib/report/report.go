@@ -13,7 +13,7 @@ import (
 )
 
 // 15 is default scraping interval for prometheus
-const Interval = 15
+var Interval = 15
 
 var logger = log.New("BOT/REPORT")
 
@@ -158,16 +158,12 @@ type ActiveUsers struct {
 
 var activeUsers = &ActiveUsers{list: map[string]time.Time{}}
 
-//	func (au *ActiveUsers) Increment() {
-//		if au.m == nil {
-//			au.m = NewMetrics()
-//		}
-//		au.m.counter.Add(1)
-//	}
 func IsActive(userID string) bool {
+	activeUsers.RLock()
 	lastTouched := activeUsers.list[userID]
-	duration := time.Since(lastTouched)
+	activeUsers.RUnlock()
 
+	duration := time.Since(lastTouched)
 	return duration < time.Second*time.Duration(Interval)
 }
 func TouchAsActiveUser(userID string) {
@@ -195,7 +191,7 @@ func TouchAsActiveUser(userID string) {
 }
 
 func (au *ActiveUsers) GetMetrics() string {
-	label := fmt.Sprintf("Bot_Active_Users_%dseconds", Interval)
+	label := fmt.Sprintf("Bot_Active_Users", Interval)
 	var metrics string
 	metrics += fmt.Sprintf("# HELP %s number of users that issued a command in %d seconds\n", label, Interval)
 	metrics += fmt.Sprintf("# TYPE %s gauge\n", label)
@@ -360,7 +356,7 @@ func (cm *CustomMetrics) GetMetrics() string {
 	if cm != nil && len(cm.m) > 0 {
 		for name, keys := range cm.m {
 			counterLabel := fmt.Sprintf("Bot_Custom_Metrics_%s_total", name)
-			gaugeLabel := fmt.Sprintf("Bot_Custom_Metrics_%s_%dseconds", name, Interval)
+			gaugeLabel := fmt.Sprintf("Bot_Custom_Metrics_%s", name, Interval)
 			averageLabel := fmt.Sprintf("Bot_Custom_Metrics_%s_average", name)
 			fmt.Fprintf(&c, "# HELP %s total value for custom metrics\n", counterLabel)
 			fmt.Fprintf(&c, "# TYPE %s counter\n", counterLabel)
@@ -395,6 +391,30 @@ func (cm *CustomMetrics) Stop() {
 			}
 		}
 	}
+}
+
+func (cm *CustomMetrics) WriteCSV(name string) {
+	var keys []string
+	var values []string
+
+	var kv = KeyValue{}
+	cm.GetAsKV(&kv)
+
+	for key, value := range kv {
+		keys = append(keys, key)
+		values = append(values, fmt.Sprintf("%v", value))
+	}
+	header := strings.Join(keys, ",")
+	data := strings.Join(values, ",")
+	output := strings.Join([]string{header, data}, "\n")
+
+	filename := "Bot_Report_Custom_"
+	filename += name
+	filename += "_"
+	filename += time.Now().Format("20060102150405")
+	filename += ".csv"
+	logger.Info("Writing report to csv file. file name:%s, data: \n%s", filename, output)
+	util.WriteToTmp(filename, output)
 }
 
 func PrintCustomMetrics() {
@@ -461,7 +481,7 @@ func (cm *CommandMetrics) GetMetrics() string {
 	var g strings.Builder
 	var c strings.Builder
 	if cm != nil && len(cm.m) > 0 {
-		gaugeLabel := fmt.Sprintf("Bot_Command_%s_%dseconds", cm.cType, Interval)
+		gaugeLabel := fmt.Sprintf("Bot_Command_%s", cm.cType, Interval)
 		counterLabel := fmt.Sprintf("Bot_Command_%s_total", cm.cType)
 		fmt.Fprintf(&g, "# HELP %s sub total %s count for each commands in %d seconds\n", gaugeLabel, cm.cType, Interval)
 		fmt.Fprintf(&g, "# TYPE %s gauge\n", gaugeLabel)
@@ -553,10 +573,11 @@ func WriteCSV(name string, inputs ...map[string]string) {
 	data := strings.Join(values, ",")
 	output := strings.Join([]string{header, data}, "\n")
 
-	filename := "Bot_Report"
+	filename := "Bot_Report_"
 	filename += name
 	filename += "_"
 	filename += time.Now().Format("20060102150405")
+	filename += ".csv"
 	logger.Info("Writing report to csv file. file name:%s, data: \n%s", filename, output)
 	util.WriteToTmp(filename, output)
 }

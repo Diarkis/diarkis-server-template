@@ -3,6 +3,7 @@ package scenarios
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	bot_client "{0}/bot/scenario/lib/client"
@@ -40,27 +41,31 @@ func NewTicketScenario() Scenario {
 }
 
 // // // // // Interface Functions // // // // //
+func (s *TicketScenario) GetUserID() string {
+	return s.params.UID
+}
+
 func (s *TicketScenario) ParseParam(index int, params []byte) error {
 	// parse scenario params
 	var ticketParams *TicketScenarioParams
 	err := json.Unmarshal(params, &ticketParams)
 	if err != nil {
-		logger.Erroru(s.params.UID, "Failed to unmarshal scenario params.", err.Error())
+		logger.Erroru(strconv.Itoa(index), "Failed to unmarshal scenario params.", err.Error())
 		return err
 	}
 	s.params = ticketParams
-	logger.Debugu(s.params.UID, "Scenario Params. %#v", ticketParams)
+	logger.Debugu(s.GetUserID(), "Scenario Params. %#v", ticketParams)
 
 	// params for create room
 	s.createRoomReq = &packets.CreateRoomReq{}
 	json.Unmarshal(params, s.createRoomReq)
-	logger.Debugu(s.params.UID, "Params for create Room. %#v", s.createRoomReq)
+	logger.Debugu(s.GetUserID(), "Params for create Room. %#v", s.createRoomReq)
 
 	return nil
 }
 
 func (s *TicketScenario) Run(gp *GlobalParams) error {
-	logger.Infou(s.params.UID, "Starting scenario for user %v", s.params.UID)
+	logger.Infou(s.GetUserID(), "Starting scenario for user %v", s.GetUserID())
 
 	// store GlobalParams to use it later
 	s.gp = gp
@@ -68,7 +73,7 @@ func (s *TicketScenario) Run(gp *GlobalParams) error {
 	s.metrics = report.NewCustomMetrics()
 
 	// connect to udp server
-	_, udpClient, err := bot_client.NewAndConnect(gp.Host, s.params.UID, s.params.ServerTypeMM, nil, gp.ReceiveByteSize, gp.UDPSendInterval)
+	_, udpClient, err := bot_client.NewAndConnect(gp.Host, s.GetUserID(), s.params.ServerTypeMM, nil, gp.ReceiveByteSize, gp.UDPSendInterval)
 	if err != nil {
 		return err
 	}
@@ -89,28 +94,34 @@ func (s *TicketScenario) Run(gp *GlobalParams) error {
 	return nil
 }
 
+func (s *TicketScenario) OnIdle() {
+	// leave from ticket if the user is idling to cancel and restart the ticket
+	s.leaveTicket()
+	return
+}
+
 func (s *TicketScenario) OnScenarioEnd() error {
 	// stop update metrics loop
 	s.metrics.Stop()
 
 	// print if the client is active and print the last command if not
-	isActive := report.IsActive(s.params.UID)
+	isActive := report.IsActive(s.GetUserID())
 	if !isActive {
 		kind, ver, cmd := s.client.GetLastActivity()
-		logger.Warnu(s.params.UID, "I did not have any activities more than %d seconds, last command was ver: %d cmd: %d type: %s", report.Interval, ver, cmd, kind)
+		logger.Warnu(s.GetUserID(), "I did not have any activities more than %d seconds, last command was ver: %d cmd: %d type: %s", report.Interval, ver, cmd, kind)
 	}
 
 	// disconnect from all servers
-	logger.Infou(s.params.UID, "disconnecting client...")
+	logger.Infou(s.GetUserID(), "disconnecting client...")
 	s.client.Disconnect()
 	if s.params.ServerTypeMM != s.params.ServerTypeTurn && s.trnClient != nil {
 		s.trnClient.Disconnect()
 	}
 
 	// print report
-	logger.Noticeu(s.params.UID, "result per client   === \\")
+	logger.Noticeu(s.GetUserID(), "result per client   === \\")
 	s.metrics.Print()
-	logger.Noticeu(s.params.UID, "result per client   === /")
+	logger.Noticeu(s.GetUserID(), "result per client   === /")
 	return nil
 }
 
@@ -130,9 +141,9 @@ func (s *TicketScenario) handleTicketComplete(payload []byte) {
 	// connect to turn server
 	s.connectTurnServer()
 	// create Room if I am the ticket owner
-	s.isOwner = string(res[0]) == s.params.UID
+	s.isOwner = string(res[0]) == s.GetUserID()
 	if s.isOwner {
-		logger.Sysu(s.params.UID, "Room Owner")
+		logger.Sysu(s.GetUserID(), "Room Owner")
 		s.createRoom()
 	}
 }
@@ -142,7 +153,7 @@ func (s *TicketScenario) handleTicketLeave(payload []byte) {
 
 	// issue ticket again to loop the scenario
 	s.issueTicket()
-	logger.Infou(s.params.UID, "Restarting ticket...")
+	logger.Infou(s.GetUserID(), "Restarting ticket...")
 }
 
 func (s *TicketScenario) handleTicketBroadcast(payload []byte) {
@@ -153,7 +164,7 @@ func (s *TicketScenario) handleTicketBroadcast(payload []byte) {
 		req := payload
 		req = append(req, []byte("hello")...)
 		s.trnClient.RSend(util.CmdBuiltInVer, util.CmdJoinRoom, req)
-		logger.Sysu(s.params.UID, "Joining room... roomID: %s", s.roomID)
+		logger.Sysu(s.GetUserID(), "Joining room... roomID: %s", s.roomID)
 	}
 }
 
@@ -176,9 +187,9 @@ func (s *TicketScenario) connectTurnServer() {
 	if s.params.ServerTypeMM == s.params.ServerTypeTurn {
 		s.trnClient = s.client
 	} else {
-		_, trnClient, err := bot_client.NewAndConnect(s.gp.Host, s.params.UID, s.params.ServerTypeTurn, nil, s.gp.ReceiveByteSize, s.gp.UDPSendInterval)
+		_, trnClient, err := bot_client.NewAndConnect(s.gp.Host, s.GetUserID(), s.params.ServerTypeTurn, nil, s.gp.ReceiveByteSize, s.gp.UDPSendInterval)
 		if err != nil {
-			logger.Erroru(s.params.UID, "Failed to get Turn server")
+			logger.Erroru(s.GetUserID(), "Failed to get Turn server")
 			return
 		}
 		s.trnClient = trnClient
@@ -235,7 +246,7 @@ func (s *TicketScenario) battle(payload []byte) {
 
 func (s *TicketScenario) regenerateParams() {
 	// generate params again to get a random value for ticketType
-	bytes, _ := GenerateParams(0, s.gp.Raw.ScenarioParams)
+	bytes, _ := s.gp.GenerateParams(0)
 	var ticketParams *TicketScenarioParams
 	json.Unmarshal(bytes, &ticketParams)
 	// update with new ticket type

@@ -22,6 +22,10 @@ func NewConnectScenario() Scenario {
 }
 
 // // // // // Interface Functions // // // // //
+func (s *ConnectScenario) GetUserID() string {
+	return s.params.UID
+}
+
 func (s *ConnectScenario) ParseParam(index int, params []byte) error {
 	var connectParams *ConnectParams
 	err := json.Unmarshal(params, &connectParams)
@@ -45,6 +49,11 @@ func (s *ConnectScenario) Run(globalParams *GlobalParams) error {
 	udpClient.Connect()
 	udpClient.Disconnect()
 	return nil
+}
+
+func (s *ConnectScenario) OnIdle() {
+	// do nothing
+	return
 }
 
 func (s *ConnectScenario) OnScenarioEnd() error {

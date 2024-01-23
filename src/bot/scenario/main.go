@@ -57,6 +57,8 @@ func load() error {
 	return nil
 }
 func setup() error {
+	gp.UserState = scenarios.NewUserState()
+
 	// get scenario
 	scenarioFactory_, ok := scenarios.ScenarioFactoryList[ss.ScenarioName]
 	if !ok {
@@ -91,7 +93,7 @@ func setup() error {
 	}
 
 	// set global params
-	globalParamsBytes, _ := scenarios.GenerateParams(0, gp.Raw.CommonParams, gp.Raw.ScenarioParams, gp.Raw.ParamsFromAPI)
+	globalParamsBytes, _ := gp.GenerateParams(0)
 	err := json.Unmarshal(globalParamsBytes, &gp)
 
 	logger.Sys("Parsed global params. %#v", gp)
@@ -102,7 +104,7 @@ func setup() error {
 
 	// set log level
 	udp.LogLevel(gp.LogLevel)
-	if gp.MetricsInterval >= 0 {
+	if gp.MetricsInterval > 0 {
 		report.Interval = gp.MetricsInterval
 	}
 
@@ -138,24 +140,55 @@ func start() error {
 			clients[i] = &scenarioClient
 
 			// set scenario params
-			scenarioParamsBytes, _ := scenarios.GenerateParams(i, gp.Raw.CommonParams, gp.Raw.ScenarioParams, gp.Raw.ParamsFromAPI)
+			scenarioParamsBytes, _ := gp.GenerateParams(i)
 			scenarioClient.ParseParam(i, scenarioParamsBytes)
+
+			// get user ID from parsed data
+			userID := scenarioClient.GetUserID()
+
+			// initialise user states
+			gp.UserState.Init(userID)
 
 			// execute scenario
 			err := scenarioClient.Run(gp)
 			if err != nil {
 				logger.Error(util.StackError(util.NewError("Scenario execution failed. %v", err.Error())))
 				report.IncrementScenarioError()
+				return
 			}
+
+			// if a user is idling, meaning does not send or get push/response for a specific period, trigger OnIdle()
+			checkIdling := func() {
+				startedAt := time.Now()
+				lastActiveTime := time.Now()
+				// Loop while scenario is running
+				for startedAt.Add(time.Duration(gp.Duration) * time.Second).After(time.Now()) {
+					if report.IsActive(userID) {
+						// update timestamp if the user is active
+						lastActiveTime = time.Now()
+					}
+
+					if lastActiveTime.Add(time.Duration(gp.IdleDuration) * time.Second).Before(time.Now()) {
+						logger.Infou(userID, "Triggering OnIdle... ")
+						// trigger on Idle if the user is idling over IdleDuration
+						scenarioClient.OnIdle()
+						// reset lastActiveTime
+						lastActiveTime = time.Now()
+					}
+
+					time.Sleep(time.Second)
+				}
+			}
+			go checkIdling()
 		}(i)
-		time.Sleep(time.Millisecond * time.Duration(gp.Interval))
+		time.Sleep(time.Duration(gp.Interval) * time.Millisecond)
 	}
 
 	// wait for "duration" time if it's set. mainly used for looping scenario
 	if gp.Duration == 0 {
 		wg.Wait()
 	} else {
-		time.Sleep(time.Second * time.Duration(gp.Duration))
+		time.Sleep(time.Duration(gp.Duration) * time.Second)
 	}
 
 	// loop again to call scenario end callback

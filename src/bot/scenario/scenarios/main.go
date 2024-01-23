@@ -2,34 +2,41 @@ package scenarios
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"math/rand"
 	"strconv"
+	"sync"
 	"time"
 
-	bot_client "{0}/bot/scenario/lib/client"
 	"{0}/bot/scenario/lib/log"
-	"{0}/bot/scenario/lib/report"
 
 	"github.com/Diarkis/diarkis/util"
 	uuidv4 "github.com/Diarkis/diarkis/uuid/v4"
 )
 
-type Common struct {
-	globalParams *GlobalParams
-	client       *bot_client.UDPClient
-	metrics      *report.CustomMetrics
-	UID          string
+type UserState struct {
+	sync.RWMutex
+	// map[UserID]map[key]value
+	state map[string]map[string]any
 }
 
 type GlobalParams struct {
-	ScenarioName       string         `json:"scenarioName"`
-	ScenarioPattern    string         `json:"scenarioPattern"`
-	Host               string         `json:"host"`
-	Interval           int            `json:"interval"`
-	Duration           int            `json:"duration"`
+	// // readonly params
+	// Scenario name you want to run. Set in ScenarioFactoryList.
+	ScenarioName string `json:"scenarioName"`
+	// Scenario pattern you want to run. Set in the root level of config json file. (eg. OneTicket, RandomTicket and RatedTicket in ticket.json)
+	ScenarioPattern string `json:"scenarioPattern"`
+	// Interval to spawn clients.
+	Interval int `json:"interval"`
+	// Duration how long the scenario should run in Second. set 0 if it's not looping scenario
+	Duration int `json:"duration"`
+	// time to allow users idling in Second. If user does not do any command send or get push/response during IdleDuration, OnIdle() is triggered
+	IdleDuration int `json:"idleDuration"`
+	// the number of clients to be spawned
 	HowMany            int            `json:"howmany"`
+	Host               string         `json:"host"`
 	LogLevel           int            `json:"logLevel"`
 	ReceiveByteSize    int            `json:"receiveByteSize"`
 	UDPSendInterval    int64          `json:"udpSendInterval"`
@@ -41,10 +48,16 @@ type GlobalParams struct {
 		ScenarioParams map[string]any
 		ParamsFromAPI  map[string]any
 	}
+	// // updatable params
+	sync.RWMutex
+	UserState *UserState
 }
 
 // Scenario represents a scenario for a specific task.
 type Scenario interface {
+	// GetUserID should return the UID used for HTTP auth
+	GetUserID() string
+
 	// Run should perform the scenario's main logic.
 	// It gives globalParams as a struct that is used for the running scenario.
 	// It is shared with all scenarios
@@ -57,6 +70,10 @@ type Scenario interface {
 	// OnScenarioEnd is called when the scenario execution has completed.
 	// Implementations of this method should handle any necessary cleanup or finalization.
 	OnScenarioEnd() error
+
+	// OnIdle is called when the user does not send or get push/response for a while.
+	// idle time can be specified in IdleDuration
+	OnIdle()
 }
 
 var logger = log.New("BOT/SCENARIO")
@@ -65,15 +82,6 @@ var ScenarioFactoryList map[string]func() Scenario = map[string]func() Scenario{
 	"Connect": NewConnectScenario,
 	"Ticket":  NewTicketScenario,
 }
-
-// func StructTypeByName(name string) (reflect.Type, bool) {
-// 	for _, t := range []reflect.Type{reflect.TypeOf(MyStruct1{}), reflect.TypeOf(MyStruct2{}), reflect.TypeOf(MyStruct3{})} {
-// 		if t.Name() == name {
-// 			return t, true
-// 		}
-// 	}
-// 	return nil, false
-// }
 
 type ApiParamAttributes struct {
 	DefaultValue any   `json:"defaultValue"`
@@ -90,6 +98,66 @@ type ApiParamAttributes struct {
 
 func (ap *ApiParamAttributes) isRangeSet() bool {
 	return ap.Range.Min != 0 && ap.Range.Max != 0
+}
+
+func NewUserState() *UserState {
+	us := &UserState{}
+	us.state = map[string]map[string]any{}
+	return us
+}
+
+func (us *UserState) Init(userID string) {
+	us.Lock()
+	defer us.Unlock()
+	us.state[userID] = map[string]any{}
+}
+
+func (us *UserState) Get(userID string, key string) any {
+	us.RLock()
+	defer us.RUnlock()
+	if itf, ok := us.state[userID]; ok {
+		if val, ok := itf[key]; ok {
+			return val
+		}
+	}
+	return nil
+}
+
+func (us *UserState) Set(userID string, key string, value any) error {
+	us.Lock()
+	defer us.Unlock()
+	if _, ok := us.state[userID]; !ok {
+		return errors.New("User does not exist. Call Init first.")
+	}
+	us.state[userID][key] = value
+	return nil
+}
+
+// returns a list of userID that hit passed key and value
+func (us *UserState) Search(key string, value any, limit int) []string {
+	us.RLock()
+	defer us.RUnlock()
+	var list []string
+	for userID, state := range us.state {
+		if v, _ := state[key]; v == value {
+			list = append(list, userID)
+			if len(list) == limit {
+				break
+			}
+		}
+	}
+	return list
+}
+
+func (us *UserState) Exists(userID string) bool {
+	us.RLock()
+	defer us.RUnlock()
+	_, ok := us.state[userID]
+	return ok
+}
+
+func (gp *GlobalParams) GenerateParams(index int) ([]byte, error) {
+	return GenerateParams(index, gp.Raw.CommonParams, gp.Raw.ScenarioParams, gp.Raw.ParamsFromAPI)
 }
 
 // set index if you intend to generate "isSequential" value

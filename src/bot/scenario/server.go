@@ -3,12 +3,12 @@ package main
 
 import (
 	"bytes"
+	"diarkis-dolce/bot/scenario/lib/report"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
-	"{0}/bot/scenario/lib/report"
 
 	"github.com/Diarkis/diarkis/util"
 )
@@ -50,7 +50,7 @@ func handleGetMetrics(w http.ResponseWriter, r *http.Request) {
 
 	metrics := report.GetPrometheusMetrics()
 	fmt.Fprint(w, metrics)
-	logger.Sys("Get Metrics Called...")
+	logger.Verbose("Get Metrics Called...")
 	// w.WriteHeader(http.StatusOK)
 
 }
