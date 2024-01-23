@@ -3,12 +3,13 @@ package main
 
 import (
 	"bytes"
-	"diarkis-dolce/bot/scenario/lib/report"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
+
+	"{0}/bot/scenario/lib/report"
 
 	"github.com/Diarkis/diarkis/util"
 )

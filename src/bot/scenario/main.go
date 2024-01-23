@@ -9,11 +9,11 @@ import (
 	"sync"
 	"time"
 
+	"{0}/bot/scenario/lib/log"
 	"{0}/bot/scenario/lib/report"
 	"{0}/bot/scenario/scenarios"
 
 	"github.com/Diarkis/diarkis/client/go/udp"
-	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/util"
 )
 
@@ -127,7 +127,6 @@ func setup() error {
 
 func start() error {
 	report.ResetAllMetrics()
-	scenarios.InitScenario(gp)
 
 	clients := make([]*scenarios.Scenario, gp.HowMany)
 	// create bot clients
