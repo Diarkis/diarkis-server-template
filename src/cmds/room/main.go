@@ -5,7 +5,7 @@ import (
 	"{0}/lib/meshCmds"
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/room"
-	"github.com/Diarkis/diarkis/roomSupport"
+	roomSupport "github.com/Diarkis/diarkis/roomSupport"
 	"github.com/Diarkis/diarkis/user"
 	"strconv"
 )

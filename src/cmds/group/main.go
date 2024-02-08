@@ -3,7 +3,7 @@ package groupcmds
 import (
 	"fmt"
 	"github.com/Diarkis/diarkis/group"
-	"github.com/Diarkis/diarkis/groupSupport"
+	groupSupport "github.com/Diarkis/diarkis/groupSupport"
 )
 
 func Expose(rootpath string) {

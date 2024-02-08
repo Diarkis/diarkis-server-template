@@ -3,8 +3,8 @@ package httpcmds
 import (
 	dmcmds "{0}/cmds/dm"
 
-	"github.com/Diarkis/diarkis/groupSupport" // if you do not need group module, comment out this line
-	"github.com/Diarkis/diarkis/roomSupport"  // if you do not need room module, comment out this line
+	groupSupport "github.com/Diarkis/diarkis/groupSupport" // if you do not need group module, comment out this line
+	roomSupport "github.com/Diarkis/diarkis/roomSupport"  // if you do not need room module, comment out this line
 	"github.com/Diarkis/diarkis/server/http"
 )
 
