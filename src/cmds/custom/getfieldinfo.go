@@ -7,10 +7,24 @@
 // - Maximum length of any array is 65535 elements
 package customcmds
 
+import "encoding/binary"
 import "errors"
 import "fmt"
+//???
 import "strings"
-import "encoding/binary"
+//???
+//???
+
+
+// GetFieldInfoVer represents the ver of the protocol's command.
+//
+//	[NOTE] The value is optional and if ver is not given in the definition JSON, it will be 0.
+const GetFieldInfoVer uint8 = 2
+
+// GetFieldInfoCmd represents the command ID of the protocol's command ID.
+//
+//	[NOTE] The value is optional and if cmd is not given in the definition JSON, it will be 0.
+const GetFieldInfoCmd uint16 = 4242
 
 // GetFieldInfo represents the command protocol data structure.
 type GetFieldInfo struct {
@@ -24,17 +38,19 @@ type GetFieldInfo struct {
 
 // NewGetFieldInfo creates a new instance of GetFieldInfo struct.
 func NewGetFieldInfo() *GetFieldInfo {
-	return &GetFieldInfo{ Ver: 2, Cmd: 4242 }
+	return &GetFieldInfo{ Ver: 2, Cmd: 4242, FieldSize: 0, GridCount: 0 }
 }
 
 // Pack encodes GetFieldInfo struct to a byte array to be delivered over the command.
 func (proto *GetFieldInfo) Pack() []byte {
 	bytes := make([]byte, 0)
 
+
 	/* int64 */
 	fieldSizeBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(fieldSizeBytes, uint64(proto.FieldSize))
 	bytes = append(bytes, fieldSizeBytes...)
+
 
 	/* int64 */
 	gridCountBytes := make([]byte, 8)
@@ -53,9 +69,11 @@ func (proto *GetFieldInfo) Unpack(bytes []byte) error {
 
 	offset := 0
 
+
 	/* int64 */
 	proto.FieldSize = int64(binary.BigEndian.Uint64(bytes[offset:offset + 8]))
 	offset += 8
+
 
 	/* int64 */
 	proto.GridCount = int64(binary.BigEndian.Uint64(bytes[offset:offset + 8]))
@@ -70,4 +88,11 @@ func (proto *GetFieldInfo) String() string {
 	list = append(list, fmt.Sprint("FieldSize = ", proto.FieldSize))
 	list = append(list, fmt.Sprint("GridCount = ", proto.GridCount))
 	return strings.Join(list, " | ")
+}
+
+func (proto *GetFieldInfo) GetVer() uint8 {
+	return proto.Ver
+}
+func (proto *GetFieldInfo) GetCmd() uint16 {
+	return proto.Cmd
 }

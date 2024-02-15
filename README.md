@@ -386,8 +386,48 @@ POST /mm/search/:mmIDs/:limit
 
 # Custom Commands
 
-This is where you impleement your own custom commands for TCP, UDP/RUDP.
+This is where you implement your own custom commands for TCP, UDP/RUDP.
 
 ```
 /cmds/custom/main.go
+```
+
+A stand-alone application is provided in the [puffer](./puffer) folder to facilitate the generation of custom commands.\
+To add or modify a custom commands and generate it, simply open the JSON file [CustomCommands.json](./puffer/json_definitions/CustomCommands.json).
+Set the properties according to the format of the payload used for the new command.\
+Example:
+```json
+{
+  "GetFieldInfo": {
+    "ver": 2,
+    "cmd": 4242,
+    "package": "customcmds",
+    "properties": {
+       "FieldSize": "i64",
+       "GridCount": "i64"
+    }
+  }
+}
+```
+And run: 
+```sh
+$ make puffer
+```
+This will generate the `.go` files in the [custom commands source folder](./src/cmds/custom).\
+Alternatively, you can set other options to the `puffer generator` linux executable to generate the sources in other languages, output folder, etc.
+```
+$ ./puffer/puffer_gen -help
+Usage of ./puffer/puffer_gen:
+  -clean
+        Delete files in the output folder before generating new ones
+  -definitions string
+        input folder for json definition files. (default "./json_definitions")
+  -help
+        Show help
+  -lang string
+        output source language [all;cs;go;cpp] (default "all")
+  -output string
+        Definition path. (default "./payloads")
+  -tpl string
+        folder containing the tpl files (language syntax parsing format definition) (default "./tpl/")
 ```

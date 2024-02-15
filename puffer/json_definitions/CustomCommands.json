@@ -1,0 +1,11 @@
+{
+  "GetFieldInfo": {
+    "ver": 2,
+    "cmd": 4242,
+    "package": "customcmds",
+    "properties": {
+       "FieldSize": "i64",
+       "GridCount": "i64"
+    }
+  }
+}

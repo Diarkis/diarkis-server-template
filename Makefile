@@ -8,3 +8,7 @@ help:
 .PHONY: init
 init: ## make init project_id={project ID} builder_token={build token} output={absolute path to install}
 	go run ./tools/install.go $(project_id) $(builder_token) $(output)
+
+.PHONY: puffer
+puffer:
+	./puffer/puffer_gen -lang go -output ./src/cmds/custom/ -definitions ./puffer/json_definitions -tpl ./puffer/tpl

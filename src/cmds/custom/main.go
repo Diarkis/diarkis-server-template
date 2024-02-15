@@ -39,7 +39,7 @@ func Expose() {
 	// defined in p2p.go
 	server.HandleCommand(customVer, p2pReportAddr, reportP2PAddr)
 	server.HandleCommand(customVer, p2pInit, initP2P)
-	server.HandleCommand(customVer, NewGetFieldInfo().Cmd, getFieldInfo)
+	server.HandleCommand(GetFieldInfoVer, GetFieldInfoCmd, getFieldInfo)
 }
 
 func helloCmd(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
