@@ -5,7 +5,7 @@ import (
 	"{0}/lib/meshCmds"
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/room"
-	roomSupport "github.com/Diarkis/diarkis/roomSupport"
+	"github.com/Diarkis/diarkis/roomsupport"
 	"github.com/Diarkis/diarkis/user"
 	"strconv"
 )
@@ -25,10 +25,10 @@ func Expose() {
 	room.AfterCreateRoomCmd(afterCreateRoom)
 	// When a user performs random join and the server creates a new room, we setup on join event
 	// to sync owner ID by message
-	roomSupport.AfterRandomRoomCmd(afterRandomJoin)
+	roomsupport.AfterRandomRoomCmd(afterRandomJoin)
 	// expose commands
 	room.ExposeCommands()
-	roomSupport.ExposeCommands()
+	roomsupport.ExposeCommands()
 	// set up custom mesh commands
 	meshCmds.Setup()
 }

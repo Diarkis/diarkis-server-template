@@ -3,8 +3,8 @@ package httpcmds
 import (
 	dmcmds "{0}/cmds/dm"
 
-	groupSupport "github.com/Diarkis/diarkis/groupSupport" // if you do not need group module, comment out this line
-	roomSupport "github.com/Diarkis/diarkis/roomSupport"  // if you do not need room module, comment out this line
+	"github.com/Diarkis/diarkis/groupsupport" // if you do not need group module, comment out this line
+	"github.com/Diarkis/diarkis/roomsupport"  // if you do not need room module, comment out this line
 	"github.com/Diarkis/diarkis/server/http"
 )
 
@@ -14,9 +14,9 @@ func Expose(rootpath string) {
 	// if you do not need HTTP-based match making comment out this line
 	exposeMatchMaker(rootpath)
 	// if you do not need room module, comment out this line
-	roomSupport.DefineRoomSupport()
+	roomsupport.DefineRoomSupport()
 	// if you do not need group module, comment out this line
-	groupSupport.DefineGroupSupport()
+	groupsupport.DefineGroupSupport()
 	// custom room operations
 	exposeRoom(rootpath)
 	// if you do not need dm module, comment out this line
