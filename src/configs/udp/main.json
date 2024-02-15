@@ -6,5 +6,7 @@
 	"sendUDPInterval": 50,
 	"handleRUDPInterval": 100,
 	"retryInterval": 1000,
-	"maxRetry": 10
+	"maxRetry": 10,
+	"fieldSize": 4500,
+	"fieldOfVisionSize": 4500
 }
