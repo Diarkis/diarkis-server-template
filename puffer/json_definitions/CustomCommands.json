@@ -2,10 +2,11 @@
   "GetFieldInfo": {
     "ver": 2,
     "cmd": 4242,
-    "package": "customcmds",
+    "package": "payload",
     "properties": {
        "FieldSize": "i64",
-       "GridCount": "i64"
+       "NodeCount": "i32",
+       "FieldOfVisionSize": "i64"
     }
   }
 }

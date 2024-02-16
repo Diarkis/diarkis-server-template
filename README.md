@@ -401,10 +401,11 @@ Example:
   "GetFieldInfo": {
     "ver": 2,
     "cmd": 4242,
-    "package": "customcmds",
+    "package": "payload",
     "properties": {
        "FieldSize": "i64",
-       "GridCount": "i64"
+       "NodeCount": "i32",
+       "FieldOfVisionSize": "i64"
     }
   }
 }
@@ -413,10 +414,10 @@ And run:
 ```sh
 $ make puffer
 ```
-This will generate the `.go` files in the [custom commands source folder](./src/cmds/custom).\
-Alternatively, you can set other options to the `puffer generator` linux executable to generate the sources in other languages, output folder, etc.
+This will generate the `.go` files in the [payload](./lib/payload) source folder.\
+Alternatively, you can set other options to the `puffer generator` linux (and mac) executable to generate the sources in other languages, output folder, etc.
 ```
-$ ./puffer/puffer_gen -help
+$ ./puffer/puffer_gen-linux -help
 Usage of ./puffer/puffer_gen:
   -clean
         Delete files in the output folder before generating new ones

@@ -1,7 +1,7 @@
 package customcmds
 
 import (
-	"math"
+	dpayload "{0}/lib/payload"
 
 	"github.com/Diarkis/diarkis/field"
 	"github.com/Diarkis/diarkis/server"
@@ -11,10 +11,11 @@ import (
 // add to matching and create a room
 func getFieldInfo(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
 	logger.Sys("Get Field Info Received from user: {}", userData.ID)
-	fieldInfo := NewGetFieldInfo()
+	fieldInfo := dpayload.NewGetFieldInfo()
 
-	fieldInfo.GridCount = int64(field.GetNumberOfGrids())
-	fieldInfo.FieldSize = int64(float64(field.GetGridSize()) * math.Sqrt(float64(fieldInfo.GridCount)))
+	fieldInfo.GridCount = int64(field.GetFieldSize())
+	fieldInfo.FieldSize = int64(field.GetNodeNum())
+	fieldInfo.FieldOfVisionSize = int64(field.GetFieldOfVisionSize())
 	userData.ServerRespond(fieldInfo.Pack(), ver, cmd, server.Ok, true)
 	next(nil)
 }

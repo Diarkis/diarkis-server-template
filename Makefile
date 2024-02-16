@@ -20,5 +20,5 @@ init: ## make init project_id={project ID} builder_token={build token} output={a
 
 .PHONY: puffer
 puffer:
-	 $(PUFFER_BIN) -lang go -output ./src/cmds/custom/ -definitions ./puffer/json_definitions -tpl ./puffer/tpl
+	 $(PUFFER_BIN) -lang go -output ./src/lib/payload/ -definitions ./puffer/json_definitions -tpl ./puffer/tpl
 	
