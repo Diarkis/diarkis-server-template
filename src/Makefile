@@ -50,3 +50,17 @@ push-container: ## Push container to AWS
 	docker push AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/udp
 	docker push AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/tcp
 	docker push AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/mars
+
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S), Linux)
+    PUFFER_BIN ?= ./puffer/puffer_gen-linux
+endif
+ifeq ($(UNAME_S), Darwin)
+    PUFFER_BIN ?= ./puffer/puffer_gen-mac
+endif
+PUFFER_BIN ?= :
+
+.PHONY: puffer
+puffer:
+	 $(PUFFER_BIN) -lang go -output ./lib/payload/ -definitions ./puffer/json_definitions -tpl ./puffer/tpl
+	
