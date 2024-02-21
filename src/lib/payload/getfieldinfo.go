@@ -10,10 +10,7 @@ package payload
 import "encoding/binary"
 import "errors"
 import "fmt"
-//???
 import "strings"
-//???
-//???
 
 
 // GetFieldInfoVer represents the ver of the protocol's command.
@@ -46,18 +43,15 @@ func NewGetFieldInfo() *GetFieldInfo {
 func (proto *GetFieldInfo) Pack() []byte {
 	bytes := make([]byte, 0)
 
-
 	/* int64 */
 	fieldOfVisionSizeBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(fieldOfVisionSizeBytes, uint64(proto.FieldOfVisionSize))
 	bytes = append(bytes, fieldOfVisionSizeBytes...)
 
-
 	/* int64 */
 	fieldSizeBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(fieldSizeBytes, uint64(proto.FieldSize))
 	bytes = append(bytes, fieldSizeBytes...)
-
 
 	/* int32 */
 	nodeCountBytes := make([]byte, 4)
@@ -76,16 +70,13 @@ func (proto *GetFieldInfo) Unpack(bytes []byte) error {
 
 	offset := 0
 
-
 	/* int64 */
 	proto.FieldOfVisionSize = int64(binary.BigEndian.Uint64(bytes[offset:offset + 8]))
 	offset += 8
 
-
 	/* int64 */
 	proto.FieldSize = int64(binary.BigEndian.Uint64(bytes[offset:offset + 8]))
 	offset += 8
-
 
 	/* int32 */
 	proto.NodeCount = int32(binary.BigEndian.Uint32(bytes[offset:offset + 4]))

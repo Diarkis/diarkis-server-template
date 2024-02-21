@@ -60,7 +60,9 @@ ifeq ($(UNAME_S), Darwin)
 endif
 PUFFER_BIN ?= :
 
+PUFFER_OUTPUT_FOLDER=./puffer/generated
 .PHONY: puffer
 puffer:
-	 $(PUFFER_BIN) -lang go -output ./lib/payload/ -definitions ./puffer/json_definitions -tpl ./puffer/tpl
-	
+	mkdir -p ${PUFFER_OUTPUT_FOLDER}
+	$(PUFFER_BIN) -lang go -output ${PUFFER_OUTPUT_FOLDER}  -definitions ./puffer/json_definitions -tpl ./puffer/tpl -module "lib/payload"
+	cp $(PUFFER_OUTPUT_FOLDER)/go/payload/*.go ./lib/payload/
