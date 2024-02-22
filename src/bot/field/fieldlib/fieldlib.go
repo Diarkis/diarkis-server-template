@@ -5,25 +5,20 @@ import (
 
 	"github.com/Diarkis/diarkis/client/go/tcp"
 	"github.com/Diarkis/diarkis/client/go/udp"
-	"github.com/Diarkis/diarkis/packet"
 	"github.com/Diarkis/diarkis/util"
 )
 
 const builtInVer = util.CmdBuiltInVer
-const syncInitCmd = util.CmdFieldSyncInit
 const syncCmd = util.CmdFieldSync
-const reconnCmd = util.CmdFieldReconn
 const disappearCmd = util.CmdFieldDisappear
-const serverSyncCmd = util.CmdFieldServerSync
 
 type Field struct {
-	tcp                *tcp.Client
-	udp                *udp.Client
-	onResponseSyncInit []func(messageList [][]byte)
-	onSync             []func(message []byte)
-	onReconnect        []func()
-	onDisappear        []func(uid string)
-	onServerSync       []func(inSight bool, message []byte)
+	tcp          *tcp.Client
+	udp          *udp.Client
+	onSync       []func(message []byte)
+	onReconnect  []func()
+	onDisappear  []func(uid string)
+	onServerSync []func(inSight bool, message []byte)
 }
 
 func NewFieldAsTCP(tcpClient *tcp.Client) *Field {
@@ -59,21 +54,14 @@ func (f *Field) SetupAsUDP(udpClient *udp.Client) bool {
 func (f *Field) setup() {
 	if f.tcp != nil {
 		f.tcp.OnReconnect(f.dispatchOnReconnectCallbacks)
-		f.tcp.OnResponse(f.dispatchOnResponseCallbacks)
 		f.tcp.OnPush(f.dispatchOnPushCallbacks)
 		return
 	}
 	if f.udp != nil {
 		f.udp.OnReconnect(f.dispatchOnReconnectCallbacks)
-		f.udp.OnResponse(f.dispatchOnResponseCallbacks)
 		f.udp.OnPush(f.dispatchOnPushCallbacks)
 		return
 	}
-}
-
-func (f *Field) SyncInit(x, y, z int64, syncLimit uint16, customFilterID uint8, msg []byte, reliable bool, uid string) {
-	payload := f.createSyncPayload(x, y, z, syncLimit, customFilterID, msg, reliable, uid)
-	f.send(builtInVer, syncInitCmd, payload, reliable)
 }
 
 func (f *Field) Sync(x, y, z int64, syncLimit uint16, customFilterID uint8, msg []byte, reliable bool, uid string) {
@@ -131,10 +119,6 @@ func (f *Field) send(ver uint8, cmd uint16, payload []byte, reliable bool) {
 	}
 }
 
-func (f *Field) OnResponseSyncInit(cb func([][]byte)) {
-	f.onResponseSyncInit = append(f.onResponseSyncInit, cb)
-}
-
 func (f *Field) OnSync(cb func([]byte)) {
 	f.onSync = append(f.onSync, cb)
 }
@@ -157,16 +141,6 @@ func (f *Field) dispatchOnReconnectCallbacks() {
 	}
 }
 
-func (f *Field) dispatchOnResponseCallbacks(ver uint8, cmd uint16, status uint8, payload []byte) {
-	if ver != builtInVer {
-		return
-	}
-	switch cmd {
-	case syncInitCmd:
-		f.dispatchOnResponseSyncInit(payload)
-	}
-}
-
 func (f *Field) dispatchOnPushCallbacks(ver uint8, cmd uint16, payload []byte) {
 	if ver != builtInVer {
 		return
@@ -176,15 +150,6 @@ func (f *Field) dispatchOnPushCallbacks(ver uint8, cmd uint16, payload []byte) {
 		f.dispatchOnSync(payload)
 	case disappearCmd:
 		f.dispatchOnDisappear(payload)
-	case serverSyncCmd:
-		f.dispatchOnServerSync(payload)
-	}
-}
-
-func (f *Field) dispatchOnResponseSyncInit(payload []byte) {
-	messageList := packet.BytesToBytesList(payload)
-	for _, cb := range f.onResponseSyncInit {
-		cb(messageList)
 	}
 }
 
@@ -198,16 +163,5 @@ func (f *Field) dispatchOnDisappear(payload []byte) {
 	uid := string(payload)
 	for _, cb := range f.onDisappear {
 		cb(uid)
-	}
-}
-
-func (f *Field) dispatchOnServerSync(payload []byte) {
-	inSight := true
-	if payload[0] == 0x00 {
-		inSight = false
-	}
-	message := payload[1:]
-	for _, cb := range f.onServerSync {
-		cb(inSight, message)
 	}
 }
