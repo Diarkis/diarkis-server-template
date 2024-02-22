@@ -449,7 +449,7 @@ POST /mm/search/:mmIDs/:limit
 
 # Custom Commands
 
-This is where you impleement your own custom commands for TCP, UDP/RUDP.
+This is where you implement your own custom commands for TCP, UDP/RUDP.
 
 ```
 /cmds/custom/main.go
