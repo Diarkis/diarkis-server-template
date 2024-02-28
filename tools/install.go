@@ -7,7 +7,6 @@ import (
 
 	//"os/exec"
 	"io"
-	"io/ioutil"
 	"path/filepath"
 	"strings"
 	"syscall"
@@ -63,7 +62,7 @@ func main() {
 }
 
 func copyDirectory(pkg string, src string, dest string) error {
-	entries, err := ioutil.ReadDir(src)
+	entries, err := os.ReadDir(src)
 	if err != nil {
 		return err
 	}
@@ -123,9 +122,15 @@ func copyDirectory(pkg string, src string, dest string) error {
 		if err := os.Lchown(destPath, int(stat.Uid), int(stat.Gid)); err != nil {
 			return err
 		}
-		isSymlink := entry.Mode()&os.ModeSymlink != 0
+		info, err := entry.Info()
+		if err != nil {
+			fmt.Printf("\x1b[0;91mFailed to get file info from %s\x1b[0m\n", entry.Name())
+			continue
+		}
+
+		isSymlink := info.Mode()&os.ModeSymlink != 0
 		if !isSymlink {
-			if err := os.Chmod(destPath, entry.Mode()); err != nil {
+			if err := os.Chmod(destPath, info.Mode()); err != nil {
 				return err
 			}
 		}
@@ -154,7 +159,7 @@ func copyFile(pkg string, srcFile string, dstFile string) error {
 		}
 		prj = chunk
 	}
-	data, err := ioutil.ReadAll(in)
+	data, err := io.ReadAll(in)
 	if err != nil {
 		return err
 	}
@@ -163,6 +168,8 @@ func copyFile(pkg string, srcFile string, dstFile string) error {
 		fileData = strings.Replace(fileData, "{0}", prj, -1)
 		fileData = strings.Replace(fileData, "{{PROJECT_ID}}", projectID, -1)
 		fileData = strings.Replace(fileData, "{{BUILD_TOKEN}}", buildToken, -1)
+	} else {
+		fmt.Printf("\x1b[38;5;220mBinary file detected, skipping the replace. %s\x1b[0m\n", srcFile)
 	}
 	_, err = io.WriteString(out, fileData)
 	if err != nil {
