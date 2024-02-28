@@ -15,7 +15,7 @@ endif
 build-local: ## Build server binary for local use
 	echo "Build server binaries"
 	rm -rfv remote_bin/*
-	$(DIARKIS_CLI) build -c local-build.yml --host v2.builder.diarkis.io
+	$(DIARKIS_CLI) build -c local-build.yml --host v3.builder.diarkis.io
 	chmod -R 700 remote_bin/
 
 .PHONY: server
@@ -38,7 +38,7 @@ stop-docker: ## Stop Diarkis
 
 .PHONY: build-container
 build-container: ## Build container for AWS
-	$(DIARKIS_CLI) build -c container-build.yaml --host v2.builder.diarkis.io
+	$(DIARKIS_CLI) build -c container-build.yaml --host v3.builder.diarkis.io
 	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/http
 	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/udp
 	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/tcp

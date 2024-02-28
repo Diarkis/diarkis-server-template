@@ -3,12 +3,13 @@ package main
 import (
 	"fmt"
 	"os"
+	"unicode/utf8"
+
 	//"os/exec"
-	"syscall"
 	"io"
-	"io/ioutil"
-	"strings"
 	"path/filepath"
+	"strings"
+	"syscall"
 )
 
 var projectID = ""
@@ -31,7 +32,7 @@ func main() {
 		dest = fmt.Sprintf("%s/%s", cwd, os.Args[4])
 	}
 	list := strings.Split(dest, "/")
-	pkg := list[len(list) - 1]
+	pkg := list[len(list)-1]
 	fmt.Printf("\x1b[0;90m Installing the template as package %s to %s \x1b[0m\n", pkg, dest)
 	_, err = os.Stat(dest)
 	if err != nil {
@@ -61,7 +62,7 @@ func main() {
 }
 
 func copyDirectory(pkg string, src string, dest string) error {
-	entries, err := ioutil.ReadDir(src)
+	entries, err := os.ReadDir(src)
 	if err != nil {
 		return err
 	}
@@ -100,7 +101,7 @@ func copyDirectory(pkg string, src string, dest string) error {
 		if !ok {
 			return fmt.Errorf("Failed to get raw syscall.Stat_t data for \x1b[0;91m %v \x1b[0m", sourcePath)
 		}
-		switch fileInfo.Mode() & os.ModeType{
+		switch fileInfo.Mode() & os.ModeType {
 		case os.ModeDir:
 			if err := createIfNotExists(destPath, 0755); err != nil {
 				return err
@@ -121,9 +122,15 @@ func copyDirectory(pkg string, src string, dest string) error {
 		if err := os.Lchown(destPath, int(stat.Uid), int(stat.Gid)); err != nil {
 			return err
 		}
-		isSymlink := entry.Mode()&os.ModeSymlink != 0
+		info, err := entry.Info()
+		if err != nil {
+			fmt.Printf("\x1b[0;91mFailed to get file info from %s\x1b[0m\n", entry.Name())
+			continue
+		}
+
+		isSymlink := info.Mode()&os.ModeSymlink != 0
 		if !isSymlink {
-			if err := os.Chmod(destPath, entry.Mode()); err != nil {
+			if err := os.Chmod(destPath, info.Mode()); err != nil {
 				return err
 			}
 		}
@@ -152,13 +159,18 @@ func copyFile(pkg string, srcFile string, dstFile string) error {
 		}
 		prj = chunk
 	}
-	data, err := ioutil.ReadAll(in)
+	data, err := io.ReadAll(in)
 	if err != nil {
 		return err
 	}
-	fileData := strings.Replace(string(data), "{0}", prj, -1)
-	fileData = strings.Replace(fileData, "{{PROJECT_ID}}", projectID, -1)
-	fileData = strings.Replace(fileData, "{{BUILD_TOKEN}}", buildToken, -1)
+	fileData := string(data)
+	if utf8.ValidString(string(data)) {
+		fileData = strings.Replace(fileData, "{0}", prj, -1)
+		fileData = strings.Replace(fileData, "{{PROJECT_ID}}", projectID, -1)
+		fileData = strings.Replace(fileData, "{{BUILD_TOKEN}}", buildToken, -1)
+	} else {
+		fmt.Printf("\x1b[38;5;220mBinary file detected, skipping the replace. %s\x1b[0m\n", srcFile)
+	}
 	_, err = io.WriteString(out, fileData)
 	if err != nil {
 		return err
