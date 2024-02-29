@@ -15,6 +15,7 @@ configMapGenerator:
   files:
   - shared/conf/field.json
   - shared/conf/group.json
+  - shared/conf/dm.json  
   - shared/conf/log.json
   - shared/conf/matching.json
   - shared/conf/mesh.json

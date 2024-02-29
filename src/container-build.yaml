@@ -1,6 +1,6 @@
 buildSettings:
   root: .
-  goVersion: 1.19
+  goVersion: 1.21.5
   env:
     CGO_ENABLED: 0
     CGO_CFLAGS: -I${PROJECT_DIR}
@@ -17,9 +17,6 @@ buildSettings:
     tcp:
       target: servers/tcp/main.go
       output: remote_bin/tcp
-    ws:
-      target: servers/ws/main.go
-      output: remote_bin/ws
     mars:
       target: mars/main.go
       output: remote_bin/mars

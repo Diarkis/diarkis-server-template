@@ -42,8 +42,11 @@ Only HTTP server is required in the cluster and the rest of the servers should b
    │                                                           ├── group  ──────────────────────────── main.go
    ├─ bin/   [Built server binary directory]                   ├── field  ──────────────────────────── main.go
    │                                                           └── custom ──────────────────────────── main.go
+   ├cloud/ [Cloud Infra Manual for Diarkis]
+   │   
+   ├ k8s/ [contains k8s manifest for Diarkis]
    │
-   ├─ build.yml [Build configuration file for diarkis-cli]
+   ├build.yml [Build configuration file for diarkis-cli]
    │
    └─ go.mod [Go module file for the project]
 ```

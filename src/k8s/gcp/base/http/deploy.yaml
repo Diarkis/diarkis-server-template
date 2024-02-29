@@ -75,6 +75,8 @@ spec:
         ports:
         - name: http
           containerPort: 7000
+      nodeSelector:
+         cloud.google.com/private-node: "true"
       volumes:
       - name: http-conf
         configMap:

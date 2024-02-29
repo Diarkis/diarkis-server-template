@@ -25,6 +25,8 @@ spec:
           mountPath: /bin/mars
         - name: hc-conf
           mountPath: /bin/tools/configs
+      nodeSelector:
+        cloud.google.com/private-node: "true"
       volumes:
         - name: mars-conf
           configMap:

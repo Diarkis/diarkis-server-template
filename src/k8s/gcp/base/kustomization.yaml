@@ -20,6 +20,7 @@ resources:
 - http/ingress.yaml
 - http/hpa.yaml
 - ns.yaml
+- podmonitoring.yaml
 
 images:
 - name: udp
@@ -38,6 +39,7 @@ images:
 configMapGenerator:
 - files:
   - shared/conf/field.json
+  - shared/conf/dm.json  
   - shared/conf/group.json
   - shared/conf/log.json
   - shared/conf/matching.json
