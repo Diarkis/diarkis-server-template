@@ -1,5 +1,5 @@
 {
-    "enableP2P": false,
+    "enableP2P": true,
 	"connectionTTL": 10,
 	"sendUDPInterval": 50,
 	"handleRUDPInterval": 100,

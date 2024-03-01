@@ -20,6 +20,7 @@ spec:
         ports:
         - containerPort: 6779
           name: mars
+          protocol: UDP
         volumeMounts:
         - name: mars-conf
           mountPath: /bin/mars
