@@ -16,6 +16,7 @@ resources:
 - http/deploy.yaml
 - http/svc.yaml
 - http/hpa.yaml
+- http/ingress.yaml
 - podmonitoring.yaml
 - ns.yaml
 

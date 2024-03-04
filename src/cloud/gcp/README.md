@@ -3,6 +3,10 @@
 GKE で Diarkis を動作させるためのインフラの構築手順及び、Kubernetes manifest を格納しております。
 
 ## インフラ構築手順
+この手順書においては以下のアーキテクチャ図のような Diarkis クラスタを構築します。
+
+![DiarkisArchitecture](./img/diagram.svg)
+
 下記の手順でインフラの構築手順を述べていきます。
 
 1. firewall の作成
@@ -69,23 +73,38 @@ gcloud beta container --project "$YOUR_PROJECT_NAME" clusters create "$CLUSTER_N
 
 ## インフラ構築手順3 - GKE クラスタの作成(by web console)
 ### standard cluster 構築開始
+
 GKEの画面に遷移し、作成をクリックします。
-Autopilot か Standard か選択肢がでるので、Standardを選択します。( DiarkisはNodeのnetworkを直接使用するので、Autopilotでは動作しません。 )
+
+![CreateCluster](./img/create_cluster.png)
+
+画像のようにAutopilot か Standard か選択肢がでるので、Standardを選択します。( DiarkisはNodeのnetworkを直接使用するので、Autopilotでは動作しません。 )
 
 ### クラスタの基本
 クラスタ名、ロケーションタイプ、GKEのversionを目的に合わせ適当なものを選びます。(1.27系でdiarkisは動作確認を終えています。)
+
+![ClusterBasic](./img/cluster_basic.png)
 ### フリート登録
 行わなくて問題ないですが、行っていただいても大丈夫です。
 ### NodePool(Public)
 ### NodePool詳細
+
+![NodePoolDetail](./img/node_pool_detail.png)
+
 - クラスタオートスケーラーをenable にする
 - まずは、public なnodePoolを作るので、diarkis-publicのような名前をつけておくといいかと思います。
 ### ノード設定を構成
 - インスタンスタイプは、どれでも大丈夫ですが 一般的な使用法で、diarkisは4core マシンで 1GBほどまでのメモリ消費で動作します。
 - boot-disk は pd-balanced にすることを推奨しています。分析用のログの出力のため、IOPSがHDDだと足りなくなるおそれがあります。
 ### ノードネットワーキング
+
+![NodeNetworking](./img/node_networking.png)
+
 - ネットワークタグは`diarkis`を指定してください。(diarkisはnodeのportを使用し、クライアントと直接通信を行うため)
 ## ネットワーキング
+
+![Networking](./img/networking.png)
+
 - 一般公開クラスタにしてください。
 - VPC Native をenable
 - dataplane V2 にします
@@ -93,11 +112,14 @@ Autopilot か Standard か選択肢がでるので、Standardを選択します�
 - DNSプロバイダは CloudDNSにし、スコープはクラスタにします
 - NodeLocalDNSCache を enable にします
 
-以上の設定でまずクラスタの作成を行います。
+以上の設定でまずクラスタの作成を行います。次の手順で private node pool を追加します。
 
 ### NodePool(Private) の追加
 クラスタが起動し終わったあとに、PrivateNodeの追加を行います。
 作成したクラスタの選択をし、クラスタの詳細画面を開きNodePoolの追加を選択します。
+ここで作成する PrivateNodePool は PublicNodePool との違いとして、
+- network tag は無し。VPC外部とは、SserviceやIngressを使用して通信するので、明示的に Firewall を設定する必要はないです。
+- 一般公開クラスタではなく、限定公開クラスタに設定する。
 ### NodePool詳細
 - クラスタオートスケーラーをenable にする
 - 次は、private なnodePoolを作るので、`diarkis-private` のような名前をつけておくといいかと思います。
@@ -107,7 +129,7 @@ Autopilot か Standard か選択肢がでるので、Standardを選択します�
 ### ノードネットワーキング
 - ネットワークタグは`必要ありません。
 ## ネットワーキング
-- 一般公開クラスタにしない
+- 一般公開クラスタにせず、限定公開クラスタに変更する
 - VPC Native をenable
 - dataplane V2 にします
 - HTTP ロードバランシングを有効化します
@@ -136,12 +158,15 @@ kustomize build k8s/gcp/overlays/dev0 | sed -e "s/__GCP_PROJECT_ID__/${PROJECT_N
 
 ## インフラ構築手順7 - Diarkis 起動確認
 作成したクラスタの稼働を確認するために、Diarkis の認証エンドポイントに HTTP リクエストを送信し、動作の確認をします。
+お渡ししたmanifestでは、httpへは同一VPC内のサーバーからアクセスすることを想定しているので、`kubectl port-forward`を使ってアクセスを行います。
+
 下記の結果がレスポンスされれば正常に起動が完了しております。
 (下記の例では xxx や yyy 等で伏せ字をしております)
 ```
-# http loadbalancer のエンドポイント取得
-$ kubectl get ing -n dev0
-
-$ curl {http ingress の EXTERNAL-IP}:7000/auth/1 # 本来は、"GET /auth/{user id}"でリクエストいただく想定です。今回は動作確認のため"/auth/1"で挙動確認しております。
-{"TCP":"xxxx.bc.googleusercontent.com:7200","UDP":"yyyy.bc.googleusercontent.com:7100","sid":"xxxxx","encryptionKey":"xxxxx","encryptionIV":"xxxxx","encryptionMacKey":"xxxxx"}
+# kubectl port-forward svc/http 7000:http # port forward 開始
+```
+```
+# 別 shell で
+$ curl localhost:7000/endpoint/UDP/user/111 
+{"encryptionKey":"8368dd8a931e4510bdba5456b501fe6d","encryptionIV":"1119653769714ce7aafb6761f1589ded","encryptionMacKey":"c051b960657c4dbdb531a520693e5590","serverType":"UDP","serverHost":"xx.xx.xx.xx.bc.googleusercontent.com","serverPort":7102,"sid":"4bfde9f6f76c4385a38fff99d8abb478"}
 ```
