@@ -9,6 +9,7 @@ import (
 	matchmakercmds "{0}/cmds/matchmaker"
 	p2pcmds "{0}/cmds/p2p"
 	roomcmds "{0}/cmds/room"
+	sessioncmds "{0}/cmds/session"
 )
 
 var rootpath string
@@ -31,4 +32,5 @@ func ExposeServer() {
 	matchmakercmds.Expose(rootpath)
 	p2pcmds.Expose()
 	customcmds.Expose()
+	sessioncmds.Expose()
 }
