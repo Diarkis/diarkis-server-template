@@ -22,16 +22,16 @@ resources:
 
 images:
 - name: udp
-  newName: asia.gcr.io/diarkis-development/udp
+  newName: asia.gcr.io/__GCP_PROJECT_ID__/udp
   newTag: latest
 - name: tcp
-  newName: asia.gcr.io/diarkis-development/tcp
+  newName: asia.gcr.io/__GCP_PROJECT_ID__/tcp
   newTag: latest
 - name: mars
-  newName: asia.gcr.io/diarkis-development/mars
+  newName: asia.gcr.io/__GCP_PROJECT_ID__/mars
   newTag: latest
 - name: http
-  newName: asia.gcr.io/diarkis-development/http
+  newName: asia.gcr.io/__GCP_PROJECT_ID__/http
   newTag: latest
 
 configMapGenerator:

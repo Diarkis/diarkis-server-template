@@ -51,6 +51,10 @@ push-container: ## Push container to AWS
 	docker push AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/tcp
 	docker push AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/mars
 
+.PHONY: setup-gcp
+setup-gcp: 
+	./script/setup_gcp.sh
+
 .PHONY: build-container-gcp
 build-container: ## Build container for GCP
 	$(DIARKIS_CLI) build -c container-build.yaml --host v3.builder.diarkis.io
