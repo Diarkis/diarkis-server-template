@@ -22,6 +22,10 @@ Only HTTP server is required in the cluster and the rest of the servers should b
    │
    │
    ├─ healthcheck/ ── main.go
+   │   
+   ├ infra contains cloud infrastructure manual]
+   │   
+   ├k8 [contains k8s maniefst files]
    │
    │
    ├─ configs/ ─┬──── shared/ [Shared configuration directory] ────────────────────┬─ field.json

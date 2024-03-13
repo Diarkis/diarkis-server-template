@@ -1,5 +1,0 @@
-{
-    "nic": "eth0",
-    "marsAddress": "mars.aliyun.svc.cluster.local",
-    "marsPort": "6779"
-}
