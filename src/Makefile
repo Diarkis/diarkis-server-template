@@ -58,14 +58,14 @@ setup-gcp:
 .PHONY: build-container-gcp
 build-container: ## Build container for GCP
 	$(DIARKIS_CLI) build -c container-build.yaml --host v3.builder.diarkis.io
-	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t asia.gcr.io/$PROJECT/http
-	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/udp
-	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/tcp
-	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/mars
+	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t asia.gcr.io/__GCP_PROJECT_ID__/http
+	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t asia.gcr.io/__GCP_PROJECT_ID__/udp
+	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t asia.gcr.io/__GCP_PROJECT_ID__/tcp
+	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t asia.gcr.io/__GCP_PROJECT_ID__/mars
 
 .PHONY: push-container
 push-container: ## Push container to GCP
-	docker push AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/http
-	docker push AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/udp
-	docker push AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/tcp
-	docker push AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/mars
+	docker push asia.gcr.io/__GCP_PROJECT_ID__/http
+	docker push asia.gcr.io/__GCP_PROJECT_ID__/udp
+	docker push asia.gcr.io/__GCP_PROJECT_ID__/tcp
+	docker push asia.gcr.io/__GCP_PROJECT_ID__/mars
