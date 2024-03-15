@@ -11,11 +11,13 @@ AWS EKS上にDiarkisクラスターを構築するための手順です。
 
 ## 1. install eksctl
 https://catalog.us-east-1.prod.workshops.aws/workshops/f5abb693-2d87-43b5-a439-77454f28e2e7/ja-JP/020-create-cluster/10-install-eksctl
+`0.173.0` で動作確認済み
 
 ## 2. create ECR for diarkis images
 Diarkis構成コンポーネントをpushするためのregistryを準備
 alpineなどもsampleで使用しているが、それに関してはdocker hubから取得
 ```
+aws sts get-caller-identity # 向き先が正しいか確認してください
 aws ecr create-repository --repository-name http
 export HTTP_URI=$(aws ecr describe-repositories --repository-names http | jq '.repositories[].repositoryUri')
 aws ecr create-repository --repository-name udp
