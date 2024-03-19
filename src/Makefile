@@ -50,3 +50,23 @@ push-container: ## Push container to AWS
 	docker push AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/udp
 	docker push AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/tcp
 	docker push AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/mars
+
+.PHONY: setup-azure
+setup-azure:
+	./script/setup_azure.sh
+
+
+.PHONY: build-container-azure
+build-container-azure: ## Build container for azure
+	$(DIARKIS_CLI) build -c container-build.yaml --host v3.builder.diarkis.io
+	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t __ACR_DOMAIN__/http
+	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t  __ACR_DOMAIN__/udp
+	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t  __ACR_DOMAIN__/tcp
+	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t __ACR_DOMAIN__/mars
+
+.PHONY: push-container-azure
+push-container-azure: ## Push container to azure
+	docker push __ACR_DOMAIN__/http
+	docker push __ACR_DOMAIN__/udp
+	docker push __ACR_DOMAIN__/tcp
+	docker push __ACR_DOMAIN__/mars

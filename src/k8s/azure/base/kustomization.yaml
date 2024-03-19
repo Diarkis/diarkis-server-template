@@ -23,16 +23,16 @@ resources:
 
 images:
 - name: udp
-  newName: __REPOSITORY_NAME__.azurecr.io/udp
+  newName: __ACR_DOMAIN__/udp
   newTag: latest
 - name: tcp
-  newName: __REPOSITORY_NAME__.azurecr.io/tcp
+  newName: __ACR_DOMAIN__/tcp
   newTag: latest
 - name: mars
-  newName: __REPOSITORY_NAME__.azurecr.io/mars
+  newName: __ACR_DOMAIN__/mars
   newTag: latest
 - name: http
-  newName: __REPOSITORY_NAME__.azurecr.io/http
+  newName: __ACR_DOMAIN__/http
   newTag: latest
 
 configMapGenerator:
@@ -42,6 +42,7 @@ configMapGenerator:
   - shared/conf/log.json
   - shared/conf/matching.json
   - shared/conf/mesh.json
+  - shared/conf/dm.json  
   name: shared-conf
 - files:
   - http/conf/main.json

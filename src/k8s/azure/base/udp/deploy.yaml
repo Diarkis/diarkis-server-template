@@ -21,8 +21,6 @@ spec:
         component: udp
       annotations:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
-        ad.datadoghq.com/tuner.logs: '[{"source":"tuner","service":"udp"}]'
-        ad.datadoghq.com/udp.logs: '[{"source":"udp","service":"udp"}]'
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
@@ -57,12 +55,12 @@ spec:
           privileged: true
       containers:
       - name: udp
-        readinessProbe:
+        startupProbe:
           exec:
             command:
               - sh
               - -c
-              - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) in && /go/bin/health-check $(cat /tmp/DIARKIS_PUBLIC_ADDR) out"
+              - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) mars && /go/bin/health-check $(cat /tmp/DIARKIS_PUBLIC_ADDR) out"
         livenessProbe:
           exec:
             command:

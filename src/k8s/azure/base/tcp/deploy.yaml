@@ -56,12 +56,12 @@ spec:
 
       containers:
       - name: tcp
-        readinessProbe:
+        startupProbe:
           exec:
             command:
               - sh
               - -c
-              - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) in"
+              - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) mars"
         livenessProbe:
           exec:
             command:
