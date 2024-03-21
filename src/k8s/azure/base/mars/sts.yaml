@@ -18,6 +18,7 @@ spec:
         image: mars
         ports:
         - containerPort: 6779
+          protocol: UDP
           name: mars
         volumeMounts:
         - name: mars-conf

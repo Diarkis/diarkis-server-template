@@ -30,7 +30,7 @@ gcloud compute --project=$PROJECT_NAME firewall-rules create diarkis-ingress-all
 network tag は diarkis という名前で設定していきます
 
 ## インフラ構築手順2 - GCR,CloudDNS の有効化及び設定
-GCR は Diarki のコンテナイメージを配置する場所として今回使用しますので、有効化と Docker の設定を行います。
+GCR は Diarkis のコンテナイメージを配置する場所として今回使用しますので、有効化と Docker の設定を行います。
 またCloudDNSはkubernetesクラスターで使用するので、有効化します。
 まず https://console.cloud.google.com/flows/enableapi?apiid=containerregistry.googleapis.com にアクセスして対象プロジェクトの GCR API を有効化します。
 次に、https://console.cloud.google.com/flows/enableapi?apiid=dns にアクセスしてCloudDNSを有効化します。
@@ -38,38 +38,6 @@ GCR は Diarki のコンテナイメージを配置する場所として今回�
 ```
 gcloud auth configure-docker # docker が gcloud を使って認証するように設定する
 ```
-
-## インフラ構築手順3 - GKE クラスタの作成(by gcloud)
-Diarkis を動作させる GKE クラスタを構築します。
-Diarkis を動作させるのにはそれぞれの Node が PublicIP を持つように構築する必要があります。
-また、手順１で作成した firewall と結びつけるために diarkis tag を付与しています。
-
-```
-"#!/bin/bash
-PROJECT_NAME=YOUR_PROJECT_NAME
-CLUSTER_NAME=diarkis # sample
-
-NETWORK_TAG_NAME=diarkis
-
-NETWORK_NAME=YOUR_NETWORK_NAME
-SUBNETWORK_NAME=YOUR_SUBNETWORK_NAME
-
-ZONE=asia-northeast1-a
-REGION=asia-northeast1
-
-gcloud beta container --project "$YOUR_PROJECT_NAME" clusters create "$CLUSTER_NAME" \
-    --no-enable-basic-auth --cluster-version "1.27.8-gke.1067004" --release-channel "regular" \
-    --machine-type "c2-standard-4" --image-type "COS_CONTAINERD" --disk-type "pd-balanced" --disk-size "100" \
-    --metadata disable-legacy-endpoints=true --scopes "https://www.googleapis.com/auth/devstorage.read_only","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" \
-    --num-nodes "3" --logging=SYSTEM,WORKLOAD --monitoring=SYSTEM --enable-ip-alias --network "projects/$PROJECT_NAME/global/networks/$NETWORK_NAME" \
-    --subnetwork "projects/$PROJECT_NAME/regions/$REGION/subnetworks/$SUBNETWORK_NAME" --no-enable-intra-node-visibility \
-    --cluster-dns=clouddns --cluster-dns-scope=cluster --default-max-pods-per-node "110" --security-posture=standard --workload-vulnerability-scanning=disabled \
-    --enable-dataplane-v2 --no-enable-master-authorized-networks --addons HorizontalPodAutoscaling,HttpLoadBalancing,NodeLocalDNS,GcePersistentDiskCsiDriver \
-    --enable-autoupgrade --enable-autorepair --max-surge-upgrade 1 --max-unavailable-upgrade 0 --binauthz-evaluation-mode=DISABLED \
-    --enable-managed-prometheus --enable-shielded-nodes --tags "diarkis" --node-locations "$ZONE" 
-```
-
---cluster-version や、--machine-type, --network, --subnetwork などに関してはプロジェクトによって適宜調整していただければと思います。
 
 ## インフラ構築手順3 - GKE クラスタの作成(by web console)
 ### standard cluster 構築開始
@@ -128,23 +96,20 @@ GKEの画面に遷移し、作成をクリックします。
 - boot-disk は pd-balanced にすることを推奨しています。分析用のログの出力のため、IOPSがHDDだと足りなくなるおそれがあります。
 ### ノードネットワーキング
 - ネットワークタグは`必要ありません。
-## ネットワーキング
-- 一般公開クラスタにせず、限定公開クラスタに変更する
-- VPC Native をenable
-- dataplane V2 にします
-- HTTP ロードバランシングを有効化します
-- DNSプロバイダは CloudDNSにし、スコープはクラスタにします
-- NodeLocalDNSCache を enable にします
+- プライベートノードをenableにする
 
 以上の設定を行い diarkis-private クラスタを追加します。
 
 ## インフラ構築手順4 - GKE クラスタへの接続
 kubectlに認証を通します。
 ```
-gcloud container clusters get-credentials $CLUSTER_NAME --project $PROJECT_NAME
+gcloud container clusters get-credentials $CLUSTER_NAME --project $PROJECT_NAME --location $TARGET_ZONE_OR_REGION
 ```
 
 ## インフラ構築手順5 - Diarkis CLIを使ってイメージをビルド
+```
+make setup-gcp 
+```
 ```
 make build-container-gcp
 make push-container-gcp
@@ -153,7 +118,7 @@ make push-container-gcp
 ## インフラ構築手順6 - GKE クラスタへのマニフェスト反映
 kustomize を使用し、GKE クラスタにマニフェストの反映をします
 ```
-kustomize build k8s/gcp/overlays/dev0 | sed -e "s/__GCP_PROJECT_ID__/${PROJECT_NAME}/g" | kubectl apply -f -
+kustomize build k8s/gcp/overlays/dev0 | kubectl apply -f -
 ```
 
 ## インフラ構築手順7 - Diarkis 起動確認

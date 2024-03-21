@@ -1,12 +1,12 @@
 namespace: dev0
-bases:
+resources:
   - ../../base
 
 # build target
 patches:
-  - http/deploy.yaml
-  - udp/deploy.yaml
-  - tcp/deploy.yaml
+- path: http/deploy.yaml
+- path: udp/deploy.yaml
+- path: tcp/deploy.yaml
   
 configMapGenerator:
 - name: shared-conf
@@ -17,6 +17,7 @@ configMapGenerator:
     - shared/conf/log.json
     - shared/conf/matching.json
     - shared/conf/mesh.json
+    - shared/conf/dm.json    
     
 - name: http-conf
   behavior: replace
