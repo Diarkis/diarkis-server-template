@@ -5,7 +5,6 @@ metadata:
   labels:
     component: udp
 spec:
-  replicas: 1
   revisionHistoryLimit: 3
   strategy:
     type: RollingUpdate
@@ -21,8 +20,6 @@ spec:
         component: udp
       annotations:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
-        ad.datadoghq.com/tuner.logs: '[{"source":"tuner","service":"udp"}]'
-        ad.datadoghq.com/udp.logs: '[{"source":"udp","service":"udp"}]'
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
@@ -102,6 +99,8 @@ spec:
           mountPath: /bin/tools/configs
         - name: tmp
           mountPath: /tmp
+      nodeSelector:
+        cloud.google.com/private-node: "false"
       volumes:
         - name: shared-conf
           configMap:

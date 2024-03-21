@@ -5,7 +5,6 @@ metadata:
   labels:
     component: http
 spec:
-  replicas: 1
   selector:
     matchLabels:
       component: http
@@ -75,6 +74,8 @@ spec:
         ports:
         - name: http
           containerPort: 7000
+      nodeSelector:
+         cloud.google.com/private-node: "true"
       volumes:
       - name: http-conf
         configMap:

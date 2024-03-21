@@ -20,11 +20,14 @@ spec:
         ports:
         - containerPort: 6779
           name: mars
+          protocol: UDP
         volumeMounts:
         - name: mars-conf
           mountPath: /bin/mars
         - name: hc-conf
           mountPath: /bin/tools/configs
+      nodeSelector:
+        cloud.google.com/private-node: "true"
       volumes:
         - name: mars-conf
           configMap:

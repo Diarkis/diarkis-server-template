@@ -5,7 +5,6 @@ metadata:
   labels:
     component: tcp
 spec:
-  replicas: 1
   revisionHistoryLimit: 3
   strategy:
     type: RollingUpdate
@@ -97,6 +96,8 @@ spec:
           mountPath: /bin/tools/configs
         - name: tmp
           mountPath: /tmp
+      nodeSelector:
+        cloud.google.com/private-node: "false"
       volumes:
         - name: shared-conf
           configMap:

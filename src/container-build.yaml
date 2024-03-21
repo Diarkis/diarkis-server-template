@@ -17,9 +17,6 @@ buildSettings:
     tcp:
       target: servers/tcp/main.go
       output: remote_bin/tcp
-    ws:
-      target: servers/ws/main.go
-      output: remote_bin/ws
     mars:
       target: mars/main.go
       output: remote_bin/mars

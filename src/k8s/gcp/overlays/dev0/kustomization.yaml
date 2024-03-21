@@ -1,5 +1,3 @@
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 namespace: dev0
 resources:
 - ../../base
@@ -9,12 +7,14 @@ patches:
 - path: http/deploy.yaml
 - path: udp/deploy.yaml
 - path: tcp/deploy.yaml
+#- path: ns.yaml
 
 configMapGenerator:
 - behavior: replace
   files:
   - shared/conf/field.json
   - shared/conf/group.json
+  - shared/conf/dm.json  
   - shared/conf/log.json
   - shared/conf/matching.json
   - shared/conf/mesh.json
