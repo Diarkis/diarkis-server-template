@@ -1,7 +1,9 @@
 namespace: base
 
-commonLabels:
-  app: diarkis
+labels:
+- includeSelectors: true
+  pairs:
+    app: diarkis
 
 # build target
 resources:
@@ -19,16 +21,16 @@ resources:
 
 images:
 - name: udp
-  newName: 354265976659.dkr.ecr.ap-northeast-1.amazonaws.com/udp
+  newName: __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/udp
   newTag: latest
 - name: tcp
-  newName: 354265976659.dkr.ecr.ap-northeast-1.amazonaws.com/tcp
+  newName: __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/tcp
   newTag: latest
 - name: mars
-  newName: 354265976659.dkr.ecr.ap-northeast-1.amazonaws.com/mars
+  newName: __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/mars
   newTag: latest
 - name: http
-  newName: 354265976659.dkr.ecr.ap-northeast-1.amazonaws.com/http
+  newName: __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/http
   newTag: latest
   
 configMapGenerator:

@@ -97,3 +97,14 @@ curl ${EXTERNAI_IP}/auth/1
 ```
 抜けている項目等があれば、何かのコンポーネントに異常をきたしている可能性があるため、お問合せください。
 
+## 8. setup cluster autoscaler
+```
+kubectl apply -f cluster-autoscaler-autodiscover.yaml # cluster 名diarkisとして編集済みですが、別のクラスタ名で作っていた場合、manifest内でdiarkisと書かれている部分を変更してください
+```
+
+## 9. setup log collector 
+cloud watch logs 等で container のログを集約することが可能です。
+すでにfluent-bit 等は、amazon-cloudwatch namespace にデプロイされておりますが権限だけがついていない状態なので、NodeRoleに権限をつけるだけでログがCloudwatch logsに集約されます。
+参考画像![NodeInstanceRole](img/NodeInstanceRole.png)のように、diarkis-public とdiarkis-private Nodeに対して`CloudWatchAgentServerPolicy`をつけてあげることによって、logが集約されます。
+対象のログは、`/aws/containerinsights/Cluster_Name/application`というロググループに入りますので、filterling等も行うことができます。
+
