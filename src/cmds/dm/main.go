@@ -13,7 +13,7 @@ func Expose(rootpath string) {
 
 	// If you do not need to send a disconnect message automatically, comment out the following line
 	dm.SetOnUserDisconnect(func(disconnectedUser *user.User, peerUserID string) []byte {
-		return []byte(fmt.Sprintf("User %s is gone", disconnectedUser.ID))
+		return []byte(disconnectedUser.ID)
 	})
 
 	dm.ExposeCommands()
