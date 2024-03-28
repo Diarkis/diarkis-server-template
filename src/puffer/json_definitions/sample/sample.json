@@ -1,0 +1,59 @@
+{
+  "sampleA": {
+    "ver": 4,
+    "cmd": 1000,
+    "properties": {
+      "UInt8": "u8",
+      "UInt16": "u16",
+      "UInt32": "u32",
+      "UInt64": "u64",
+      "UInt8s": "u8[]",
+      "UInt16s": "u16[]",
+      "UInt32s": "u32[]",
+      "UInt64s": "u64[]",
+      "Int8": "i8",
+      "Int16": "i16",
+      "Int32": "i32",
+      "Int64": "i64",
+      "Float32": "f32",
+      "Float32s": "f32[]",
+      "Double64": "f64",
+      "Double64s": "f64[]",
+      "Boolean": "bool",
+      "StringValue": "string",
+      "Bytes": "b[]",
+      "Int8s": "i8[]",
+      "Int16s": "i16[]",
+      "Int32s": "i32[]",
+      "Int64s": "i64[]",
+      "Strings": "string[]",
+      "BytesList": "b[][]",
+      "Bools": "bool[]",
+      "sampleB": "SampleB",
+      "sampleCList": "SampleC[]"
+    }
+  },
+  "sampleB": {
+    "ver": 4,
+    "Cmd": 1001,
+    "Properties": {
+      "c": { "type":"sampleC", "comment":"This property uses the custom data type generated as SampleC" },
+      "category": { "type":"u16", "Comment":"Category is just a sample property" },
+      "message": { "type":"string", "Comment":"Message should not be too long..." },
+      "bin": { "type":"b[]" },
+      "bytes": { "type":"b[][]", "comment":"This comment is rather tricky\n\t, but it should /* work */ just fine\\t%v" }
+    }
+  },
+  "sampleC": {
+    "ver": 4,
+    "cmd": 1002,
+    "properties": {
+      "foo": "b[]",
+      "name": "string",
+      "index": "i32"
+    }
+  },
+  "sampleD": {
+    "properties": {}
+  }
+}

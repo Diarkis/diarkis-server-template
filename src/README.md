@@ -44,7 +44,9 @@ Only HTTP server is required in the cluster and the rest of the servers should b
    │                                                           └── custom ──────────────────────────── main.go
    ├ cloud/ [Cloud Infra Manual for Diarkis]
    │   
-   ├ k8s/ [contains k8s manifest for Diarkis]
+   ├ k8s/ [Contains k8s manifest for Diarkis]
+   │   
+   ├  puffer/ [Contains package definition generator]
    │
    ├ build.yml [Build configuration file for diarkis-cli]
    │
@@ -165,6 +167,9 @@ cmds/
 ```
 ws_cmds/
 ```
+
+We recommend that packets be defined and implemented using `puffer`.
+We store puffer in the puffer directory and provide usage and examples.
 
 # Configurations
 

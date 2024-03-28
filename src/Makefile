@@ -12,7 +12,7 @@ ifeq ($(shell uname), Darwin)
 endif
 
 .PHONY: build-local
-build-local: ## Build server binary for local use
+build-local: gen ## Build server binary for local use
 	echo "Build server binaries"
 	rm -rfv remote_bin/*
 	$(DIARKIS_CLI) build -c local-build.yml --host v3.builder.diarkis.io
@@ -28,6 +28,10 @@ else
 	./remote_bin/$(target)
 endif
 
+.PHONY: gen
+gen: # Generate go, cpp, css code from packet definition written in json
+	make -C puffer gen
+
 .PHONY: run-docker
 run-docker: ## Run Diarkis locally with docker compose
 	docker compose up -d
@@ -37,7 +41,7 @@ stop-docker: ## Stop Diarkis
 	docker compose down
 
 .PHONY: build-container
-build-container: ## Build container for AWS
+build-container: gen ## Build container for AWS
 	$(DIARKIS_CLI) build -c container-build.yaml --host v3.builder.diarkis.io
 	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/http
 	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/udp

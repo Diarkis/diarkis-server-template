@@ -1,0 +1,29 @@
+{
+  "Zoo": {
+    "ver": 4,
+    "cmd": 500,
+    "properties": {
+      "tiger": "u64",
+      "lion": "i64",
+      "penguins": "u8[]"
+    }
+  },
+  "TransportData": {
+    "properties": {
+      "movement":  "Movement",
+      "movements": "Movement[]",
+      "messages":  "b[][]",
+      "sequence":  "u16"
+    }
+  },
+  "Movement": {
+    "properties": {
+      "characterID": "string",
+      "x":           "f32",
+      "y":           "f32",
+      "z":           "f32",
+      "velocity":    "f32",
+      "msg":         "b[]"
+    }
+  }
+}

@@ -2,7 +2,7 @@ package customcmds
 
 import (
 	dpayload "{0}/lib/payload"
-
+	"{0}/puffer/go/custom"
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/server"
 	"github.com/Diarkis/diarkis/user"
@@ -35,6 +35,8 @@ func Expose() {
 	server.HandleCommand(customVer, helloCmdID, afterHelloCmd)
 	server.HandleCommand(customVer, pushCmdID, pushCmd)
 	server.HandleCommand(customVer, pushCmdID, outputClientErrLog)
+	// puffer version sample
+	server.HandleCommand(custom.EchoVer, custom.EchoCmd, echoPufferCmd)
 	// defined in matchmaker.go
 	server.HandleCommand(customVer, matchmakerAdd, addToMatchMaker)
 	server.HandleCommand(customVer, matchmakerSearch, searchMatchMaker)
@@ -65,6 +67,25 @@ func pushCmd(ver uint8, cmd uint16, payload []byte, userData *user.User, next fu
 	reliable := true
 	// we send a push packet to the client that sent the data to this command
 	userData.ServerPush(ver, cmd, payload, reliable)
+	// move on to the next command handler if there is any
+	next(nil)
+}
+
+func echoPufferCmd(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
+	logger.Debug("Hello puffer command has received %#v from the client SID:%s - UID:%s", payload, userData.SID, userData.ID)
+	// unpack []byte to struct
+	echoData := custom.NewEcho()
+	err := echoData.Unpack(payload) // You can unpack []byte to go struct
+
+	if err != nil {
+		logger.Error("Failed to unpack echo data: %v", err)
+		userData.ServerRespond(nil, ver, cmd, server.Err, true)
+		next(nil)
+		return
+	}
+
+	logger.Debug("Unpacked echo data: %#v", echoData)
+	userData.ServerRespond(echoData.Pack(), ver, cmd, server.Ok, true) // You can get []byte by using Pack. ( echoData.Pack eauals payload in this example.)
 	// move on to the next command handler if there is any
 	next(nil)
 }
