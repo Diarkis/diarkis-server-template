@@ -18,7 +18,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"{0}/bot/field/fieldlib"
+	"github.com/Diarkis/diarkis-server-template/bot/field/fieldlib"
 
 	"github.com/Diarkis/diarkis/client/go/tcp"
 	"github.com/Diarkis/diarkis/client/go/udp"

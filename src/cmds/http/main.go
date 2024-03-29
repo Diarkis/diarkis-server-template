@@ -1,7 +1,7 @@
 package httpcmds
 
 import (
-	dmcmds "{0}/cmds/dm"
+	dmcmds "github.com/Diarkis/diarkis-server-template/cmds/dm"
 
 	"github.com/Diarkis/diarkis/groupsupport" // if you do not need group module, comment out this line
 	"github.com/Diarkis/diarkis/roomsupport"  // if you do not need room module, comment out this line

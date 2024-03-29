@@ -1,7 +1,7 @@
 package customcmds
 
 import (
-	dpayload "{0}/lib/payload"
+	dpayload "github.com/Diarkis/diarkis-server-template/lib/payload"
 
 	"github.com/Diarkis/diarkis/field"
 	"github.com/Diarkis/diarkis/server"
