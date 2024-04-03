@@ -1,7 +1,7 @@
 {
     "GetFieldInfo": {
     "ver": 2,
-    "cmd": 4242,
+    "cmd": 4001,
     "package": "payload",
     "properties": {
        "FieldSize": "i64",

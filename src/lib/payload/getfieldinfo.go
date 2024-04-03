@@ -12,7 +12,6 @@ import "errors"
 import "fmt"
 import "strings"
 
-
 // GetFieldInfoVer represents the ver of the protocol's command.
 //
 //	[NOTE] The value is optional and if ver is not given in the definition JSON, it will be 0.
@@ -21,7 +20,7 @@ const GetFieldInfoVer uint8 = 2
 // GetFieldInfoCmd represents the command ID of the protocol's command ID.
 //
 //	[NOTE] The value is optional and if cmd is not given in the definition JSON, it will be 0.
-const GetFieldInfoCmd uint16 = 4242
+const GetFieldInfoCmd uint16 = 4001
 
 // GetFieldInfo represents the command protocol data structure.
 type GetFieldInfo struct {
@@ -36,7 +35,7 @@ type GetFieldInfo struct {
 
 // NewGetFieldInfo creates a new instance of GetFieldInfo struct.
 func NewGetFieldInfo() *GetFieldInfo {
-	return &GetFieldInfo{ Ver: 2, Cmd: 4242, FieldSize: 0, NodeCount: 0, FieldOfVisionSize: 0 }
+	return &GetFieldInfo{ Ver: 2, Cmd: 4001, FieldSize: 0, NodeCount: 0, FieldOfVisionSize: 0 }
 }
 
 // Pack encodes GetFieldInfo struct to a byte array to be delivered over the command.
