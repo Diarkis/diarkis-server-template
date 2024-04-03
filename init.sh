@@ -20,10 +20,9 @@ fi
 project_id=$1
 builder_token=$2
 output_path=$3
-
+module_name=$(basename $output_path)
 go run ./tools/install.go $project_id $builder_token $output_path
 cd $output_path &&
-    go mod edit -module $project_id &&
-    find . -type f -name '*.go'  -exec sed -i '' -e "s%github.com/Diarkis/diarkis-server-template%$project_id%g" {} \; &&
-    sed -i '' -e "s%github.com/Diarkis/diarkis-server-template%$project_id%g" puffer/gen.sh
-
+    go mod edit -module $module_name &&
+    find . -type f -name '*.go'  -exec sed -i '' -e "s%github.com/Diarkis/diarkis-server-template%$module_name%g" {} \; &&
+    sed -i '' -e "s%github.com/Diarkis/diarkis-server-template%$module_name%g" puffer/gen.sh

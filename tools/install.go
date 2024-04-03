@@ -150,22 +150,12 @@ func copyFile(pkg string, srcFile string, dstFile string) error {
 	if err != nil {
 		return err
 	}
-	// replace {0} in the file with the root path of the target path
-	list := strings.Split(pkg, "/")
-	prj := ""
-	for _, chunk := range list {
-		if chunk == "" {
-			continue
-		}
-		prj = chunk
-	}
 	data, err := io.ReadAll(in)
 	if err != nil {
 		return err
 	}
 	fileData := string(data)
 	if utf8.ValidString(string(data)) {
-		fileData = strings.Replace(fileData, "{0}", prj, -1)
 		fileData = strings.Replace(fileData, "{{PROJECT_ID}}", projectID, -1)
 		fileData = strings.Replace(fileData, "{{BUILD_TOKEN}}", buildToken, -1)
 	} else {
