@@ -75,6 +75,11 @@ spec:
           containerPort: 7000
       nodeSelector:
         alpha.eksctl.io/nodegroup-name: diarkis-private
+      tolerations:
+        - key: "diarkis.io/network"
+          operator: "Equal"
+          value: "private"
+          effect: "NoExecute"        
       volumes:
       - name: http-conf
         configMap:
