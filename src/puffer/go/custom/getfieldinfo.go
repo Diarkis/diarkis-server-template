@@ -5,7 +5,7 @@
 // - Maximum length of a string is 65535 bytes
 // - Maximum length of a byte array is 65535 bytes
 // - Maximum length of any array is 65535 elements
-package payload
+package custom
 
 import "encoding/binary"
 import "errors"
@@ -35,7 +35,7 @@ type GetFieldInfo struct {
 
 // NewGetFieldInfo creates a new instance of GetFieldInfo struct.
 func NewGetFieldInfo() *GetFieldInfo {
-	return &GetFieldInfo{ Ver: 2, Cmd: 4001, FieldSize: 0, NodeCount: 0, FieldOfVisionSize: 0 }
+	return &GetFieldInfo{ Ver: 2, Cmd: 4001, FieldOfVisionSize: 0, FieldSize: 0, NodeCount: 0 }
 }
 
 // Pack encodes GetFieldInfo struct to a byte array to be delivered over the command.
