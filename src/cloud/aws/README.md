@@ -21,17 +21,18 @@ aws sts get-caller-identity # 向き先が正しいか確認してください
 aws ecr create-repository --repository-name http
 export HTTP_URI=$(aws ecr describe-repositories --repository-names http | jq '.repositories[].repositoryUri')
 aws ecr create-repository --repository-name udp
-export UDP_URI=$(aws ecr describe-repositories --repository-names http | jq '.repositories[].repositoryUri')
+export UDP_URI=$(aws ecr describe-repositories --repository-names udp | jq '.repositories[].repositoryUri')
 aws ecr create-repository --repository-name tcp
-export TCP_URI=$(aws ecr describe-repositories --repository-names http | jq '.repositories[].repositoryUri')
+export TCP_URI=$(aws ecr describe-repositories --repository-names tcp | jq '.repositories[].repositoryUri')
 aws ecr create-repository --repository-name mars
-export MARS_URI=$(aws ecr describe-repositories --repository-names http | jq '.repositories[].repositoryUri')
+export MARS_URI=$(aws ecr describe-repositories --repository-names mars | jq '.repositories[].repositoryUri')
 ```
 
 ## 3. Create EKS for diarkis
 ```
-eksctl create cluster --node-type c5n.xlarge --name diarkis --nodes 1 --alb-ingress-access --asg-access # about 10 minutes
+eksctl create cluster -f cluster_config.yaml # about 10 minutes
 ```
+NAT gateway が該当のAZで対応していない等のエラーが出た場合には、AZで別の物を選択してください。
 
 ## 4. connect to eks
 ```
@@ -49,11 +50,8 @@ make build-local
 ```
 ./remote_bin にサーバーの実行ファイル郡(udp, tcp, http, mars)が生成された後、コンテナイメージをビルド
 ```
-export AWS_ACCOUNT_NUM=$(aws sts get-caller-identity | jq .Account -r)
-docker build -t ${AWS_ACCOUNT_NUM}.dkr.ecr.ap-northeast-1.amazonaws.com/udp ./remote_bin -f docker/udp/Dockerfile
-docker build -t ${AWS_ACCOUNT_NUM}.dkr.ecr.ap-northeast-1.amazonaws.com/tcp ./remote_bin -f docker/tcp/Dockerfile
-docker build -t ${AWS_ACCOUNT_NUM}.dkr.ecr.ap-northeast-1.amazonaws.com/http ./remote_bin -f docker/http/Dockerfile
-docker build -t ${AWS_ACCOUNT_NUM}.dkr.ecr.ap-northeast-1.amazonaws.com/mars ./remote_bin -f docker/mars/Dockerfile
+make setup-aws
+make build-container-aws
 ```
 dockerに認証を通す
 ```
@@ -61,15 +59,12 @@ aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS
 ```
 imageをpush
 ```
-docker push ${AWS_ACCOUNT_NUM}.dkr.ecr.ap-northeast-1.amazonaws.com/http
-docker push ${AWS_ACCOUNT_NUM}.dkr.ecr.ap-northeast-1.amazonaws.com/udp
-docker push ${AWS_ACCOUNT_NUM}.dkr.ecr.ap-northeast-1.amazonaws.com/tcp
-docker push ${AWS_ACCOUNT_NUM}.dkr.ecr.ap-northeast-1.amazonaws.com/mars
+make push-container-aws
 ```
 
-## 6. apply manifest
+## 7. apply manifest
 ```
-kustomize build k8s/overlays/dev0 | sed -e "s/__AWS_ACCOUNT_NUM__/${AWS_ACCOUNT_NUM}/g" | kubectl apply -f -
+kustomize build k8s/aws/overlays/dev0 | sed -e "s/__AWS_ACCOUNT_NUM__/${AWS_ACCOUNT_NUM}/g" | kubectl apply -f -
 ```
 下記のように4つのコンポーネントが立ち上がっていればOKです。
 ```
@@ -80,16 +75,16 @@ mars-0                  1/1     Running   0          3d14h
 tcp-88dc5f97d-7sqk9     1/1     Running   0          3d14h
 udp-fdc6bbccc-dwc5w     1/1     Running   0          3d14h
 ```
-## 7. check diarkis cluster
+## 8. check diarkis cluster
 まずpublic endpointを取得する
 ```
-EXTERNAL_IP=$(kubectl get svc http -o json -n dev0 | jq '.status.loadBalancer.ingress[].hostname')
+EXTERNAL_IP=$(kubectl get svc http -o json -n dev0 | jq -r '.status.loadBalancer.ingress[].hostname')
 kubectl get svc -n dev0 -o wide # このコマンドで表示されるEXTERNAL IPと同一なのでどちらで見ていただいても構いません。
 ```
 
 取得できたEXTERNAL-IPに対してAPIを叩く
 ```
-curl ${EXTERNAI_IP}/auth/1
+curl ${EXTERNAL_IP}/auth/1
 ```
 下記の様なレスポンスが返ってくればOK
 ```
@@ -97,12 +92,12 @@ curl ${EXTERNAI_IP}/auth/1
 ```
 抜けている項目等があれば、何かのコンポーネントに異常をきたしている可能性があるため、お問合せください。
 
-## 8. setup cluster autoscaler
+## 9. setup cluster autoscaler
 ```
 kubectl apply -f cluster-autoscaler-autodiscover.yaml # cluster 名diarkisとして編集済みですが、別のクラスタ名で作っていた場合、manifest内でdiarkisと書かれている部分を変更してください
 ```
 
-## 9. setup log collector 
+## 10. setup log collector 
 cloud watch logs 等で container のログを集約することが可能です。
 すでにfluent-bit 等は、amazon-cloudwatch namespace にデプロイされておりますが権限だけがついていない状態なので、NodeRoleに権限をつけるだけでログがCloudwatch logsに集約されます。
 参考画像![NodeInstanceRole](img/NodeInstanceRole.png)のように、diarkis-public とdiarkis-private Nodeに対して`CloudWatchAgentServerPolicy`をつけてあげることによって、logが集約されます。
