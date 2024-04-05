@@ -12,7 +12,7 @@ ifeq ($(shell uname), Darwin)
 endif
 
 .PHONY: build-local
-build-local: ## Build server binary for local use
+build-local: gen ## Build server binary for local use
 	echo "Build server binaries"
 	rm -rfv remote_bin/*
 	$(DIARKIS_CLI) build -c local-build.yml --host v3.builder.diarkis.io
@@ -27,6 +27,10 @@ ifeq ($(target), mars)
 else
 	./remote_bin/$(target)
 endif
+
+.PHONY: gen
+gen: # Generate go, cpp, css code from packet definition written in json
+	make -C puffer gen
 
 .PHONY: run-docker
 run-docker: ## Run Diarkis locally with docker compose

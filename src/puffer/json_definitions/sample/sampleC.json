@@ -1,0 +1,34 @@
+{
+  "stringData": {
+    "package": "sampleC",
+    "ver": 0,
+    "cmd": 0,
+    "properties": {
+      "prop": "string"
+    }
+  },
+  "stringDataList": {
+    "Package": "sampleC",
+    "ver": 0,
+    "cmd": 0,
+    "properties": {
+      "prop": "string[]"
+    }
+  },
+  "bytesData": {
+    "package": "sampleC",
+    "ver": 0,
+    "cmd": 0,
+    "properties": {
+      "prop": "b[]"
+    }
+  },
+  "bytesDataList": {
+    "package": "sampleC",
+    "ver": 0,
+    "cmd": 0,
+    "properties": {
+      "prop": "b[][]"
+    }
+  }
+}
