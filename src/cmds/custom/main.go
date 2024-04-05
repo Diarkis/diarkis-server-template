@@ -1,7 +1,6 @@
 package customcmds
 
 import (
-	dpayload "{0}/lib/payload"
 	"{0}/puffer/go/custom"
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/server"
@@ -43,7 +42,7 @@ func Expose() {
 	// defined in p2p.go
 	server.HandleCommand(customVer, p2pReportAddr, reportP2PAddr)
 	server.HandleCommand(customVer, p2pInit, initP2P)
-	server.HandleCommand(dpayload.GetFieldInfoVer, dpayload.GetFieldInfoCmd, getFieldInfo)
+	server.HandleCommand(custom.GetFieldInfoVer, custom.GetFieldInfoCmd, getFieldInfo)
 }
 
 func helloCmd(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
