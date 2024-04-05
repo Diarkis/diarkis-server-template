@@ -64,7 +64,7 @@ make push-container-aws
 
 ## 7. apply manifest
 ```
-kustomize build k8s/aws/overlays/dev0 | sed -e "s/__AWS_ACCOUNT_NUM__/${AWS_ACCOUNT_NUM}/g" | kubectl apply -f -
+kustomize build k8s/aws/overlays/dev0 | kubectl apply -f -
 ```
 下記のように4つのコンポーネントが立ち上がっていればOKです。
 ```
