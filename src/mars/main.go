@@ -14,7 +14,6 @@ func main() {
 	mars.Setup()
 	if config.GetAsBool("Mars", "debug", false) {
 		ddebug.Enable()
-		ddebug.EnableMutexLogging()
 	}
 	diarkis.OnReady(onReady)
 	diarkis.Start()
