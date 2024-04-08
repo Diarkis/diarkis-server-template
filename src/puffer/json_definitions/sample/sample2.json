@@ -2,6 +2,7 @@
   "Zoo": {
     "ver": 4,
     "cmd": 500,
+    "package": "zoo",
     "properties": {
       "tiger": "u64",
       "lion": "i64",
@@ -9,6 +10,7 @@
     }
   },
   "TransportData": {
+    "package": "movement",
     "properties": {
       "movement":  "Movement",
       "movements": "Movement[]",
@@ -17,6 +19,7 @@
     }
   },
   "Movement": {
+    "package": "movement",
     "properties": {
       "characterID": "string",
       "x":           "f32",
