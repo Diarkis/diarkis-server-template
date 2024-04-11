@@ -1,0 +1,97 @@
+apiVersion: v1
+data:
+  connect.json: |-
+    {
+      "ConnectUDP": {
+        "serverType": "UDP",
+        "userID": {
+          "isRandom": true
+        }
+      },
+      "ConnectTRN": {
+        "serverType": "TRN",
+        "userID": {
+          "isRandom": true
+        }
+      }
+    }
+  example.json: |-
+    {
+      "Default": {
+        "userID": {
+          "isRandom": true
+        },
+        "serverType": "UDP",
+        "dumpMsgpack": true,
+        "platformUserId": {
+          "isRandom": true
+        },
+        "areaId": {
+          "defaultValue": "0",
+          "options": [
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7"
+          ]
+        },
+        "language": {
+          "defaultValue": "en",
+          "options": [
+            "en"
+          ]
+        }
+      }
+    }
+  global.json: |-
+    {
+        "_host": "localhost:7000",
+        "host": "http.dev0.svc.cluster.local",
+        "interval": 500,
+        "duration": 0,
+        "logLevel": 20,
+        "serverType": "UDP",
+        "receiveByteSize": 1400,
+        "udpSendInterval": 100,
+        "userID": {
+            "defaultValue": "1000000000000000",
+            "isSequential": true
+        }
+    }
+  ticket.json: |-
+    {
+      "OneTicket": {
+        "ticketType": 0
+      },
+      "RandomTicket": {
+        "ticketType": {
+          "isRandom": true,
+          "options": [
+            0,
+            1
+          ]
+        }
+      },
+      "RatedTicket": {
+        "ticketType": {
+          "options": [
+            0,
+            1,
+            2
+          ],
+          "optionRates": [
+            0.8,
+            0.15,
+            0.05
+          ]
+        }
+      }
+    }
+kind: ConfigMap
+metadata:
+  name: bot-conf
+  namespace: bot
