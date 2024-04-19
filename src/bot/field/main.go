@@ -18,6 +18,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"{0}/bot/field/custom"
 	"{0}/bot/field/fieldlib"
 
 	"github.com/Diarkis/diarkis/client/go/tcp"
@@ -367,7 +368,7 @@ func createMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData, fp
 		payload = append(payload, float32ToByte(frameDistanceX)...)
 		payload = append(payload, float32ToByte(frameDistanceY)...)
 		payload = append(payload, float32ToByte(float32(0))...)
-		payload = append(payload, []byte{ 0 }...)
+		payload = append(payload, []byte{0}...)
 	}
 
 	return append(payloadSizeBytes, payload...)
