@@ -7,18 +7,14 @@
 // - Maximum length of any array is 65535 elements
 package custom
 
-import "encoding/binary"
-import "errors"
-import "fmt"
-import "math"
-import "strings"
-import "github.com/Diarkis/diarkis/util"
-import "server_bina/custom"
-import "server_bina/custom"
-import "server_bina/custom"
-import "server_bina/custom"
-import "server_bina/custom"
-
+import (
+	"encoding/binary"
+	"errors"
+	"fmt"
+	"math"
+	"strings"
+	util "github.com/Diarkis/diarkis/util"
+)
 // DiarkisCharacterFrameDataVer represents the ver of the protocol's command.
 //
 //	[NOTE] The value is optional and if ver is not given in the definition JSON, it will be 0.
@@ -35,31 +31,31 @@ type DiarkisCharacterFrameData struct {
 	Ver uint8
 	// Command ID of the protocol
 	Cmd uint16
-	AngularVelocity *custom.DiarkisVector3
+	AngularVelocity *DiarkisVector3
 	AnimationBlend float32
 	Engine string
 	IsMoving bool
 	Jump bool
 	LastFrameSkipped bool
-	Position *custom.DiarkisVector3
+	Position *DiarkisVector3
 	PreviousFrameInterval float32
-	Rotation *custom.DiarkisQuaternion
+	Rotation *DiarkisQuaternion
 	Sprint bool
 	TimeStamp int64
-	Velocity *custom.DiarkisVector3
-	Move *custom.DiarkisVector2
+	Velocity *DiarkisVector3
+	Move *DiarkisVector2
 }
 
 // NewDiarkisCharacterFrameData creates a new instance of DiarkisCharacterFrameData struct.
 func NewDiarkisCharacterFrameData() *DiarkisCharacterFrameData {
-	return &DiarkisCharacterFrameData{ Ver: 0, Cmd: 0, LastFrameSkipped: false, TimeStamp: 0, Jump: false, Rotation: diarkisquaternion.NewDiarkisQuaternion(), AnimationBlend: 0, Sprint: false, Position: diarkisvector3.NewDiarkisVector3(), Velocity: diarkisvector3.NewDiarkisVector3(), AngularVelocity: diarkisvector3.NewDiarkisVector3(), Engine: "", Move: diarkisvector2.NewDiarkisVector2(), IsMoving: false, PreviousFrameInterval: 0 }
+	return &DiarkisCharacterFrameData{ Ver: 0, Cmd: 0, LastFrameSkipped: false, TimeStamp: 0, Jump: false, Rotation: NewDiarkisQuaternion(), AnimationBlend: 0, Sprint: false, Position: NewDiarkisVector3(), Velocity: NewDiarkisVector3(), AngularVelocity: NewDiarkisVector3(), Engine: "", Move: NewDiarkisVector2(), IsMoving: false, PreviousFrameInterval: 0 }
 }
 
 // Pack encodes DiarkisCharacterFrameData struct to a byte array to be delivered over the command.
 func (proto *DiarkisCharacterFrameData) Pack() []byte {
 	bytes := make([]byte, 0)
 
-	/* custom.DiarkisVector3 */
+	/* DiarkisVector3 */
 	angularVelocitySizeBytes := make([]byte, 2)
 	angularVelocityPacked := proto.AngularVelocity.Pack()
 	binary.BigEndian.PutUint16(angularVelocitySizeBytes, uint16(len(angularVelocityPacked)))
@@ -73,7 +69,7 @@ func (proto *DiarkisCharacterFrameData) Pack() []byte {
 	animationBlendBytes[1] = byte(animationBlendBits >> 16)
 	animationBlendBytes[2] = byte(animationBlendBits >> 8)
 	animationBlendBytes[3] = byte(animationBlendBits)
-	animationBlendBytes = util.ReverseBytes(animationBlendBytes)
+	//animationBlendBytes = util.ReverseBytes(animationBlendBytes)
 	bytes = append(bytes, animationBlendBytes...)
 
 	/* string */
@@ -109,7 +105,7 @@ func (proto *DiarkisCharacterFrameData) Pack() []byte {
 	}
 	bytes = append(bytes, lastFrameSkippedBytes...)
 
-	/* custom.DiarkisVector3 */
+	/* DiarkisVector3 */
 	positionSizeBytes := make([]byte, 2)
 	positionPacked := proto.Position.Pack()
 	binary.BigEndian.PutUint16(positionSizeBytes, uint16(len(positionPacked)))
@@ -123,10 +119,10 @@ func (proto *DiarkisCharacterFrameData) Pack() []byte {
 	previousFrameIntervalBytes[1] = byte(previousFrameIntervalBits >> 16)
 	previousFrameIntervalBytes[2] = byte(previousFrameIntervalBits >> 8)
 	previousFrameIntervalBytes[3] = byte(previousFrameIntervalBits)
-	previousFrameIntervalBytes = util.ReverseBytes(previousFrameIntervalBytes)
+//	previousFrameIntervalBytes = util.ReverseBytes(previousFrameIntervalBytes)
 	bytes = append(bytes, previousFrameIntervalBytes...)
 
-	/* custom.DiarkisQuaternion */
+	/* DiarkisQuaternion */
 	rotationSizeBytes := make([]byte, 2)
 	rotationPacked := proto.Rotation.Pack()
 	binary.BigEndian.PutUint16(rotationSizeBytes, uint16(len(rotationPacked)))
@@ -147,14 +143,14 @@ func (proto *DiarkisCharacterFrameData) Pack() []byte {
 	binary.BigEndian.PutUint64(timeStampBytes, uint64(proto.TimeStamp))
 	bytes = append(bytes, timeStampBytes...)
 
-	/* custom.DiarkisVector3 */
+	/* DiarkisVector3 */
 	velocitySizeBytes := make([]byte, 2)
 	velocityPacked := proto.Velocity.Pack()
 	binary.BigEndian.PutUint16(velocitySizeBytes, uint16(len(velocityPacked)))
 	bytes = append(bytes, velocitySizeBytes...)
 	bytes = append(bytes, velocityPacked...)
 
-	/* custom.DiarkisVector2 */
+	/* DiarkisVector2 */
 	moveSizeBytes := make([]byte, 2)
 	movePacked := proto.Move.Pack()
 	binary.BigEndian.PutUint16(moveSizeBytes, uint16(len(movePacked)))
@@ -173,14 +169,14 @@ func (proto *DiarkisCharacterFrameData) Unpack(bytes []byte) error {
 
 	offset := 0
 
-	/* custom.DiarkisVector3 */
+	/* DiarkisVector3 */
 	angularVelocitySize := int(binary.BigEndian.Uint16((bytes[offset:offset + 2])))
 	if angularVelocitySize + offset > len(bytes) {
 		return errors.New("UnpackError")
 	}
 	offset += 2
 	angularVelocityBytes := bytes[offset:offset + angularVelocitySize]
-	proto.AngularVelocity = &custom.DiarkisVector3{ Ver: 0, Cmd: 0 }
+	proto.AngularVelocity = &DiarkisVector3{ Ver: 0, Cmd: 0 }
 	proto.AngularVelocity.Unpack(angularVelocityBytes)
 	offset += angularVelocitySize
 
@@ -226,14 +222,14 @@ func (proto *DiarkisCharacterFrameData) Unpack(bytes []byte) error {
 	}
 	offset++
 
-	/* custom.DiarkisVector3 */
+	/* DiarkisVector3 */
 	positionSize := int(binary.BigEndian.Uint16((bytes[offset:offset + 2])))
 	if positionSize + offset > len(bytes) {
 		return errors.New("UnpackError")
 	}
 	offset += 2
 	positionBytes := bytes[offset:offset + positionSize]
-	proto.Position = &custom.DiarkisVector3{ Ver: 0, Cmd: 0 }
+	proto.Position = &DiarkisVector3{ Ver: 0, Cmd: 0 }
 	proto.Position.Unpack(positionBytes)
 	offset += positionSize
 
@@ -243,14 +239,14 @@ func (proto *DiarkisCharacterFrameData) Unpack(bytes []byte) error {
 	offset += 4
 	proto.PreviousFrameInterval = math.Float32frombits(previousFrameIntervalBits)
 
-	/* custom.DiarkisQuaternion */
+	/* DiarkisQuaternion */
 	rotationSize := int(binary.BigEndian.Uint16((bytes[offset:offset + 2])))
 	if rotationSize + offset > len(bytes) {
 		return errors.New("UnpackError")
 	}
 	offset += 2
 	rotationBytes := bytes[offset:offset + rotationSize]
-	proto.Rotation = &custom.DiarkisQuaternion{ Ver: 0, Cmd: 0 }
+	proto.Rotation = &DiarkisQuaternion{ Ver: 0, Cmd: 0 }
 	proto.Rotation.Unpack(rotationBytes)
 	offset += rotationSize
 
@@ -267,25 +263,25 @@ func (proto *DiarkisCharacterFrameData) Unpack(bytes []byte) error {
 	proto.TimeStamp = int64(binary.BigEndian.Uint64(bytes[offset:offset + 8]))
 	offset += 8
 
-	/* custom.DiarkisVector3 */
+	/* DiarkisVector3 */
 	velocitySize := int(binary.BigEndian.Uint16((bytes[offset:offset + 2])))
 	if velocitySize + offset > len(bytes) {
 		return errors.New("UnpackError")
 	}
 	offset += 2
 	velocityBytes := bytes[offset:offset + velocitySize]
-	proto.Velocity = &custom.DiarkisVector3{ Ver: 0, Cmd: 0 }
+	proto.Velocity = &DiarkisVector3{ Ver: 0, Cmd: 0 }
 	proto.Velocity.Unpack(velocityBytes)
 	offset += velocitySize
 
-	/* custom.DiarkisVector2 */
+	/* DiarkisVector2 */
 	moveSize := int(binary.BigEndian.Uint16((bytes[offset:offset + 2])))
 	if moveSize + offset > len(bytes) {
 		return errors.New("UnpackError")
 	}
 	offset += 2
 	moveBytes := bytes[offset:offset + moveSize]
-	proto.Move = &custom.DiarkisVector2{ Ver: 0, Cmd: 0 }
+	proto.Move = &DiarkisVector2{ Ver: 0, Cmd: 0 }
 	proto.Move.Unpack(moveBytes)
 	offset += moveSize
 

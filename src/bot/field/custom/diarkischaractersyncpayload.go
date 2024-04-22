@@ -7,11 +7,12 @@
 // - Maximum length of any array is 65535 elements
 package custom
 
-import "encoding/binary"
-import "errors"
-import "fmt"
-import "strings"
-import "server_bina/custom"
+import (
+	"encoding/binary"
+	"errors"
+	"fmt"
+	"strings"
+)
 
 // DiarkisCharacterSyncPayloadVer represents the ver of the protocol's command.
 //
@@ -29,21 +30,21 @@ type DiarkisCharacterSyncPayload struct {
 	Ver uint8
 	// Command ID of the protocol
 	Cmd uint16
-	Frames []*custom.DiarkisCharacterFrameData
+	Frames []*DiarkisCharacterFrameData
 	PacketGUID string
 	UID string
 }
 
 // NewDiarkisCharacterSyncPayload creates a new instance of DiarkisCharacterSyncPayload struct.
 func NewDiarkisCharacterSyncPayload() *DiarkisCharacterSyncPayload {
-	return &DiarkisCharacterSyncPayload{ Ver: 0, Cmd: 0, Frames: make([]*diarkischaracterframedata.DiarkisCharacterFrameData, 0), PacketGUID: "", UID: "" }
+	return &DiarkisCharacterSyncPayload{ Ver: 0, Cmd: 0, Frames: make([]*DiarkisCharacterFrameData, 0), PacketGUID: "", UID: "" }
 }
 
 // Pack encodes DiarkisCharacterSyncPayload struct to a byte array to be delivered over the command.
 func (proto *DiarkisCharacterSyncPayload) Pack() []byte {
 	bytes := make([]byte, 0)
 
-	/* []custom.DiarkisCharacterFrameData */
+	/* []DiarkisCharacterFrameData */
 	framesLengthBytes := make([]byte, 2)
 	framesLength := len(proto.Frames)
 	binary.BigEndian.PutUint16(framesLengthBytes, uint16(framesLength))
@@ -80,10 +81,10 @@ func (proto *DiarkisCharacterSyncPayload) Unpack(bytes []byte) error {
 
 	offset := 0
 
-	/* []custom.DiarkisCharacterFrameData */
+	/* []DiarkisCharacterFrameData */
 	framesLength := int(binary.BigEndian.Uint16((bytes[offset:offset + 2])))
 	offset += 2
-	proto.Frames = make([]*custom.DiarkisCharacterFrameData, framesLength)
+	proto.Frames = make([]*DiarkisCharacterFrameData, framesLength)
 	for i := 0; i < framesLength; i++ {
 		framesSize := int(binary.BigEndian.Uint16((bytes[offset:offset + 2])))
 		if framesSize + offset > len(bytes) {
@@ -91,7 +92,7 @@ func (proto *DiarkisCharacterSyncPayload) Unpack(bytes []byte) error {
 		}
 		offset += 2
 		framesBytes := bytes[offset:offset + framesSize]
-		item := &custom.DiarkisCharacterFrameData{ Ver: 0, Cmd: 0 }
+		item := &DiarkisCharacterFrameData{ Ver: 0, Cmd: 0 }
 		item.Unpack(framesBytes)
 		proto.Frames[i] = item
 		offset += framesSize

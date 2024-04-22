@@ -51,7 +51,7 @@ func (proto *DiarkisVector3) Pack() []byte {
 	xBytes[1] = byte(xBits >> 16)
 	xBytes[2] = byte(xBits >> 8)
 	xBytes[3] = byte(xBits)
-	xBytes = util.ReverseBytes(xBytes)
+	//xBytes = util.ReverseBytes(xBytes)
 	bytes = append(bytes, xBytes...)
 
 	/* float32 */
@@ -61,7 +61,7 @@ func (proto *DiarkisVector3) Pack() []byte {
 	yBytes[1] = byte(yBits >> 16)
 	yBytes[2] = byte(yBits >> 8)
 	yBytes[3] = byte(yBits)
-	yBytes = util.ReverseBytes(yBytes)
+	//yBytes = util.ReverseBytes(yBytes)
 	bytes = append(bytes, yBytes...)
 
 	/* float32 */
@@ -71,7 +71,7 @@ func (proto *DiarkisVector3) Pack() []byte {
 	zBytes[1] = byte(zBits >> 16)
 	zBytes[2] = byte(zBits >> 8)
 	zBytes[3] = byte(zBits)
-	zBytes = util.ReverseBytes(zBytes)
+	//zBytes = util.ReverseBytes(zBytes)
 	bytes = append(bytes, zBytes...)
 
 	// done

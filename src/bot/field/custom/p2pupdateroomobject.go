@@ -7,11 +7,14 @@
 // - Maximum length of any array is 65535 elements
 package custom
 
-import "encoding/binary"
-import "errors"
-import "fmt"
-import "strings"
-
+import (
+	"encoding/binary"
+	"errors"
+	"fmt"
+	"math"
+	"strings"
+	util "github.com/Diarkis/diarkis/util"
+)
 // P2PUpdateRoomObjectVer represents the ver of the protocol's command.
 //
 //	[NOTE] The value is optional and if ver is not given in the definition JSON, it will be 0.

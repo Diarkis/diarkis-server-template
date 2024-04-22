@@ -26,6 +26,7 @@ import (
 	"github.com/Diarkis/diarkis/smap"
 	"github.com/Diarkis/diarkis/util"
 	v4 "github.com/Diarkis/diarkis/uuid/v4"
+	"github.com/google/uuid"
 )
 
 const UDP_STRING string = "udp"
@@ -68,6 +69,8 @@ var latencyCnt int64
 var sleepTime int64 = 1
 var botsMap sync.Map
 
+var useNewPayloadFormat = false
+
 type botData struct {
 	uid        string
 	state      int
@@ -82,8 +85,8 @@ type botData struct {
 }
 
 func main() {
-	if len(os.Args) < 7 {
-		fmt.Printf("Bot requires 4 parameters: {http host:port} {how many bots} {protocol} {packet interval in milliseconds} {map size} {range}")
+	if len(os.Args) < 8 {
+		fmt.Printf("Bot requires 8 parameters: {http host:port} {how many bots} {protocol} {payloadFormat 1 or 2} {packet interval in milliseconds} {map size} {range}")
 		os.Exit(1)
 		return
 	}
@@ -330,7 +333,82 @@ func float32ToByte(f float32) []byte {
 	return buf.Bytes()
 }
 
-func createMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData, fps int) []byte {
+func createNewMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData, fps int, isLast bool) []byte {
+	newPayload := custom.NewDiarkisCharacterSyncPayload()
+	prevXUnity := float32(prevX) / 100.
+	prevYUnity := float32(prevY) / 100.
+	xUnity := float32(x) / 100.
+	yUnity := float32(y) / 100.
+
+	distanceX := xUnity - prevXUnity
+	distanceY := yUnity - prevYUnity
+	frameDistanceX := float32(distanceX) / float32(nbMoveData)
+	frameDistanceY := float32(distanceY) / float32(nbMoveData)
+
+	currentX := prevXUnity
+	currentY := prevYUnity
+	newRot := eulerToQuaternion(float64(int(direction+90) % 360))
+
+	for i := 0; i < nbMoveData; i++ {
+		frameData := custom.NewDiarkisCharacterFrameData()
+		frameData.Rotation.Y = newRot.Y
+		frameData.Rotation.W = newRot.W
+		frameData.Position.X = float32(currentX)
+		frameData.Position.Z = -float32(currentY)
+		frameData.Position.Y = 0
+		frameData.PreviousFrameInterval = 0.02
+		newPayload.Frames = append(newPayload.Frames, frameData)
+		currentX += frameDistanceX
+		currentY += frameDistanceY
+		frameData.AnimationBlend = 10.
+		frameData.IsMoving = true
+		if isLast {
+			frameData.IsMoving = false
+			frameData.AnimationBlend = 0
+		}
+	}
+
+	newPayload.PacketGUID = uuid.New().String()
+	payloadBytes := newPayload.Pack()
+	payloadSizeBytes := make([]byte, 2)
+	binary.BigEndian.PutUint16(payloadSizeBytes, uint16(len(payloadBytes)))
+
+	return append(payloadSizeBytes, payloadBytes...)
+}
+
+func eulerToQuaternion(angle float64) *custom.DiarkisQuaternion {
+	// Convert angle to radians
+	angleRad := math.Pi * float64(angle) / 180.0
+
+	// Calculate half angle
+	halfAngle := angleRad * 0.5
+
+	// Calculate quaternion components
+	w := math.Cos(halfAngle)
+	x := 0.0
+	y := math.Sin(halfAngle)
+	z := 0.0
+
+	// Normalize the quaternion
+	length := math.Sqrt(float64(w*w + x*x + y*y + z*z))
+	w /= length
+	x /= length
+	y /= length
+	z /= length
+
+	quat := custom.NewDiarkisQuaternion()
+	quat.W = float32(w)
+	quat.X = float32(x)
+	quat.Y = float32(y)
+	quat.Z = float32(z)
+	return quat
+}
+
+func createMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData, fps int, useNewPayload, isLast bool) []byte {
+	if useNewPayload {
+		return createNewMovementPayload(direction, prevX, prevY, x, y, nbMoveData, fps, isLast)
+	}
+
 	payloadSize := 1 + (4 * 8) + (nbMoveData)*(13)
 	payload := []byte{}
 	payloadSizeBytes := make([]byte, 2)
@@ -420,13 +498,13 @@ func randomSync(bot *botData) {
 		for i := 0; i < nbSyncPerMovement; i++ {
 			nextX := currentX + stepX
 			nextY := currentY + stepY
-			message := createMovementPayload(bot.angle, currentX, currentY, nextX, nextY, 6, 60)
+			message := createMovementPayload(bot.angle, currentX, currentY, nextX, nextY, 6, 60, useNewPayloadFormat, false)
 			go bot.field.Sync(int64(nextX), int64(nextY), 0, 300, 0, message, false, bot.uid)
 			currentX = nextX
 			currentY = nextY
 			time.Sleep(time.Millisecond * time.Duration(100))
 		}
-		message := createMovementPayload(bot.angle, bot.x, bot.y, bot.x, bot.y, 6, 60)
+		message := createMovementPayload(bot.angle, bot.x, bot.y, bot.x, bot.y, 6, 60, useNewPayloadFormat, true)
 		go bot.field.Sync(int64(bot.x), int64(bot.y), 0, 300, 0, message, false, bot.uid)
 
 		bot.state = STATUS_SYNC
@@ -437,13 +515,13 @@ func randomSync(bot *botData) {
 		for i := 0; i < nbSyncPerMovement; i++ {
 			nextX := currentX
 			nextY := currentY
-			message := createMovementPayload(bot.angle, currentX, currentY, currentX, currentY, 6, 60)
+			message := createMovementPayload(bot.angle, currentX, currentY, currentX, currentY, 6, 60, useNewPayloadFormat, true)
 			go bot.field.Sync(int64(nextX), int64(nextY), 0, 300, 0, message, false, bot.uid)
 			currentX = nextX
 			currentY = nextY
 			time.Sleep(time.Millisecond * time.Duration(100))
 		}
-		message := createMovementPayload(bot.angle, bot.x, bot.y, bot.x, bot.y, 6, 60)
+		message := createMovementPayload(bot.angle, bot.x, bot.y, bot.x, bot.y, 6, 60, useNewPayloadFormat, true)
 		go bot.field.Sync(int64(bot.x), int64(bot.y), 0, 300, 0, message, false, bot.uid)
 
 		bot.state = STATUS_SYNC
@@ -469,7 +547,14 @@ func parseFieldArgs() {
 	}
 	proto = protocolSource
 
-	intervalSource, err := strconv.Atoi(os.Args[4])
+	payloadVer := strings.ToLower(os.Args[4]) // only tcp or udp
+	if payloadVer != "1" {
+		useNewPayloadFormat = true
+	} else {
+		useNewPayloadFormat = false
+	}
+
+	intervalSource, err := strconv.Atoi(os.Args[5])
 	if err != nil {
 		fmt.Printf("Interval of broadcast parameter given is invalid %v\n", err)
 		os.Exit(1)
@@ -477,7 +562,7 @@ func parseFieldArgs() {
 	}
 	interval = int64(intervalSource)
 
-	mapSizeSource, err := strconv.Atoi(os.Args[5])
+	mapSizeSource, err := strconv.Atoi(os.Args[6])
 	if err != nil {
 		fmt.Printf("Map size parameter given is invalid %v\n", err)
 		os.Exit(1)
@@ -485,7 +570,7 @@ func parseFieldArgs() {
 	}
 	mapSize = mapSizeSource
 
-	rangeSource, err := strconv.Atoi(os.Args[6])
+	rangeSource, err := strconv.Atoi(os.Args[7])
 	if err != nil {
 		fmt.Printf("Movement range parameter given is invalid %v\n", err)
 		os.Exit(1)
