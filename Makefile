@@ -7,4 +7,4 @@ help:
 
 .PHONY: init
 init: ## make init project_id={project ID} builder_token={build token} output={absolute path to install}
-	./tools/gen.sh $(project_id) $(builder_token) $(output)
+	go run ./tools/install.go $(project_id) $(builder_token) $(output)

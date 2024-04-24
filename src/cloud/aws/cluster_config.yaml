@@ -28,7 +28,7 @@ addons:
 - name: amazon-cloudwatch-observability
   version: latest
   
-nodeGroups:
+mangedNodeGroups:
   - name: diarkis-public
     instanceType: m5.large
     volumeSize: 100
@@ -40,7 +40,7 @@ nodeGroups:
     iam:
       withAddonPolicies:
         autoScaler: true
-        albIngress: true
+        awsLoadBalancerController: true
 
   - name: diarkis-private
     volumeSize: 100
@@ -54,7 +54,7 @@ nodeGroups:
     iam:
       withAddonPolicies:
         autoScaler: true
-        albIngress: true
+        awsLoadBalancerController: true
     taints:
       - key: "diarkis.io/network"
         value: "private"

@@ -19,18 +19,14 @@ alpineなどもsampleで使用しているが、それに関してはdocker hub�
 ```
 aws sts get-caller-identity # 向き先が正しいか確認してください
 aws ecr create-repository --repository-name http
-export HTTP_URI=$(aws ecr describe-repositories --repository-names http | jq '.repositories[].repositoryUri')
 aws ecr create-repository --repository-name udp
-export UDP_URI=$(aws ecr describe-repositories --repository-names udp | jq '.repositories[].repositoryUri')
 aws ecr create-repository --repository-name tcp
-export TCP_URI=$(aws ecr describe-repositories --repository-names tcp | jq '.repositories[].repositoryUri')
 aws ecr create-repository --repository-name mars
-export MARS_URI=$(aws ecr describe-repositories --repository-names mars | jq '.repositories[].repositoryUri')
 ```
 
 ## 3. Create EKS for diarkis
 ```
-eksctl create cluster -f cluster_config.yaml # about 10 minutes
+eksctl create cluster -f cloud/aws/cluster_config.yaml # about 10 minutes
 ```
 NAT gateway が該当のAZで対応していない等のエラーが出た場合には、AZで別の物を選択してください。
 
@@ -40,7 +36,7 @@ aws eks --region ap-northeast-1 update-kubeconfig --name diarkis # get credetial
 ```
 
 ## 5. Open EKS firewall
-EKSのNodeに対して0.0.0.0/0からtcp,udpの7000-8000を開放する
+EKSのNodeに対してfirewallで、0.0.0.0/0からtcp,udpの7000-8000を開放する
 
 ## 6. tagging the server image and push
 server-templateから生成した project の root から下記を実行
