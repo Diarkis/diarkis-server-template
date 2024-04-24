@@ -1,0 +1,20 @@
+{
+  "OneTicket": {
+    "keysForReport": ["ticketType"],
+    "ticketType": 0
+  },
+  "RandomTicket": {
+    "keysForReport": ["ticketType"],
+    "ticketType": {
+      "isRandom": true,
+      "options": [0, 1]
+    }
+  },
+  "RatedTicket": {
+    "keysForReport": ["ticketType"],
+    "ticketType": {
+      "options": [0, 1, 2],
+      "optionRates": [0.8, 0.15, 0.05]
+    }
+  }
+}

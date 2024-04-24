@@ -1,0 +1,19 @@
+namespace: bot
+
+commonLabels:
+  app: diarkis
+
+# build target
+resources:
+  - k8s/ns.yaml
+  - k8s/deploy.yaml
+  - k8s/svc.yaml
+  - k8s/podmonitoring.yaml
+
+configMapGenerator:
+  - name: bot-conf
+    files:
+      - config/example.json
+      - config/connect.json
+      - config/global.json
+      - config/ticket.json

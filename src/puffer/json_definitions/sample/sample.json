@@ -2,6 +2,7 @@
   "sampleA": {
     "ver": 4,
     "cmd": 1000,
+    "package": "samplea",
     "properties": {
       "UInt8": "u8",
       "UInt16": "u16",
@@ -36,6 +37,7 @@
   "sampleB": {
     "ver": 4,
     "Cmd": 1001,
+    "package": "sampleb",
     "Properties": {
       "c": { "type":"sampleC", "comment":"This property uses the custom data type generated as SampleC" },
       "category": { "type":"u16", "Comment":"Category is just a sample property" },
@@ -47,6 +49,7 @@
   "sampleC": {
     "ver": 4,
     "cmd": 1002,
+    "package": "samplec",
     "properties": {
       "foo": "b[]",
       "name": "string",
@@ -54,6 +57,7 @@
     }
   },
   "sampleD": {
+    "package": "sampled",
     "properties": {}
   }
 }
