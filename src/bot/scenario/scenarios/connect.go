@@ -3,7 +3,7 @@ package scenarios
 import (
 	"encoding/json"
 
-	bot_client "{0}/bot/scenario/lib/client"
+	bot_client "github.com/Diarkis/diarkis-server-template/bot/scenario/lib/client"
 )
 
 type ConnectParams struct {

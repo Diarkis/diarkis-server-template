@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"{0}/bot/scenario/lib/log"
+	"github.com/Diarkis/diarkis-server-template/bot/scenario/lib/log"
 
 	"github.com/Diarkis/diarkis/util"
 	uuidv4 "github.com/Diarkis/diarkis/uuid/v4"
