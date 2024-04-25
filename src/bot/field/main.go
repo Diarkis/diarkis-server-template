@@ -314,6 +314,7 @@ func startBot(bot *botData) {
 	for {
 		switch bot.state {
 		case STATUS_BEFORE_START:
+			bot.field.Join(int64(bot.x), int64(bot.y), 0, 300, 0, nil, false, bot.uid)
 			bot.state = STATUS_AFTER_START
 		case STATUS_AFTER_START:
 			randomSync(bot)

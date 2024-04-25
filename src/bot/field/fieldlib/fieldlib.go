@@ -11,6 +11,7 @@ import (
 const builtInVer = util.CmdBuiltInVer
 const syncCmd = util.CmdFieldSync
 const disappearCmd = util.CmdFieldDisappear
+const joinCmd = 120
 
 type Field struct {
 	tcp          *tcp.Client
@@ -98,6 +99,10 @@ func (f *Field) createSyncPayload(
 	payload[27] = reliableByte
 	msg = append(header[:], msg[:]...)
 	return append(payload[:], msg[:]...)
+}
+func (f *Field) Join(x, y, z int64, syncLimit uint16, customFilterID uint8, msg []byte, reliable bool, uid string) {
+	payload := f.createSyncPayload(x, y, z, syncLimit, customFilterID, msg, reliable, uid)
+	f.send(builtInVer, joinCmd, payload, reliable)
 }
 
 func (f *Field) Disappear() {
