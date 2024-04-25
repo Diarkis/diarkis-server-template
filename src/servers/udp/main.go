@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/Diarkis/diarkis"
-	"{0}/cmds"
+	"github.com/Diarkis/diarkis-server-template/cmds"
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/mesh"
 	"github.com/Diarkis/diarkis/server"

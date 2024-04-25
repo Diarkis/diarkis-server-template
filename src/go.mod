@@ -1,4 +1,4 @@
-module {0}
+module github.com/Diarkis/diarkis-server-template
 
 go 1.21
 

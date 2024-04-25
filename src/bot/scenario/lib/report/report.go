@@ -7,7 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"{0}/bot/scenario/lib/log"
+	"github.com/Diarkis/diarkis-server-template/bot/scenario/lib/log"
 
 	"github.com/Diarkis/diarkis/util"
 )

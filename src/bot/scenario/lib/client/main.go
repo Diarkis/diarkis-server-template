@@ -1,9 +1,9 @@
 package bot_client
 
 import (
+	"github.com/Diarkis/diarkis-server-template/bot/scenario/lib/log"
 	"strconv"
 	"strings"
-	"{0}/bot/scenario/lib/log"
 
 	"github.com/Diarkis/diarkis/util"
 )
