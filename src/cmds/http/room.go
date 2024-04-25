@@ -11,8 +11,9 @@ import (
 	"strings"
 )
 
-func exposeRoom(rootpath string) {
-	// serverType={UDP|TCP|WS} WS=WebSocket
+func exposeRoom() {
+	// IMPORTANT: This API does NOT work with custom server type.
+	// serverType={UDP|TCP}
 	// maxMembers={number of allowed members}
 	// ttl={TTL of empty room in seconds}
 	// interval={broadcast buffer interval}
@@ -27,7 +28,7 @@ func createRoom(resp *http.Response, req *http.Request, params *http.Params, nex
 		return
 	}
 	serverType = strings.ToUpper(serverType)
-	if serverType != server.UDPType && serverType != server.TCPType && serverType != server.WSType {
+	if serverType != server.UDPType && serverType != server.TCPType {
 		resp.Respond(fmt.Sprintf("Invalid server type %s", serverType), http.Bad)
 		next(errors.New(fmt.Sprintf("Invalid server type %s", serverType)))
 		return

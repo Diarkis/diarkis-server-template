@@ -29,7 +29,7 @@ else
 endif
 
 .PHONY: gen
-gen: # Generate go, cpp, css code from packet definition written in json
+gen: ## Generate go, cpp, cs code from packet definition written in json
 	make -C puffer gen
 
 .PHONY: run-docker
@@ -56,7 +56,7 @@ push-container: ## Push container to AWS
 	docker push AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/mars
 
 .PHONY: setup-gcp
-setup-gcp: 
+setup-gcp: ## Set up GCP
 	./script/setup_gcp.sh
 
 .PHONY: build-container-gcp
@@ -75,7 +75,7 @@ push-container-gcp: ## Push container to GCP
 	docker push asia.gcr.io/__GCP_PROJECT_ID__/mars
 
 .PHONY: setup-azure
-setup-azure:
+setup-azure: ## Set up Azure
 	./script/setup_azure.sh
 
 

@@ -5,15 +5,13 @@ package httpcmds
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/Diarkis/diarkis/matching"
 	"github.com/Diarkis/diarkis/server/http"
 )
 
-func exposeMatchMaker(rootpath string) {
-	matching.Setup(fmt.Sprintf("%s/configs/shared/matching.json", rootpath))
+func exposeMatchMaker() {
 	http.Post("/mm/add/:mmID/:uniqueID/:ttl", addToMatchMaker)
 	http.Delete("/mm/rm/:mmID", removeFromMatchMaker)
 	http.Post("/mm/search/:mmIDs/:limit", searchMatchMaker)

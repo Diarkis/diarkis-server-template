@@ -1,24 +1,28 @@
 package main
 
 import (
-	"fmt"
-	"github.com/Diarkis/diarkis"
+	"github.com/Diarkis/diarkis/diarkisexec"
 	"github.com/Diarkis/diarkis-server-template/cmds"
-	"github.com/Diarkis/diarkis/log"
-	"github.com/Diarkis/diarkis/mesh"
-	"github.com/Diarkis/diarkis/server"
-	"os"
 )
 
 func main() {
-	rootpath, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-	log.Setup(fmt.Sprintf("%s/configs/shared/log.json", rootpath))
-	mesh.Setup(fmt.Sprintf("%s/configs/shared/mesh.json", rootpath))
-	server.SetupAsUDPServer(fmt.Sprintf("%s/configs/udp/main.json", rootpath))
-	cmds.Setup(rootpath)
-	cmds.ExposeServer()
-	diarkis.Start()
+	logConfigPath := "/configs/shared/log.json"
+	meshConfigPath := "/configs/shared/mesh.json"
+
+	diarkisexec.SetupDiarkis(logConfigPath, meshConfigPath, &diarkisexec.Modules{
+		Room:       &diarkisexec.Options{ ExposeCommands: true },
+		P2P:        &diarkisexec.Options{ ExposeCommands: true },
+		Group:      &diarkisexec.Options{ ConfigPath: "/configs/shared/group.json", ExposeCommands: true },
+		Dive:       &diarkisexec.Options{ ConfigPath: "/configs/shared/dive.json", ExposeCommands: true },
+		Field:      &diarkisexec.Options{ ConfigPath: "/configs/shared/field.json", ExposeCommands: true },
+		DM:         &diarkisexec.Options{ ConfigPath: "/configs/shared/dm.json", ExposeCommands: true },
+		MatchMaker: &diarkisexec.Options{ ConfigPath: "/configs/shared/matching.json", ExposeCommands: true },
+		Session:    &diarkisexec.Options{ ConfigPath: "/configs/shared/session.json", ExposeCommands: true },
+	})
+
+	cmds.Setup()
+
+	diarkisexec.SetupDiarkisUDPServer("/configs/udp/main.json")
+
+	diarkisexec.StartDiarkis()
 }
