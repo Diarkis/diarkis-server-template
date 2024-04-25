@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"{0}/bot/scenario/lib/log"
-	"{0}/bot/scenario/lib/report"
-	"{0}/bot/scenario/scenarios"
+	"github.com/Diarkis/diarkis-server-template/bot/scenario/lib/log"
+	"github.com/Diarkis/diarkis-server-template/bot/scenario/lib/report"
+	"github.com/Diarkis/diarkis-server-template/bot/scenario/scenarios"
 
 	"github.com/Diarkis/diarkis/client/go/udp"
 	"github.com/Diarkis/diarkis/util"

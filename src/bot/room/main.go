@@ -1,6 +1,6 @@
 package main
 
-import "{0}/bot/room/app"
+import "github.com/Diarkis/diarkis-server-template/bot/room/app"
 
 func main() {
 	app.Run()

@@ -2,7 +2,7 @@ package roomcmds
 
 import (
 	"encoding/binary"
-	"{0}/lib/meshCmds"
+	"github.com/Diarkis/diarkis-server-template/lib/meshCmds"
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/room"
 	"github.com/Diarkis/diarkis/roomsupport"

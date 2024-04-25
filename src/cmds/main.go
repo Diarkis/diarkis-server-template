@@ -1,15 +1,15 @@
 package cmds
 
 import (
-	customcmds "{0}/cmds/custom"
-	dmcmds "{0}/cmds/dm"
-	fieldcmds "{0}/cmds/field"
-	groupcmds "{0}/cmds/group"
-	httpcmds "{0}/cmds/http"
-	matchmakercmds "{0}/cmds/matchmaker"
-	p2pcmds "{0}/cmds/p2p"
-	roomcmds "{0}/cmds/room"
-	sessioncmds "{0}/cmds/session"
+	customcmds "github.com/Diarkis/diarkis-server-template/cmds/custom"
+	dmcmds "github.com/Diarkis/diarkis-server-template/cmds/dm"
+	fieldcmds "github.com/Diarkis/diarkis-server-template/cmds/field"
+	groupcmds "github.com/Diarkis/diarkis-server-template/cmds/group"
+	httpcmds "github.com/Diarkis/diarkis-server-template/cmds/http"
+	matchmakercmds "github.com/Diarkis/diarkis-server-template/cmds/matchmaker"
+	p2pcmds "github.com/Diarkis/diarkis-server-template/cmds/p2p"
+	roomcmds "github.com/Diarkis/diarkis-server-template/cmds/room"
+	sessioncmds "github.com/Diarkis/diarkis-server-template/cmds/session"
 )
 
 var rootpath string

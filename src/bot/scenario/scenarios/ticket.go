@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"time"
 
-	bot_client "{0}/bot/scenario/lib/client"
-	"{0}/bot/scenario/lib/report"
-	"{0}/bot/scenario/packets"
+	bot_client "github.com/Diarkis/diarkis-server-template/bot/scenario/lib/client"
+	"github.com/Diarkis/diarkis-server-template/bot/scenario/lib/report"
+	"github.com/Diarkis/diarkis-server-template/bot/scenario/packets"
 
 	"github.com/Diarkis/diarkis/packet"
 	"github.com/Diarkis/diarkis/util"

@@ -1,6 +1,6 @@
 #!/bin/bash
 if [ $(uname) == 'Darwin' ]; then
-    ./puffer-mac . . {0}
+    ./puffer-mac . . github.com/Diarkis/diarkis-server-template/puffer/go
 elif [ "$(expr substr $(uname -s) 1 5)" == 'Linux' ]; then
-    ./puffer-linux . . {0}
+    ./puffer-linux . . github.com/Diarkis/diarkis-server-template/puffer/go
 fi

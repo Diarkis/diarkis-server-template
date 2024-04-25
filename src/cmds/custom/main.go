@@ -1,7 +1,7 @@
 package customcmds
 
 import (
-	"{0}/puffer/go/custom"
+	"github.com/Diarkis/diarkis-server-template/puffer/go/custom"
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/server"
 	"github.com/Diarkis/diarkis/user"

@@ -1,8 +1,7 @@
 package customcmds
 
 import (
-	dpayload "{0}/puffer/go/custom"
-
+	dpayload "github.com/Diarkis/diarkis-server-template/lib/payload"
 	"github.com/Diarkis/diarkis/field"
 	"github.com/Diarkis/diarkis/server"
 	"github.com/Diarkis/diarkis/user"

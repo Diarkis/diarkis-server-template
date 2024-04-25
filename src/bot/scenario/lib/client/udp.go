@@ -1,11 +1,9 @@
 package bot_client
 
 import (
-	// todo: replace after upgrading to 1.21
-	"golang.org/x/exp/slices"
+	"slices"
 
-	"{0}/bot/scenario/lib/report"
-
+	"github.com/Diarkis/diarkis-server-template/bot/scenario/lib/report"
 	"github.com/Diarkis/diarkis/client/go/udp"
 	"github.com/Diarkis/diarkis/server"
 	"github.com/Diarkis/diarkis/util"

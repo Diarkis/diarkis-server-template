@@ -5,7 +5,7 @@ package httpcmds
 import (
 	"fmt"
 	"errors"
-	"{0}/lib/meshCmds"
+	"github.com/Diarkis/diarkis-server-template/lib/meshCmds"
 	"github.com/Diarkis/diarkis/server"
 	"github.com/Diarkis/diarkis/server/http"
 	"strings"

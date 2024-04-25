@@ -10,7 +10,7 @@ import (
 	"github.com/Diarkis/diarkis/client/go/udp"
 	"github.com/Diarkis/diarkis/util"
 
-	"{0}/bot/dm/http"
+	"github.com/Diarkis/diarkis-server-template/bot/dm/http"
 )
 
 

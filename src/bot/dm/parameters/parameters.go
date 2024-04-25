@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"{0}/bot/dm/loadtest"
+	"github.com/Diarkis/diarkis-server-template/bot/dm/loadtest"
 )
 
 func ParseParams(args []string) *loadtest.Params {

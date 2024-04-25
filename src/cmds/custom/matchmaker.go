@@ -3,7 +3,7 @@ package customcmds
 import (
 	"encoding/binary"
 	"errors"
-	dpayload "{0}/lib/payload"
+	dpayload "github.com/Diarkis/diarkis-server-template/lib/payload"
 	"github.com/Diarkis/diarkis/matching"
 	"github.com/Diarkis/diarkis/room"
 	"github.com/Diarkis/diarkis/server"

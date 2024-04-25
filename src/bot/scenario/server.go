@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strings"
 
-	"{0}/bot/scenario/lib/report"
+	"github.com/Diarkis/diarkis-server-template/bot/scenario/lib/report"
 
 	"github.com/Diarkis/diarkis/util"
 )
