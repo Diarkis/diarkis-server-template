@@ -5,7 +5,6 @@ metadata:
   labels:
     component: http
 spec:
-  replicas: 1
   selector:
     matchLabels:
       component: http
@@ -20,31 +19,15 @@ spec:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
     spec:
       terminationGracePeriodSeconds: 10      
-      initContainers:
-      - image: alpine:latest
-        name: tuner
-        command:
-        - /bin/sh
-        - -c
-        - |
-          sysctl -w kernel.msgmax=65536
-          sysctl -w kernel.msgmnb=65536
-          sysctl -w net.netfilter.nf_conntrack_max=1048576
-          sysctl -w net.core.somaxconn=32768
-          sysctl -w net.ipv4.tcp_syncookies=0
-          sysctl -w net.ipv4.tcp_max_syn_backlog=32768
-        imagePullPolicy: Always
-        securityContext:
-          privileged: true
       containers:
       - name: http
         readinessProbe:
           httpGet:
-            path: /healthcheck
+            path: /hello
             port: 7000
         livenessProbe:
           httpGet:
-            path: /healthcheck
+            path: /hello
             port: 7000            
         securityContext:
           runAsUser: 1000
@@ -57,8 +40,10 @@ spec:
         command:
           - /go/bin/http
         env:
+          - name: ROLE
+            value: http
           - name: DIARKIS_CLOUD_ENV
-            value: AWS
+            value: GCP
           - name: DIARKIS_FIELD_MOD
             value: "true"
         volumeMounts:
@@ -67,20 +52,17 @@ spec:
         - mountPath: /configs/shared
           name: shared-conf          
         - mountPath:  /bin/tools/configs
-          name: hc-conf
-        - mountPath: /tmp
-          name: tmp
+          name: hc-conf          
         ports:
         - name: http
           containerPort: 7000
       nodeSelector:
-        alpha.eksctl.io/nodegroup-name: diarkis-private
-      tolerations:
-        - key: "diarkis.io/network"
-          operator: "Equal"
-          value: "private"
-          effect: "NoExecute"        
+         cloud.google.com/private-node: "true"
       volumes:
+      - name: cache
+        emptyDir: {}
+      - name: pid
+        emptyDir: {}
       - name: http-conf
         configMap:
           name: http-conf
@@ -90,5 +72,3 @@ spec:
       - name: hc-conf
         configMap:
           name: hc-conf
-      - name: tmp
-        emptyDir: {}

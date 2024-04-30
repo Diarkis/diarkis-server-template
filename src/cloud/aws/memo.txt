@@ -1,0 +1,5 @@
+## get config
+eksctl  utils write-kubeconfig --cluster diarkis
+
+## delete 
+eksctl delete cluster --region=ap-northeast-1 --name=diarkis  --disable-nodegroup-eviction

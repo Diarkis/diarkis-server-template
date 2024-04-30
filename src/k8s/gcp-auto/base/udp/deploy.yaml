@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: udp
+  labels:
+    component: udp
+  annotations:
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+    autopilot.gke.io/host-port-assignment: '{"min":7000,"max":8000}'
+spec:
+  containers:
+  - name: udp
+    image: udp
+    imagePullPolicy: Always
+    env:
+      - name: ROLE
+        value: udp
+      - name: DIARKIS_CLOUD_ENV
+        value: GCP
+      - name: DIARKIS_SHUTDOWN_TIMEOUT
+        value: "600"
+    ports:
+    - containerPort: 7000
+      hostPort: 7000
+      protocol: UDP
+    command:
+      - /go/bin/udp
+    args:
+      - -c
+      - "1"
+    volumeMounts:
+    - mountPath: /configs/shared
+      name: shared-conf
+    - mountPath: /configs/udp
+      name: udp-conf
+    - name: hc-conf
+      mountPath: /bin/tools/configs
+    - name: tmp
+      mountPath: /tmp
+  volumes:
+    - name: shared-conf
+      configMap:
+        name: shared-conf        
+    - name: udp-conf
+      configMap:
+        name: udp-conf
+    - name: hc-conf
+      configMap:
+        name: hc-conf            
+    - name: tmp
+      emptyDir: {}

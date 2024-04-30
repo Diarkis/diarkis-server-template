@@ -40,20 +40,24 @@ run-docker: ## Run Diarkis locally with docker compose
 stop-docker: ## Stop Diarkis
 	docker compose down
 
-.PHONY: build-container
-build-container: gen ## Build container for AWS
-	$(DIARKIS_CLI) build -c container-build.yaml --host v3.builder.diarkis.io
-	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/http
-	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/udp
-	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/tcp
-	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/mars
+.PHONY: setup-aws
+setup-aws:
+	./script/setup_aws.sh
 
-.PHONY: push-container
-push-container: ## Push container to AWS
-	docker push AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/http
-	docker push AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/udp
-	docker push AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/tcp
-	docker push AWS_ACCOUNT_NUM.dkr.ecr.ap-northeast-1.amazonaws.com/mars
+.PHONY: build-container-aws
+build-container-aws: ## Build container for AWS
+	$(DIARKIS_CLI) build -c container-build.yaml --host v3.builder.diarkis.io
+	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/http
+	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/udp
+	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/tcp
+	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/mars
+
+.PHONY: push-container-aws
+push-container-aws: ## Push container to AWS
+	docker push __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/http
+	docker push __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/udp
+	docker push __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/tcp
+	docker push __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/mars
 
 .PHONY: setup-gcp
 setup-gcp: 

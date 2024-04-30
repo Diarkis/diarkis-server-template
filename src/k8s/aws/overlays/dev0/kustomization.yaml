@@ -17,6 +17,7 @@ configMapGenerator:
     - shared/conf/log.json
     - shared/conf/matching.json
     - shared/conf/mesh.json
+    - shared/conf/dm.json    
     
 - name: http-conf
   behavior: replace
