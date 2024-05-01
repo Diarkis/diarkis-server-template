@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 function usage {
     cat <<EOF
@@ -22,7 +22,18 @@ builder_token=$2
 output_path=$3
 module_name=$(basename $output_path)
 go run ./tools/install.go $project_id $builder_token $output_path
-cd $output_path &&
-    go mod edit -module $module_name &&
-    find . -type f -name '*.go'  -exec sed -i '' -e "s%github.com/Diarkis/diarkis-server-template%$module_name%g" {} \; &&
-    sed -i '' -e "s%github.com/Diarkis/diarkis-server-template%$module_name%g" puffer/gen.sh
+pushd $output_path
+    go mod edit -module $module_name
+    if [ $(uname) == 'Darwin' ]; then
+        find . -type f -name '*.go'  -exec sed -i '' -e "s%github.com/Diarkis/diarkis-server-template%$module_name%g" {} \;
+        sed -i '' -e "s%github.com/Diarkis/diarkis-server-template%$module_name%g" puffer/gen.sh
+    elif [ "$(expr substr $(uname -s) 1 5)" == 'Linux' ]; then
+        find . -type f -name '*.go'  -exec sed -i -e "s%github.com/Diarkis/diarkis-server-template%$module_name%g" {} \;
+        sed -i -e "s%github.com/Diarkis/diarkis-server-template%$module_name%g" puffer/gen.sh
+        echo "Linux"
+    else
+        echo "Unsupported OS"
+        uname -a
+        exit 1
+    fi
+popd
