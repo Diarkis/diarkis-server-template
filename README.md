@@ -1,4 +1,18 @@
+
 # Overview
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+Server: ![docker](https://img.shields.io/badge/-docker-black.svg?logo=docker&style=flat) ![golang](https://img.shields.io/badge/-go-black.svg?logo=go&style=flat)
+
+Client: ![c#](https://img.shields.io/badge/-csharp-black.svg?logo=csharp&style=flat) ![c++](https://img.shields.io/badge/-csharp-black.svg?logo=csharp&style=flat)
+
+This repository is the source code to use when starting a project with the network engine diarkis.
+
+One thing to note about this project is that diarkis itself is proprietary software and will not pass the build process as is, but must be built using diarkis-cli.
+
+A skeleton source code with function definitions and variable definitions is also provided for use with the IDE's completion functions, etc.
+
+
 
 Diarkis server cluster is made up with HTTP, TCP, and UDP servers.
 
