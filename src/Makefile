@@ -11,11 +11,11 @@ ifeq ($(shell uname), Darwin)
 	DIARKIS_CLI = ./diarkis-cli/os/mac/bin/diarkis-cli
 endif
 
-.PHONY: build-local
-build-local: gen ## Build server binary for local use
+.PHONY: build
+build: gen ## Build server binary for local use
 	echo "Build server binaries"
 	rm -rfv remote_bin/*
-	$(DIARKIS_CLI) build -c local-build.yml --host v3.builder.diarkis.io
+	$(DIARKIS_CLI) build -c build.yml --host v3.builder.diarkis.io
 	chmod -R 700 remote_bin/
 
 .PHONY: server

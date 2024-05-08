@@ -71,10 +71,10 @@ Use the following commands to build the server binaries:
 The following command will be building the servers for your local machine.
 
 ```
-make local-build
+make build
 ```
 
-### local-build.yml
+### build.yml
 
 This file controls which server binaries to build, which Go version to use, and which architecture and OS to build the servers for etc.
 
