@@ -162,10 +162,35 @@ This is where you add your custom commands.
 cmds/
 ```
 
-# Transport Payload
+# Client to Server Transport Payload
 
 We recommend that packets be defined and implemented using `puffer`.
 We store puffer in the puffer directory and provide usage and examples.
+
+## How to generate code files
+
+`puffer` reads from JSON formatted definition files and generate payload code files for
+Golang, C++, and C#.
+
+In order to generate code files, execute the following make command:
+
+`make gen`
+
+### Where are the puffer generated code files stored?
+
+The `puffer` generated code files will be stored as shown below:
+
+- Golang `puffer/go/`
+
+- C++    `puffer/cpp/`
+
+- C#     `puffer/cs/`
+
+## How to delete all puffer generated files
+
+Execute the following make command:
+
+`make clean`
 
 # Configurations
 
