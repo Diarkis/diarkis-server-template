@@ -6,17 +6,34 @@ help:
 .DEFAULT_GOAL := help
 
 DIARKIS_CLI = ./diarkis-cli/os/linux/bin/diarkis-cli
+BUILD_CONFIG = ./build/linux-build.yml
 
 ifeq ($(shell uname), Darwin)
 	DIARKIS_CLI = ./diarkis-cli/os/mac/bin/diarkis-cli
+	BUILD_CONFIG = ./build/mac-build.yml
 endif
 
 .PHONY: build-local
 build-local: gen ## Build server binary for local use
+	echo "Build server binaries for local use"
+	rm -rfv remote_bin/*
+	$(DIARKIS_CLI) build -c $(BUILD_CONFIG) --host v3.builder.diarkis.io
+	chmod -R 700 remote_bin/
+
+.PHONY: build-linux
+build-linux: gen ## Build server binary for linux or container environment
 	echo "Build server binaries"
 	rm -rfv remote_bin/*
-	$(DIARKIS_CLI) build -c build.yml --host v3.builder.diarkis.io
+	$(DIARKIS_CLI) build -c linux-build.yml --host v3.builder.diarkis.io
 	chmod -R 700 remote_bin/
+
+.PHONY: build-mac
+build-mac: gen ## Build server binary for mac use
+	echo "Build server binaries"
+	rm -rfv remote_bin/*
+	$(DIARKIS_CLI) build -c mac-build.yml --host v3.builder.diarkis.io
+	chmod -R 700 remote_bin/
+
 
 .PHONY: server
 server: ## Start a server locally: [ target=mars ] [ target=http ] [ target=udp ] [ target=tcp ]
@@ -37,7 +54,7 @@ clean: ## Deletes all puffer generated code files
 	make -C puffer clean
 
 .PHONY: run-docker
-run-docker: ## Run Diarkis locally with docker compose
+run-docker: build-linux ## Run Diarkis locally with docker compose
 	docker compose up -d
 
 .PHONY: stop-docker
@@ -49,8 +66,7 @@ setup-aws:
 	./script/setup_aws.sh
 
 .PHONY: build-container-aws
-build-container-aws: ## Build container for AWS
-	$(DIARKIS_CLI) build -c container-build.yaml --host v3.builder.diarkis.io
+build-container-aws: build-linux ## Build container for AWS
 	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/http
 	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/udp
 	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/tcp
@@ -68,8 +84,7 @@ setup-gcp: ## Set up GCP
 	./script/setup_gcp.sh
 
 .PHONY: build-container-gcp
-build-container-gcp: ## Build container for GCP
-	$(DIARKIS_CLI) build -c container-build.yaml --host v3.builder.diarkis.io
+build-container-gcp: build-linux ## Build container for GCP
 	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t asia.gcr.io/__GCP_PROJECT_ID__/http
 	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t asia.gcr.io/__GCP_PROJECT_ID__/udp
 	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t asia.gcr.io/__GCP_PROJECT_ID__/tcp
@@ -88,8 +103,7 @@ setup-azure: ## Set up Azure
 
 
 .PHONY: build-container-azure
-build-container-azure: ## Build container for azure
-	$(DIARKIS_CLI) build -c container-build.yaml --host v3.builder.diarkis.io
+build-container-azure: build-linux ## Build container for azure
 	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t __ACR_DOMAIN__/http
 	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t  __ACR_DOMAIN__/udp
 	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t  __ACR_DOMAIN__/tcp
