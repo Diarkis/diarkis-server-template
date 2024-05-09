@@ -24,14 +24,14 @@ build-local: gen ## Build server binary for local use
 build-linux: gen ## Build server binary for linux or container environment
 	echo "Build server binaries"
 	rm -rfv remote_bin/*
-	$(DIARKIS_CLI) build -c linux-build.yml --host v3.builder.diarkis.io
+	$(DIARKIS_CLI) build -c ./build/linux-build.yml --host v3.builder.diarkis.io
 	chmod -R 700 remote_bin/
 
 .PHONY: build-mac
 build-mac: gen ## Build server binary for mac use
 	echo "Build server binaries"
 	rm -rfv remote_bin/*
-	$(DIARKIS_CLI) build -c mac-build.yml --host v3.builder.diarkis.io
+	$(DIARKIS_CLI) build -c ./build/mac-build.yml --host v3.builder.diarkis.io
 	chmod -R 700 remote_bin/
 
 
