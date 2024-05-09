@@ -1,6 +1,6 @@
 # Overview
 
-Diarkis server cluster is made up with HTTP, TCP, UDP and WebSocket servers.
+Diarkis server cluster is made up with HTTP, TCP, and UDP servers.
 
 Each protocol servers run independently within the cluster, but you do not have to have all protocols.
 
@@ -162,11 +162,7 @@ This is where you add your custom commands.
 cmds/
 ```
 
-## WebSocket
-
-```
-ws_cmds/
-```
+# Transport Payload
 
 We recommend that packets be defined and implemented using `puffer`.
 We store puffer in the puffer directory and provide usage and examples.
@@ -397,7 +393,7 @@ POST /room/create/:serverType/:maxMembers/:ttl/:interval
 
 ## Parameters
 
-- `serverType` is to choose which server to create a new room in. Valid types are: `udp`, `tcp`, and `ws`.
+- `serverType` is to choose which server to create a new room in. Valid types are: `udp`, and `tcp`.
 
 - `maxMembers` is a maximum client members allowed in the new room.
 
@@ -411,7 +407,7 @@ POST /room/create/:serverType/:maxMembers/:ttl/:interval
 
 This is where you define your own MatchMaker rules.
 
-The template provides HTTP API endpoints, but you may implement UDP, TCP, WebSocket commands for MatchMaker as well.
+The template provides HTTP API endpoints, but you may implement UDP, and TCP commands for MatchMaker as well.
 
 ```
 cmds/http/matching.go
@@ -461,10 +457,4 @@ This is where you implement your own custom commands for TCP, UDP/RUDP.
 
 ```
 /cmds/custom/main.go
-```
-
-This is where you implement your own custom commands for WebSocket.
-
-```
-ws_cmds/custom/main.go
 ```
