@@ -89,17 +89,17 @@ setup-gcp: ## Set up GCP
 
 .PHONY: build-container-gcp
 build-container-gcp: build-linux ## Build container for GCP
-	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t asia.gcr.io/__GCP_PROJECT_ID__/http
-	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t asia.gcr.io/__GCP_PROJECT_ID__/udp
-	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t asia.gcr.io/__GCP_PROJECT_ID__/tcp
-	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t asia.gcr.io/__GCP_PROJECT_ID__/mars
+	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/http
+	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t  asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/udp
+	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t  asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/tcp
+	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t  asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/mars
 
 .PHONY: push-container-gcp
 push-container-gcp: ## Push container to GCP
-	docker push asia.gcr.io/__GCP_PROJECT_ID__/http
-	docker push asia.gcr.io/__GCP_PROJECT_ID__/udp
-	docker push asia.gcr.io/__GCP_PROJECT_ID__/tcp
-	docker push asia.gcr.io/__GCP_PROJECT_ID__/mars
+	docker push  asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/http
+	docker push  asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/udp
+	docker push  asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/tcp
+	docker push  asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/mars
 
 .PHONY: setup-azure
 setup-azure: ## Set up Azure
