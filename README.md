@@ -1,6 +1,6 @@
 
 # Overview
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: Apache](https://img.shields.io/badge/License-Apache-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Server: ![kuberentes](https://img.shields.io/badge/-kubernetes-black.svg?logo=kubernetes&style=flat) ![docker](https://img.shields.io/badge/-docker-black.svg?logo=docker&style=flat) ![golang](https://img.shields.io/badge/-go-black.svg?logo=go&style=flat) 
 
