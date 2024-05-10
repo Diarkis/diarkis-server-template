@@ -95,6 +95,13 @@ make stop-docker
 
 **NOTE** You must have MARS and HTTP server running in order to create Diarkis server cluster properly.
 
+# Change Diarkis version
+```
+make change-diarkis-version
+```
+It will download files for code completion and rewrite go.mod.
+
+
 # Server Entry Points
 
 ## HTTP server

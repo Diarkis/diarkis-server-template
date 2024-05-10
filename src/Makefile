@@ -45,6 +45,10 @@ else
 	./remote_bin/$(target)
 endif
 
+.PHONY: change-diarkis-version
+change-diarkis-version: ## Change diarkis version
+	./script/change_diarkis_version.sh
+
 .PHONY: gen
 gen: ## Generate go, cpp, and cs code files using puffer (Diarkis packet gen module) from packet definition written in json
 	make -C puffer gen
