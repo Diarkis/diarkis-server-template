@@ -3,12 +3,13 @@ package httpcmds
 // rootpath is defined in cmds/main.go
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
+	"strings"
+
 	"github.com/Diarkis/diarkis-server-template/lib/meshCmds"
 	"github.com/Diarkis/diarkis/server"
 	"github.com/Diarkis/diarkis/server/http"
-	"strings"
 )
 
 func exposeRoom(rootpath string) {
@@ -27,7 +28,7 @@ func createRoom(resp *http.Response, req *http.Request, params *http.Params, nex
 		return
 	}
 	serverType = strings.ToUpper(serverType)
-	if serverType != server.UDPType && serverType != server.TCPType && serverType != server.WSType {
+	if serverType != server.UDPType && serverType != server.TCPType {
 		resp.Respond(fmt.Sprintf("Invalid server type %s", serverType), http.Bad)
 		next(errors.New(fmt.Sprintf("Invalid server type %s", serverType)))
 		return
