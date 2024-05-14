@@ -29,8 +29,12 @@ else
 endif
 
 .PHONY: gen
-gen: ## Generate go, cpp, cs code from packet definition written in json
+gen: ## Generate go, cpp, and cs code files using puffer (Diarkis packet gen module) from packet definition written in json
 	make -C puffer gen
+
+.PHONY: clean
+clean: ## Deletes all puffer generated code files
+	make -C puffer clean
 
 .PHONY: run-docker
 run-docker: ## Run Diarkis locally with docker compose

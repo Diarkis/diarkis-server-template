@@ -1,6 +1,6 @@
 # Overview
 
-Diarkis server cluster is made up with HTTP, TCP, UDP and WebSocket servers.
+Diarkis server cluster is made up with HTTP, TCP, and UDP servers.
 
 Each protocol servers run independently within the cluster, but you do not have to have all protocols.
 
@@ -162,14 +162,35 @@ This is where you add your custom commands.
 cmds/
 ```
 
-## WebSocket
-
-```
-ws_cmds/
-```
+# Client to Server Transport Payload
 
 We recommend that packets be defined and implemented using `puffer`.
 We store puffer in the puffer directory and provide usage and examples.
+
+## How to generate code files
+
+`puffer` reads from JSON formatted definition files and generate payload code files for
+Golang, C++, and C#.
+
+In order to generate code files, execute the following make command:
+
+`make gen`
+
+### Where are the puffer generated code files stored?
+
+The `puffer` generated code files will be stored as shown below:
+
+- Golang `puffer/go/`
+
+- C++    `puffer/cpp/`
+
+- C#     `puffer/cs/`
+
+## How to delete all puffer generated files
+
+Execute the following make command:
+
+`make clean`
 
 # Configurations
 
@@ -397,7 +418,7 @@ POST /room/create/:serverType/:maxMembers/:ttl/:interval
 
 ## Parameters
 
-- `serverType` is to choose which server to create a new room in. Valid types are: `udp`, `tcp`, and `ws`.
+- `serverType` is to choose which server to create a new room in. Valid types are: `udp`, and `tcp`.
 
 - `maxMembers` is a maximum client members allowed in the new room.
 
@@ -411,7 +432,7 @@ POST /room/create/:serverType/:maxMembers/:ttl/:interval
 
 This is where you define your own MatchMaker rules.
 
-The template provides HTTP API endpoints, but you may implement UDP, TCP, WebSocket commands for MatchMaker as well.
+The template provides HTTP API endpoints, but you may implement UDP, and TCP commands for MatchMaker as well.
 
 ```
 cmds/http/matching.go
@@ -461,10 +482,4 @@ This is where you implement your own custom commands for TCP, UDP/RUDP.
 
 ```
 /cmds/custom/main.go
-```
-
-This is where you implement your own custom commands for WebSocket.
-
-```
-ws_cmds/custom/main.go
 ```
