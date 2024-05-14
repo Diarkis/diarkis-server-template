@@ -4,7 +4,7 @@
 
 Server: ![kubernetes](https://img.shields.io/badge/-kubernetes-black.svg?logo=kubernetes&style=flat) ![docker](https://img.shields.io/badge/-docker-black.svg?logo=docker&style=flat) ![golang](https://img.shields.io/badge/-go-black.svg?logo=go&style=flat) 
 
-Client: ![golang](https://img.shields.io/badge/-go-black.svg?logo=go&style=flat) ![c#](https://img.shields.io/badge/-csharp-black.svg?logo=csharp&style=flat) ![c++](https://img.shields.io/badge/-csharp-black.svg?logo=csharp&style=flat)
+Client: ![golang](https://img.shields.io/badge/-go-black.svg?logo=go&style=flat) ![c#](https://img.shields.io/badge/-csharp-black.svg?logo=csharp&style=flat) ![c++](https://img.shields.io/badge/-c++-black?logo=c%2B%2B&style=flat)
 
 This repository is the source code to use when starting a project with the network engine **diarkis**.
 
