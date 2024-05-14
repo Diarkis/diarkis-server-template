@@ -76,7 +76,7 @@ The following command will be building the servers for your local machine.
 make build-local
 ```
 
-### build.yml
+### build/(mac|linux)-build.yml
 
 This file controls which server binaries to build, which Go version to use, and which architecture and OS to build the servers for etc.
 
