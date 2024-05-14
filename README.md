@@ -12,7 +12,6 @@ One thing to note about this project is that diarkis itself is proprietary softw
 
 A skeleton source code with function definitions and variable definitions is also provided for use with the IDE's completion functions, etc.
 
-
 Diarkis server cluster is made up with HTTP, TCP, and UDP servers.
 
 Each protocol servers run independently within the cluster, but you do not have to have all protocols.
