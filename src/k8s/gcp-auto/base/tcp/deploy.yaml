@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tcp
+  labels:
+    component: tcp
+spec:
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
+      maxSurge: 10%
+  selector:
+    matchLabels:
+      component: tcp
+  template:
+    metadata:
+      labels:
+        component: tcp
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+        ad.datadoghq.com/tuner.logs: '[{"source":"tuner","service":"tcp"}]'
+        ad.datadoghq.com/tcp.logs: '[{"source":"tcp","service":"tcp"}]'
+    spec:
+      terminationGracePeriodSeconds: 600
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+      - name: tcp
+        readinessProbe:
+          exec:
+            command:
+              - sh
+              - -c
+              - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) in"
+        livenessProbe:
+          exec:
+            command:
+              - sh
+              - -c
+              - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) in"
+        securityContext:
+          runAsUser: 1000
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          privileged: false
+        image: tcp
+        imagePullPolicy: Always
+        env:
+          - name: ROLE
+            value: tcp
+          - name: DIARKIS_CLOUD_ENV
+            value: GCP
+          - name: DIARKIS_FIELD_MOD
+            value: "true"
+          - name: DIARKIS_SHUTDOWN_TIMEOUT
+            value: "600"
+        command:
+          - /go/bin/tcp
+        args:
+          - -c
+          - "1"
+        volumeMounts:
+        - mountPath: /configs/tcp
+          name: tcp-conf
+        - mountPath: /configs/shared
+          name: shared-conf
+        - name: hc-conf
+          mountPath: /bin/tools/configs
+        - name: tmp
+          mountPath: /tmp
+      nodeSelector:
+        cloud.google.com/private-node: "false"
+      volumes:
+        - name: shared-conf
+          configMap:
+            name: shared-conf
+        - name: tcp-conf
+          configMap:
+            name: tcp-conf
+        - name: hc-conf
+          configMap:
+            name: hc-conf            
+        - name: tmp
+          emptyDir: {}

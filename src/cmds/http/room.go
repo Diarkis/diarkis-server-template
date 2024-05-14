@@ -3,12 +3,13 @@ package httpcmds
 // rootpath is defined in cmds/main.go
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
+	"strings"
+
 	"github.com/Diarkis/diarkis-server-template/lib/meshCmds"
 	"github.com/Diarkis/diarkis/server"
 	"github.com/Diarkis/diarkis/server/http"
-	"strings"
 )
 
 func exposeRoom() {

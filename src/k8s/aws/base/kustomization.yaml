@@ -1,7 +1,9 @@
 namespace: base
 
-commonLabels:
-  app: diarkis
+labels:
+- includeSelectors: true
+  pairs:
+    app: diarkis
 
 # build target
 resources:

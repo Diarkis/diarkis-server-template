@@ -44,7 +44,7 @@ spec:
             port: 7000
         livenessProbe:
           httpGet:
-            path: /healtchcheck
+            path: /healthcheck
             port: 7000            
         securityContext:
           runAsUser: 1000
@@ -73,6 +73,13 @@ spec:
         ports:
         - name: http
           containerPort: 7000
+      nodeSelector:
+        alpha.eksctl.io/nodegroup-name: diarkis-private
+      tolerations:
+        - key: "diarkis.io/network"
+          operator: "Equal"
+          value: "private"
+          effect: "NoExecute"        
       volumes:
       - name: http-conf
         configMap:

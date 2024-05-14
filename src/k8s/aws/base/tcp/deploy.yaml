@@ -62,12 +62,6 @@ spec:
               - sh
               - -c
               - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) mars"
-        readinessProbe:
-          exec:
-            command:
-              - sh
-              - -c
-              - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) in"
         livenessProbe:
           exec:
             command:
@@ -105,6 +99,8 @@ spec:
           mountPath: /bin/tools/configs
         - name: tmp
           mountPath: /tmp
+      nodeSelector:
+        alpha.eksctl.io/nodegroup-name: diarkis-public
       volumes:
         - name: shared-conf
           configMap:
