@@ -1,8 +1,6 @@
 package matchmakercmds
 
 import (
-	"fmt"
-
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/matching"
 	"github.com/Diarkis/diarkis/packet"
@@ -14,11 +12,9 @@ const sampleTicketType uint8 = 0
 
 var logger = log.New("matching")
 
-func Expose(rootpath string) {
-	// Set up matching package and load configuration file
-	matching.Setup(fmt.Sprintf("%s/configs/shared/matching.json", rootpath))
-
-	// Set up matching ticket
+func Setup() {
+	// Set up matching ticket with sampleTicketType
+	// This callback is invoked when a new ticket is issued.
 	matching.SetOnIssueTicket(sampleTicketType, func(userData *user.User) *matching.TicketParams {
 		return &matching.TicketParams{
 			ProfileIDs:     []string{"RankMatch"},
@@ -35,12 +31,20 @@ func Expose(rootpath string) {
 			SearchProperties: map[string][]int{"rank": {1, 2, 3, 4, 5}},
 		}
 	})
+
+	// Set up a callback on ticket match with sampleTicketType
+	// This callback is invoked when a ticket finds a match.
+	// By returning true, the callback allows the found match to be matched.
+	// By returning false, the callback rejects the found match and ignores it.
 	matching.SetOnTicketMatch(sampleTicketType,
 		func(t *matching.Ticket, owner, userData *user.User, roomID string, memberIDs []string) bool {
 
 			// add custom logic to decide matchmaking completion here
 			return false
 		})
+
+	// Set up a callback on ticket complete with sampleTicketType
+	// This callback is invoked when a ticket completes the matchmaking.
 	matching.SetOnTicketComplete(sampleTicketType, func(ticketProps *matching.TicketProperties, owner *user.User) []byte {
 		memberIDs, _ := matching.GetTicketMemberIDs(sampleTicketType, owner)
 
@@ -58,7 +62,4 @@ func Expose(rootpath string) {
 
 		return packet.StringListToBytes(list)
 	})
-
-	// Expose built-in commands to the client
-	matching.ExposeCommands()
 }

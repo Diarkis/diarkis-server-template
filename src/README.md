@@ -1,6 +1,6 @@
 # Overview
 
-Diarkis server cluster is made up with HTTP, TCP, UDP and WebSocket servrers.
+Diarkis server cluster is made up with HTTP, TCP, UDP and WebSocket servers.
 
 Each protocol servers run independently within the cluster, but you do not have to have all protocols.
 
@@ -26,6 +26,8 @@ Only HTTP server is required in the cluster and the rest of the servers should b
    │
    │
    ├─ configs/ ─┬──── shared/ [Shared configuration directory] ────────────────────┬─ field.json
+   │            │                                                                  ├─ dm.json
+   │            │                                                                  ├─ dive.json
    │            │                                                                  ├─ group.json
    │            ├──── http/     [HTTP configuration directory] ──────── main.json  ├─ log.json
    │            │                                                                  ├─ matching.json
@@ -38,19 +40,26 @@ Only HTTP server is required in the cluster and the rest of the servers should b
    ├─ cmds/  [Custom client command directory] ────────────────┬── main.go [Entry point for all cmds]
    │                                                           │
    │                                                           ├── http   ──────────────────────────────────────┬─── main.go
-   ├─ lib/   [Shared library directory]                        ├── room   ──────────────────────────── main.go  └─── matching.go
-   │                                                           ├── group  ──────────────────────────── main.go
-   ├─ bin/   [Built server binary directory]                   ├── field  ──────────────────────────── main.go
+   │                                                           │                                                ├─── room.go
+   ├─ lib/        [Shared library directory]                   ├── room   ──────────────────────────── main.go  └─── matching.go
+   │                                                           ├── dm     ──────────────────────────── main.go
+   ├─ remote_bin/ [Built server binary directory]              ├── matchmaker ──────────────────────── main.go
    │                                                           └── custom ──────────────────────────── main.go
-   ├ cloud/ [Cloud Infra Manual for Diarkis]
-   │   
-   ├ k8s/ [Contains k8s manifest for Diarkis]
-   │   
-   ├  puffer/ [Contains package definition generator]
+   ├─ cloud/      [Cloud Infra Manual for Diarkis]
    │
-   ├ build.yml [Build configuration file for diarkis-cli]
+   ├─ k8s/        [Contains k8s manifest for Diarkis]
    │
-   └─ go.mod [Go module file for the project]
+   ├─┬─ puffer/ [Contains package definition generator]
+   │ │
+   │ ├─ json_definitions/ [Contains packet definitions]
+   │ ├─ go/               [Generated packet code for Go will be placed here]
+   │ ├─ cpp/              [Generated packet code for C++ will be placed here]
+   │ └─ cs/               [Generated packet code for C# will be placed here]
+   │
+   │
+   ├─ build.yml [Build configuration file for diarkis-cli]
+   │
+   └─ go.mod    [Go module file for the project]
 ```
 
 # Building Server Binaries
@@ -341,7 +350,7 @@ Client receives a response with `ver:2` and `cmd:111` to evaluate success or fai
 
 All remote clients that are members of the room raise `On Member Broadcast` with a list of other client's addresses.
 
-The clients may use those addreses to initiate peer-to-peer communication immediately.
+The clients may use those addresses to initiate peer-to-peer communication immediately.
 
 ### Command Version and ID
 
@@ -389,7 +398,7 @@ The payload should be a UTF8 encoded string.
 
 # Creating A New Room Via Diarkis HTTP Server
 
-You may create an empty room from Diarkis HTTP serever.
+You may create an empty room from Diarkis HTTP server.
 
 ```
 POST /room/create/:serverType/:maxMembers/:ttl/:interval
@@ -433,7 +442,7 @@ POST /mm/add/:mmID/:uniqueID/:ttl
 
 - `uniqueID` is the unique ID of the data that is to be added to MatchMaker pool.
 
-- `ttl` is the TTL of the data that is to be added to MatcMaker pool.
+- `ttl` is the TTL of the data that is to be added to MatchMaker pool.
 
 #### Request Body
 

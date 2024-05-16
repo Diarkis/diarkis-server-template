@@ -1,6 +1,6 @@
 # Overview
 
-Diarkis server cluster is made up with HTTP, TCP, and UDP servrers.
+Diarkis server cluster is made up with HTTP, TCP, and UDP servers.
 
 Each protocol servers run independently within the cluster, but you do not have to have all protocols.
 
@@ -15,17 +15,14 @@ Only HTTP server is required in the cluster and the rest of the servers should b
    │            │
    │            ├──── tcp/main.go       [TCP server main]
    │            │
-   │            └───── connector/main.go [Connector server main]
+   │            └──── connector/main.go [Connector server main]
    │
+   ├─ bot/ [Bot clients for stress test]
    │
    ├─ mars/ ───────── main.go
    │
    │
    ├─ healthcheck/ ── main.go
-   │   
-   ├ infra contains cloud infrastructure manual]
-   │   
-   ├k8 [contains k8s maniefst files]
    │
    │
    ├─ configs/ ─┬──── shared/ [Shared configuration directory] ────────────────────┬─ field.json
@@ -38,15 +35,49 @@ Only HTTP server is required in the cluster and the rest of the servers should b
    │            │
    │            └──── connector [Connector configuration directory] ─── main.json
    │
+   ├─ cmds/  [Custom client command directory] ────────────────┬── main.go [Entry point for all cmds]
+   │                                                           │
+   │                                                           ├── http   ──────────────────────────────────────┬─── main.go
+   ├─ lib/   [Shared library directory]                        ├── room   ──────────────────────────── main.go  └─── matching.go
+   │                                                           ├── group  ──────────────────────────── main.go
+   ├─ bin/   [Built server binary directory]                   ├── field  ──────────────────────────── main.go
+   │                                                           └── custom ──────────────────────────── main.go
+   ├ cloud/ [Cloud Infra Manual for Diarkis]
+   │   
+   ├ k8s/ [Contains k8s manifest for Diarkis]
+   │   
+   ├  puffer/ [Contains package definition generator]
    │
-   ├─ cmds/  [Custom client command directory] ─┬── main.go [Entry point for all cmds]
-   │                                            ├── http   ──────────────────────────────────────┬─── main.go
-   ├─ lib/   [Shared library directory]         ├── room   ──────────────────────────── main.go  └─── matching.go
-   │                                            ├── group  ──────────────────────────── main.go
-   ├─ bin/   [Built server binary directory]    ├── field  ──────────────────────────── main.go
-   │                                            │
-   └─ go.mod [Go module file for the project]   └── custom ──────────────────────────── main.go
+   ├ build.yml [Build configuration file for diarkis-cli]
+   │
+   └─ go.mod [Go module file for the project]
 ```
+
+# Building Server Binaries
+
+Use the following commands to build the server binaries:
+
+## Build Servers for Local Use
+
+The following command will be building the servers for your local machine.
+
+```
+make local-build
+```
+
+### local-build.yml
+
+This file controls which server binaries to build, which Go version to use, and which architecture and OS to build the servers for etc.
+
+### Start a Server locally
+
+The following command will start the binary on your local machine.
+
+```
+make server target=$(udp|tcp|http|mars)
+```
+
+**NOTE** You must have MARS and HTTP server running in order to create Diarkis server cluster properly.
 
 # Server Entry Points
 
@@ -94,6 +125,33 @@ Diarkis server needs to have health check. This template provides the source to 
 
 The build will be automatically executed when you execute our make commands.
 
+# Stress Test Bots
+
+Diarkis server template comes with simple bots for stress tests.
+
+All bots can be built using diarkis-cli
+
+## MatchMaker Bot
+
+This bot uses MatchMaker built-in commands to perform search and add.
+
+```
+bots/matchmaker/main.go
+```
+
+### How To Use MatchMaker Bot
+
+```
+./remote_bin/bot-matchmaker {HTTP endpoint:port} {How many bots to spawn} {Raito of hosts from 0% to 100%} {Search interval in milliseconds}
+```
+
+Example:
+
+```
+# Bot executable binary     Target host    Number of bots  Host ratio (30%)  Search interval (500ms)
+./remote_bin/bot-matchmaker 127.0.0.1:7000 1000            30                500
+```
+
 # Commands
 
 This is where you add your custom commands.
@@ -103,6 +161,36 @@ This is where you add your custom commands.
 ```
 cmds/
 ```
+
+# Client to Server Transport Payload
+
+We recommend that packets be defined and implemented using `puffer`.
+We store puffer in the puffer directory and provide usage and examples.
+
+## How to generate code files
+
+`puffer` reads from JSON formatted definition files and generate payload code files for
+Golang, C++, and C#.
+
+In order to generate code files, execute the following make command:
+
+`make gen`
+
+### Where are the puffer generated code files stored?
+
+The `puffer` generated code files will be stored as shown below:
+
+- Golang `puffer/go/`
+
+- C++    `puffer/cpp/`
+
+- C#     `puffer/cs/`
+
+## How to delete all puffer generated files
+
+Execute the following make command:
+
+`make clean`
 
 # Configurations
 
@@ -274,7 +362,7 @@ Client receives a response with `ver:2` and `cmd:111` to evaluate success or fai
 
 All remote clients that are members of the room raise `On Member Broadcast` with a list of other client's addresses.
 
-The clients may use those addreses to initiate peer-to-peer communication immediately.
+The clients may use those addresses to initiate peer-to-peer communication immediately.
 
 ### Command Version and ID
 
@@ -322,7 +410,7 @@ The payload should be a UTF8 encoded string.
 
 # Creating A New Room Via Diarkis HTTP Server
 
-You may create an empty room from Diarkis HTTP serever.
+You may create an empty room from Diarkis HTTP server.
 
 ```
 POST /room/create/:serverType/:maxMembers/:ttl/:interval
@@ -344,7 +432,7 @@ POST /room/create/:serverType/:maxMembers/:ttl/:interval
 
 This is where you define your own MatchMaker rules.
 
-The template provides HTTP API endpoints, but you may implement UDP and TCP commands for MatchMaker as well.
+The template provides HTTP API endpoints, but you may implement UDP, and TCP commands for MatchMaker as well.
 
 ```
 cmds/http/matching.go
@@ -366,7 +454,7 @@ POST /mm/add/:mmID/:uniqueID/:ttl
 
 - `uniqueID` is the unique ID of the data that is to be added to MatchMaker pool.
 
-- `ttl` is the TTL of the data that is to be added to MatcMaker pool.
+- `ttl` is the TTL of the data that is to be added to MatchMaker pool.
 
 #### Request Body
 
@@ -390,7 +478,7 @@ POST /mm/search/:mmIDs/:limit
 
 # Custom Commands
 
-This is where you impleement your own custom commands for TCP, UDP/RUDP.
+This is where you implement your own custom commands for TCP, UDP/RUDP.
 
 ```
 /cmds/custom/main.go

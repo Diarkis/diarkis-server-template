@@ -10,4 +10,4 @@ gen: ## Generates protocol code files
 	./gen.sh
 .PHONY: clean
 clean: ## Delete all generated protocol code files
-	rm -rf go cs cpp 
+	rm -rf go cs cpp

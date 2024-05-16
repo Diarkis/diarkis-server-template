@@ -12,8 +12,9 @@ import (
 	"github.com/Diarkis/diarkis/server/http"
 )
 
-func exposeRoom(rootpath string) {
-	// serverType={UDP|TCP|WS} WS=WebSocket
+func exposeRoom() {
+	// IMPORTANT: This API does NOT work with custom server type.
+	// serverType={UDP|TCP}
 	// maxMembers={number of allowed members}
 	// ttl={TTL of empty room in seconds}
 	// interval={broadcast buffer interval}
