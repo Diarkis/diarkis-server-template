@@ -1,6 +1,6 @@
 # Overview
 
-Diarkis server cluster is made up with HTTP, TCP, UDP and WebSocket servers.
+Diarkis server cluster is made up with HTTP, TCP, and UDP servers.
 
 Each protocol servers run independently within the cluster, but you do not have to have all protocols.
 
@@ -18,6 +18,8 @@ Only HTTP server is required in the cluster and the rest of the servers should b
    │            └──── connector/main.go [Connector server main]
    │
    ├─ bot/ [Bot clients for stress test]
+   │   
+   ├─ build/ [Contains build settings]   
    │
    ├─ mars/ ───────── main.go
    │
@@ -71,10 +73,10 @@ Use the following commands to build the server binaries:
 The following command will be building the servers for your local machine.
 
 ```
-make local-build
+make build-local
 ```
 
-### local-build.yml
+### build/(mac|linux)-build.yml
 
 This file controls which server binaries to build, which Go version to use, and which architecture and OS to build the servers for etc.
 
@@ -85,8 +87,20 @@ The following command will start the binary on your local machine.
 ```
 make server target=$(udp|tcp|http|mars)
 ```
+## or, if you would like to use docker
+```
+make run-docker # run diarkis servers in docker compose
+make stop-docker 
+```
 
 **NOTE** You must have MARS and HTTP server running in order to create Diarkis server cluster properly.
+
+# Change Diarkis version
+```
+make change-diarkis-version
+```
+It will download files for code completion and rewrite go.mod.
+
 
 # Server Entry Points
 
@@ -113,6 +127,7 @@ servers/tcp/main.go
 ```
 servers/connector/main.go
 ```
+
 
 # MARS
 
@@ -169,12 +184,6 @@ This is where you add your custom commands.
 
 ```
 cmds/
-```
-
-## WebSocket
-
-```
-ws_cmds/
 ```
 
 We recommend that packets be defined and implemented using `puffer`.
@@ -406,7 +415,7 @@ POST /room/create/:serverType/:maxMembers/:ttl/:interval
 
 ## Parameters
 
-- `serverType` is to choose which server to create a new room in. Valid types are: `udp`, `tcp`, and `ws`.
+- `serverType` is to choose which server to create a new room in. Valid types are: `udp` and `tcp`.
 
 - `maxMembers` is a maximum client members allowed in the new room.
 
@@ -420,7 +429,7 @@ POST /room/create/:serverType/:maxMembers/:ttl/:interval
 
 This is where you define your own MatchMaker rules.
 
-The template provides HTTP API endpoints, but you may implement UDP, TCP, WebSocket commands for MatchMaker as well.
+The template provides HTTP API endpoints, but you may implement UDP, TC commands for MatchMaker as well.
 
 ```
 cmds/http/matching.go
@@ -470,10 +479,4 @@ This is where you implement your own custom commands for TCP, UDP/RUDP.
 
 ```
 /cmds/custom/main.go
-```
-
-This is where you implement your own custom commands for WebSocket.
-
-```
-ws_cmds/custom/main.go
 ```

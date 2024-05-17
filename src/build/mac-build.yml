@@ -2,8 +2,8 @@ buildSettings:
   root: .
   goVersion: 1.21.5
   env:
-    GOOS:
-    GOARCH:
+    GOOS: darwin
+    GOARCH: arm64 # if you use intel mac, replace from arm64 to amd64
     CGO_CFLAGS: -I${PROJECT_DIR}
     CGO_LDFLAGS: -L${PROJECT_DIR} -Wl,-rpath,${PROJECT_DIR}
   projects:
