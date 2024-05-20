@@ -127,6 +127,9 @@ func updateUserStatus(userData *user.User, next func(error)) {
 	if err != nil {
 		logger.Error("Failed to update user status: UID:%s Error:%v", userData.ID, err.Error())
 	}
+
+	// we must call next to make sure the reset of keep alive operations move forward
+	next(nil)
 }
 
 // GetUserStatus returns a td.TransportData representing user status.
