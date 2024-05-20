@@ -6,18 +6,22 @@ import (
 	dmcmds "github.com/Diarkis/diarkis-server-template/cmds/dm"
 	matchmakercmds "github.com/Diarkis/diarkis-server-template/cmds/matchmaker"
 	roomcmds "github.com/Diarkis/diarkis-server-template/cmds/room"
+	"github.com/Diarkis/diarkis-server-template/lib/onlinestatus"
 )
 
 func Setup() {
 	dmcmds.Setup()
 	matchmakercmds.Setup()
 	roomcmds.Setup()
+	onlinestatus.Setup()
 }
 
 func SetupHTTP() {
 	httpcmds.Expose()
+	onlinestatus.Setup()
 }
 
 func ExposeCustomCommands() {
 	customcmds.Expose()
+	onlinestatus.Setup()
 }

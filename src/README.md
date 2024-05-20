@@ -18,8 +18,8 @@ Only HTTP server is required in the cluster and the rest of the servers should b
    │            └──── connector/main.go [Connector server main]
    │
    ├─ bot/ [Bot clients for stress test]
-   │   
-   ├─ build/ [Contains build settings]   
+   │
+   ├─ build/ [Contains build settings]
    │
    ├─ mars/ ───────── main.go
    │
@@ -480,3 +480,41 @@ This is where you implement your own custom commands for TCP, UDP/RUDP.
 ```
 /cmds/custom/main.go
 ```
+
+# User Online Status With HTTP Server
+
+The API will return an array of user IDs that are online.
+
+```
+GET /onlinestatus/uids/:uids
+```
+
+- The `$(uids)` parameters can be a comma separated list of UIDs.
+
+#### Response
+
+The response is a JSON encoded data. The structure of the response is as follows:
+
+The response will **NOT** include the users that are offline.
+
+If a user is a member of any session, `"SessionData"` will be populated.
+
+```
+{
+  "$(userID)": {
+    "InRoom":$(bool),
+    "SessionData":{
+      "$(sessionType)":"$(sessionID)"
+    }
+  }
+}
+```
+
+## Example
+
+```
+GET /onlinestatus/uids/111,222
+```
+
+The above example will check if user `111` and `222` are online or not.
+If the returned array contains the user IDs, those users are currently online (connected to the Diarkis server).
