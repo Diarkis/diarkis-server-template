@@ -11,7 +11,7 @@ import (
 	"github.com/Diarkis/diarkis/user"
 	"github.com/Diarkis/diarkis/util"
 
-	"d/lib/meshCmds"
+	"github.com/Diarkis/diarkis-server-template/lib/meshCmds"
 )
 
 const returnLimit = 10
