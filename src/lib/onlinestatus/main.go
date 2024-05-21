@@ -1,6 +1,8 @@
 package onlinestatus
 
 import (
+	"bytes"
+
 	"github.com/Diarkis/diarkis/dive"
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/mesh"
@@ -17,6 +19,7 @@ import (
 const returnLimit = 10
 
 const storageName = "OnlineStatus"
+const userDataOnlineStatusCacheKey = "__udc__"
 
 var storage *dive.Storage
 var logger = log.New("STATUS")
@@ -123,7 +126,22 @@ func updateUserStatus(userData *user.User, next func(error)) {
 	us.SetAsBool("InRoom",       inRoom)
 	us.SetAsBytes("SessionData", usd.Pack())
 
-	err := getStorage().Set(userData.ID, us.Pack())
+	packed := us.Pack()
+
+	cached, found := util.ToBytes(userData.Get(userDataOnlineStatusCacheKey))
+
+	if bytes.Equal(packed, cached) {
+		// nothing has changed since our last update
+		// we stop here
+		next(nil)
+		return
+	}
+
+	// update the local cache
+	userData.Set(userDataOnlineStatusCacheKey, packed)
+
+	// update the remote status data
+	err := getStorage().Set(userData.ID, packed)
 	if err != nil {
 		logger.Error("Failed to update user status: UID:%s Error:%v", userData.ID, err.Error())
 	}
@@ -205,6 +223,8 @@ func GetUserStatusList(uids []string) ([]*UserStatusData, error) {
 	}
 
 	// first, we group UIDs that resolve to the same mesh address
+	// we do this because every getStorage().Get calls on remote server to retrieve the online status data
+	// we send the user IDs that resolve to the same server in one remote server call.
 	addrs := make(map[string][]string, len(uids))
 	for _, uid := range uids {
 		addr := getStorage().ResolveKey(uid)
