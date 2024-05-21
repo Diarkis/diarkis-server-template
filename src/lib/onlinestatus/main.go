@@ -130,7 +130,7 @@ func updateUserStatus(userData *user.User, next func(error)) {
 
 	cached, found := util.ToBytes(userData.Get(userDataOnlineStatusCacheKey))
 
-	if bytes.Equal(packed, cached) {
+	if found && bytes.Equal(packed, cached) {
 		// nothing has changed since our last update
 		// we stop here
 		next(nil)
@@ -219,7 +219,7 @@ func GetUserStatusList(uids []string) ([]*UserStatusData, error) {
 	// check the limit
 	if len(uids) > returnLimit {
 		logger.Debug("Number UIDs exceeds the limit of %v and the array is trucated", returnLimit)
-		uids = uids[0:returnLimit]
+		return nil, util.NewError("User status list retrieval is up to %v, but %v given", returnLimit, len(uids))
 	}
 
 	// first, we group UIDs that resolve to the same mesh address

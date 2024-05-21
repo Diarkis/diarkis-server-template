@@ -9,19 +9,23 @@ import (
 	"github.com/Diarkis/diarkis-server-template/lib/onlinestatus"
 )
 
-func Setup() {
+func SetupUDP() {
 	dmcmds.Setup()
 	matchmakercmds.Setup()
 	roomcmds.Setup()
 	onlinestatus.Setup()
+	customcmds.Expose()
+}
+
+func SetupTCP() {
+	dmcmds.Setup()
+	matchmakercmds.Setup()
+	roomcmds.Setup()
+	onlinestatus.Setup()
+	customcmds.Expose()
 }
 
 func SetupHTTP() {
 	httpcmds.Expose()
-	onlinestatus.Setup()
-}
-
-func ExposeCustomCommands() {
-	customcmds.Expose()
 	onlinestatus.Setup()
 }
