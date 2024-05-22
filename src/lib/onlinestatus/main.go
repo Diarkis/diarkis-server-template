@@ -17,7 +17,6 @@ import (
 const returnLimit = 10
 const userStatusTTL = 10 // in seconds
 const storageName = "OnlineStatus"
-const userDataOnlineStatusCacheKey = "__udc__"
 
 var storage *dive.Storage
 var logger = log.New("STATUS")
