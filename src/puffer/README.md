@@ -12,7 +12,7 @@ Reference: https://docs.diarkis.io/docs/server/v1.0.0-alpha8/diarkis/puffer/inde
 func Expose() { // add command using puffer handler 
     ...
 	// puffer version sample
-	server.HandleCommand(custom.EchoVer, custom.EchoCmd, echoPufferCmd) // sample puffer echo command
+	diarkisexec.SetServerCommandHandler(custom.EchoVer, custom.EchoCmd, echoPufferCmd) // sample puffer echo command
     ...
 }
 

@@ -1,0 +1,10 @@
+{
+  "UserStatus": {
+    "package": "userstatus",
+    "properties": {
+      "UID": "string",
+      "InRoom": "bool",
+      "SessionData": "sessiondata.UserSessionData[]"
+    }
+  }
+}

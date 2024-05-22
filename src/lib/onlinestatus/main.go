@@ -1,8 +1,6 @@
 package onlinestatus
 
 import (
-	"bytes"
-
 	"github.com/Diarkis/diarkis/dive"
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/mesh"
@@ -17,7 +15,7 @@ import (
 )
 
 const returnLimit = 10
-
+const userStatusTTL = 10 // in seconds
 const storageName = "OnlineStatus"
 const userDataOnlineStatusCacheKey = "__udc__"
 
@@ -65,8 +63,10 @@ func Setup() {
 	logger.Debug("Setting up online status lib")
 
 	// setup callbacks on user becoming online and offline
+	// we keep updating the status on keep alive
+	// once the user disconnects, keep alive stops.
+	// we will let the status be deleted by TTL expiration
 	user.OnNew(setUserAsOnline)
-	user.OnDiscard(setUserAsOffline)
 
 	mesh.HandleRPC(meshCmds.GetOnlineStatusListCmd, handleGetUserStatusList)
 }
@@ -82,7 +82,7 @@ func getStorage() *dive.Storage {
 func setUserAsOnline(userData *user.User) {
 	us := userStatus.New()
 	us.SetAsString("UID", userData.ID)
-	err := getStorage().Set(userData.ID, us.Pack())
+	err := getStorage().SetEx(userData.ID, us.Pack(), userStatusTTL)
 	if err != nil {
 		logger.Error("Failed to set user as online: UID:%s Error:%v", userData.ID, err.Error())
 		return
@@ -90,16 +90,6 @@ func setUserAsOnline(userData *user.User) {
 	logger.Debug("Set user as online: UID:%s", userData.ID)
 	// set up user status updater on every keep alive
 	server.OnKeepAlive(updateUserStatus)
-}
-
-func setUserAsOffline(sid string, userData *user.User) {
-	res := getStorage().Del(userData.ID)
-	_, err := res.ToBytes()
-	if err != nil {
-		logger.Error("Failed to set user as offline: UID:%s Error:%v", userData.ID, err.Error())
-		return
-	}
-	logger.Debug("Set user as offline: UID:%s", userData.ID)
 }
 
 func updateUserStatus(userData *user.User, next func(error)) {
@@ -127,21 +117,8 @@ func updateUserStatus(userData *user.User, next func(error)) {
 	us.SetAsBytes("SessionData", usd.Pack())
 
 	packed := us.Pack()
-
-	cached, found := util.ToBytes(userData.Get(userDataOnlineStatusCacheKey))
-
-	if found && bytes.Equal(packed, cached) {
-		// nothing has changed since our last update
-		// we stop here
-		next(nil)
-		return
-	}
-
-	// update the local cache
-	userData.Set(userDataOnlineStatusCacheKey, packed)
-
 	// update the remote status data
-	err := getStorage().Set(userData.ID, packed)
+	err := getStorage().SetEx(userData.ID, packed, userStatusTTL)
 	if err != nil {
 		logger.Error("Failed to update user status: UID:%s Error:%v", userData.ID, err.Error())
 	}
