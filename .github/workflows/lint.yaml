@@ -20,7 +20,8 @@ jobs:
           go-version: "1.21.x"
 
       - name: init test
-        run: make init
+        # check make init command does not fail
+        run: make init project_id=PROJECT_ID builder_token=BUILDER_TOKEN output=/tmp/init-test
 
       - name: check format
         run: make fmt
