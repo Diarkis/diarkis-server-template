@@ -1,10 +1,10 @@
 package customcmds
 
 import (
-	custom "github.com/Diarkis/diarkis-server-template/puffer/go/custom"
-	userstatus "github.com/Diarkis/diarkis-server-template/puffer/go/userstatus"
-	sessiondata "github.com/Diarkis/diarkis-server-template/puffer/go/sessiondata"
 	"github.com/Diarkis/diarkis-server-template/lib/onlinestatus"
+	custom "github.com/Diarkis/diarkis-server-template/puffer/go/custom"
+	sessiondata "github.com/Diarkis/diarkis-server-template/puffer/go/sessiondata"
+	userstatus "github.com/Diarkis/diarkis-server-template/puffer/go/userstatus"
 	"github.com/Diarkis/diarkis/server"
 	"github.com/Diarkis/diarkis/user"
 	"github.com/Diarkis/diarkis/util"

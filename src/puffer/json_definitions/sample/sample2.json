@@ -12,21 +12,21 @@
   "TransportData": {
     "package": "movement",
     "properties": {
-      "movement":  "Movement",
+      "movement": "Movement",
       "movements": "Movement[]",
-      "messages":  "b[][]",
-      "sequence":  "u16"
+      "messages": "b[][]",
+      "sequence": "u16"
     }
   },
   "Movement": {
     "package": "movement",
     "properties": {
       "characterID": "string",
-      "x":           "f32",
-      "y":           "f32",
-      "z":           "f32",
-      "velocity":    "f32",
-      "msg":         "b[]"
+      "x": "f32",
+      "y": "f32",
+      "z": "f32",
+      "velocity": "f32",
+      "msg": "b[]"
     }
   }
 }

@@ -12,9 +12,10 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 	"sync/atomic"
+	"time"
 )
+
 // http timeout seconds
 const authTimeout = 10
 const cmdVer uint8 = 2
@@ -39,6 +40,7 @@ type botData struct {
 	udp   *udp.Client
 	tcp   *tcp.Client
 }
+
 func parseArgs() {
 	if len(os.Args) < 4 {
 		fmt.Printf("Bot requires 4 parameters: {http host:port} {bot num} {packet interval} {packet size}")
@@ -54,7 +56,7 @@ func parseArgs() {
 		os.Exit(1)
 	}
 
-	interval ,err = strconv.Atoi(os.Args[3])
+	interval, err = strconv.Atoi(os.Args[3])
 	if err != nil {
 		fmt.Printf("bot num paramter given is invalid #{err}\n")
 		os.Exit(1)
@@ -123,7 +125,6 @@ func spawnUDPBot(id int) {
 	cli.Connect(addr)
 }
 
-
 func startBot(bot *botData) {
 	atomic.AddInt32(&botCounter, 1)
 	//waitCounter := int64(0)
@@ -141,7 +142,6 @@ func resonance(bot *botData) {
 	bot.udp.Send(cmdVer, cmdResonance, make([]byte, pktSize))
 	resonanceCnt++
 }
-
 
 func auth(uid int) (string, []byte, []byte, []byte, []byte, error) {
 	url := fmt.Sprintf("http://%s/auth/%v", host, uid)

@@ -10,7 +10,7 @@ spec:
   type: ClusterIP
   clusterIP: None
   ports:
-  - port: 6779
-    targetPort: 6779
-    name: mars
-    protocol: UDP
+    - port: 6779
+      targetPort: 6779
+      name: mars
+      protocol: UDP

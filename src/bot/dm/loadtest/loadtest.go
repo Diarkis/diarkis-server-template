@@ -13,10 +13,9 @@ import (
 	"github.com/Diarkis/diarkis-server-template/bot/dm/http"
 )
 
-
 type Bot struct {
-	uid   string
-	dm    *dm.DirectMessage
+	uid string
+	dm  *dm.DirectMessage
 }
 
 type Params struct {
@@ -37,7 +36,7 @@ var reports = new(Report)
 var mutex = new(sync.RWMutex)
 
 func Spawn(params *Params) {
-	bot := &Bot{ dm: &dm.DirectMessage{} }
+	bot := &Bot{dm: &dm.DirectMessage{}}
 
 	var tcpCli *tcp.Client
 	var udpCli *udp.Client
@@ -146,7 +145,7 @@ func countReceive() {
 
 func getTargetUID(myUID string) string {
 	for {
-		uid := bots[util.RandomInt(0, len(bots) - 1)].uid
+		uid := bots[util.RandomInt(0, len(bots)-1)].uid
 
 		if uid != myUID {
 			return uid

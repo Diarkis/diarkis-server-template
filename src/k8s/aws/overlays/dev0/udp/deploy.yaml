@@ -9,15 +9,15 @@ spec:
     spec:
       hostNetwork: true
       containers:
-      - name: udp
-        resources:
-          limits:
-            cpu: "1"
-          requests:
-            cpu: "1"
-        securityContext:
-          runAsUser: 1000
-          readOnlyRootFilesystem: true
-          runAsNonRoot: true
-          allowPrivilegeEscalation: false
-          privileged: false
+        - name: udp
+          resources:
+            limits:
+              cpu: "1"
+            requests:
+              cpu: "1"
+          securityContext:
+            runAsUser: 1000
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            privileged: false

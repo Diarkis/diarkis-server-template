@@ -10,12 +10,12 @@ metadata:
   #   networking.gke.io/managed-certificates: "base-certificate"
 spec:
   rules:
-  - http:
-      paths:
-        - path: /*
-          pathType: ImplementationSpecific
-          backend:
-            service:
-              name: http
-              port:
-                number: 80
+    - http:
+        paths:
+          - path: /*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: http
+                port:
+                  number: 80

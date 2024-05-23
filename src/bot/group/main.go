@@ -39,7 +39,7 @@ var sleepTime int64 = 1
 
 type botData struct {
 	uid   int
-	rid string
+	rid   string
 	state int
 	udp   *udp.Client
 	tcp   *tcp.Client
@@ -70,7 +70,6 @@ func main() {
 	fmt.Printf("All bots have finished their works - Exiting the process - Bye!\n")
 	os.Exit(0)
 }
-
 
 func spawnBots() {
 	for i := 0; i < bots; i++ {
@@ -172,7 +171,6 @@ func spawnUDPBot(id int, needToWait bool) {
 		spawnUDPBot(bot.uid, true)
 	})
 
-
 	cli.Connect(addr)
 	bot.group = new(group.Group)
 	bot.group.SetupAsUDP(bot.udp)
@@ -227,7 +225,7 @@ func searchAndJoin(bot *botData) {
 	groupCli.JoinRandom(60, joinMessage, 200)
 	bot.group = groupCli
 
-	groupCli.OnJoin(func(success bool, groupID string){
+	groupCli.OnJoin(func(success bool, groupID string) {
 		joinedCnt++
 		fmt.Println(success, groupID)
 		bot.state = STATUS_BROADCAST

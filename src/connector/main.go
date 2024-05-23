@@ -19,6 +19,7 @@ const anchorPort = "9000"
 var peerAddr = ""
 
 // Initialize must be called when the client server process starts.
+//
 //export Initialize
 func Initialize() C.int {
 	diarkisEP := connector.Initialize()
@@ -30,6 +31,7 @@ func Initialize() C.int {
 }
 
 // GetOpenPort returns the port for the client server to bind for client communication.
+//
 //export GetOpenPort
 func GetOpenPort() C.int {
 	res, value := connector.SendToDiarkis(peerAddr, "port", -1)
@@ -47,6 +49,7 @@ func GetOpenPort() C.int {
 
 // GetAddress returns public endpoint address that the client uses to connect to client server.
 // Allocated address string memory must be released manually.
+//
 //export GetAddress
 func GetAddress() *C.char {
 	res, value := connector.SendToDiarkis(peerAddr, "addr", -1)
@@ -60,6 +63,7 @@ func GetAddress() *C.char {
 }
 
 // Ready must be called when client server is ready to receive clients.
+//
 //export Ready
 func Ready() C.int {
 	res, _ := connector.SendToDiarkis(peerAddr, "ready", -1)
@@ -67,6 +71,7 @@ func Ready() C.int {
 }
 
 // Health must be called every 1 second to report CCU and "healthiness".
+//
 //export Health
 func Health(ccu C.int) C.int {
 	res, _ := connector.SendToDiarkis(peerAddr, "health", int(ccu))
@@ -75,6 +80,7 @@ func Health(ccu C.int) C.int {
 
 // Allocate should be called when client server needs to stop revcieving new clients.
 // Ready must be called again to start receive new clients.
+//
 //export Allocate
 func Allocate() C.int {
 	res, _ := connector.SendToDiarkis(peerAddr, "allocate", -1)
@@ -82,6 +88,7 @@ func Allocate() C.int {
 }
 
 // Shutdown should be called when the client server is shutting down.
+//
 //export Shutdown
 func Shutdown() C.int {
 	res, _ := connector.SendToDiarkis(peerAddr, "shutdown", -1)

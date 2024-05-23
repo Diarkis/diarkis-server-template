@@ -10,7 +10,7 @@ import (
 )
 
 // GetOnlineStatusListCmd is the mesh command ID
-const GetOnlineStatusListCmd uint16  = 2100
+const GetOnlineStatusListCmd uint16 = 2100
 
 const createRemoteRoomCmd uint16 = 2000
 
@@ -28,7 +28,7 @@ func CreateRemoteRoom(serverType string, maxMembers int, ttl, interval int64, cb
 	seen := make(map[string]bool)
 	targetNode := ""
 	for {
-		rand := util.RandomInt(0, len(nodes) - 1)
+		rand := util.RandomInt(0, len(nodes)-1)
 		node := nodes[rand]
 		if !mesh.IsNodeTaken(node) && mesh.IsNodeOnline(node) {
 			targetNode = node

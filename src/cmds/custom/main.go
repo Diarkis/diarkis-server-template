@@ -25,6 +25,7 @@ const matchmakerComplete = 103 // sent when room is full
 // P2P command IDs
 const p2pReportAddr = 110
 const p2pInit = 111
+
 // Online Status command ID
 const getUserStatusListCmdID = 500
 

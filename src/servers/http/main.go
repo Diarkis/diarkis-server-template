@@ -13,10 +13,10 @@ func main() {
 	diarkisexec.SetupDiarkis(logConfigPath, meshConfigPath, &diarkisexec.Modules{
 		Room:       &diarkisexec.Options{},
 		Group:      &diarkisexec.Options{},
-		Dive:       &diarkisexec.Options{ ConfigPath: "/configs/shared/dive.json", ExposeCommands: true },
-		Field:      &diarkisexec.Options{ ConfigPath: "/configs/shared/field.json", ExposeCommands: true },
-		DM:         &diarkisexec.Options{ ConfigPath: "/configs/shared/dm.json", ExposeCommands: true },
-		MatchMaker: &diarkisexec.Options{ ConfigPath: "/configs/shared/matching.json", ExposeCommands: true },
+		Dive:       &diarkisexec.Options{ConfigPath: "/configs/shared/dive.json", ExposeCommands: true},
+		Field:      &diarkisexec.Options{ConfigPath: "/configs/shared/field.json", ExposeCommands: true},
+		DM:         &diarkisexec.Options{ConfigPath: "/configs/shared/dm.json", ExposeCommands: true},
+		MatchMaker: &diarkisexec.Options{ConfigPath: "/configs/shared/matching.json", ExposeCommands: true},
 	})
 
 	cmds.SetupHTTP()

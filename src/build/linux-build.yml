@@ -24,5 +24,5 @@ buildSettings:
       target: healthcheck/main.go
       output: remote_bin/health-check
 diarkis:
-  project_id: {{PROJECT_ID}}
-  builder_token: {{BUILD_TOKEN}}
+  project_id: "{{PROJECT_ID}}"
+  builder_token: "{{BUILD_TOKEN}}"

@@ -35,22 +35,22 @@ type UserSessionData struct {
 }
 
 var userStatus = td.DefineTransportData([]td.Property{
-	td.Property{ Name: "UID",         Type: td.String },
-	td.Property{ Name: "SessionData", Type: td.Bytes },
-	td.Property{ Name: "InRoom",      Type: td.Bool },
+	td.Property{Name: "UID", Type: td.String},
+	td.Property{Name: "SessionData", Type: td.Bytes},
+	td.Property{Name: "InRoom", Type: td.Bool},
 })
 
 var userStatusList = td.DefineTransportData([]td.Property{
-	td.Property{ Name: "List", Type: td.BytesArray },
+	td.Property{Name: "List", Type: td.BytesArray},
 })
 
 var uidList = td.DefineTransportData([]td.Property{
-	td.Property{ Name: "List", Type: td.StringArray },
+	td.Property{Name: "List", Type: td.StringArray},
 })
 
 var userSessionData = td.DefineTransportData([]td.Property{
-	td.Property{ Name: "Types", Type: td.Uint8Array },
-	td.Property{ Name: "IDs",   Type: td.StringArray },
+	td.Property{Name: "Types", Type: td.Uint8Array},
+	td.Property{Name: "IDs", Type: td.StringArray},
 })
 
 func Setup() {
@@ -108,11 +108,11 @@ func updateUserStatus(userData *user.User, next func(error)) {
 		ids[i] = sd.ID
 	}
 	usd.SetAsUint8Array("Types", types)
-	usd.SetAsStringArray("IDs",  ids)
+	usd.SetAsStringArray("IDs", ids)
 
 	us := userStatus.New()
-	us.SetAsString("UID",        userData.ID)
-	us.SetAsBool("InRoom",       inRoom)
+	us.SetAsString("UID", userData.ID)
+	us.SetAsBool("InRoom", inRoom)
 	us.SetAsBytes("SessionData", usd.Pack())
 
 	packed := us.Pack()

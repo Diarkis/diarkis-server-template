@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Diarkis/diarkis/util"
-	"github.com/Diarkis/diarkis/client/go/udp"
 	"github.com/Diarkis/diarkis/client/go/tcp"
+	"github.com/Diarkis/diarkis/client/go/udp"
 	"github.com/Diarkis/diarkis/packet"
+	"github.com/Diarkis/diarkis/util"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -21,6 +21,7 @@ const cmdVer uint8 = 1
 const cmdAdd uint16 = 200
 const cmdSearch uint16 = 201
 const pushRoomFull uint16 = 206
+
 // waitingTime is in seconds
 const waitingTime int64 = 30
 
@@ -33,6 +34,7 @@ var host = "127.0.0.1:7000"
 var proto = "udp" // udp or tcp
 var howmany = 10
 var maxmembers uint16 = 10
+
 // sleepTime is in seconds
 var sleepTime int64 = 10
 var searchProps = make(map[string]int)
@@ -99,7 +101,7 @@ func main() {
 
 func spawnBots() {
 	for i := 0; i < howmany; i++ {
-		go spawnUDPBot(i, true);
+		go spawnUDPBot(i, true)
 	}
 }
 
@@ -141,10 +143,10 @@ func spawnUDPBot(id int, needToWait bool) {
 		}
 		spawnUDPBot(bot.uid, true)
 		/*
-		bot.udp = nil
-		bot.tcp = nil
-		bot.uid = -1
-		bot.state = 0
+			bot.udp = nil
+			bot.tcp = nil
+			bot.uid = -1
+			bot.state = 0
 		*/
 	})
 
@@ -180,7 +182,7 @@ func startBot(bot *botData) {
 		case 22:
 			// We are waiting
 			waitCounter += interval
-			if waitCounter >= waitingTime * 1000 {
+			if waitCounter >= waitingTime*1000 {
 				bot.state = 23
 			}
 		case 23:
@@ -203,7 +205,7 @@ func search(bot *botData) {
 		return
 	}
 	//fmt.Printf("MatchMaker search client ID:%v\n", bot.uid)
-	pkt := packet.PackMMSearch(10, true, []string{ profileID }, "", searchProps, []byte("Hello"))
+	pkt := packet.PackMMSearch(10, true, []string{profileID}, "", searchProps, []byte("Hello"))
 	switch proto {
 	case "udp":
 		if bot.udp != nil {
