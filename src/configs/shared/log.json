@@ -1,4 +1,6 @@
 {
-  "level": "sys",
-  "color": true
+  "level": "debug",
+  "color": true,
+  "flat": false,
+  ""
 }

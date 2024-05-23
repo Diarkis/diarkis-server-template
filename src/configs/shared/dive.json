@@ -1,1 +1,7 @@
-{}
+{
+  "storages": {
+    "OnlineStatus": {
+      "targetNodeType": "HTTP"
+    }
+  }
+}
