@@ -7,7 +7,7 @@ metadata:
 vpc:
   clusterEndpoints:
     privateAccess: true
-    publicAccess: true  
+    publicAccess: true
 
 iam:
   withOIDC: true
@@ -15,19 +15,19 @@ iam:
 availabilityZones: ["ap-northeast-1a", "ap-northeast-1c", "ap-northeast-1d"]
 
 addons:
-- name: vpc-cni # no version is specified so it deploys the default version
-  attachPolicyARNs:
-    - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
-- name: coredns
-  version: latest # auto discovers the latest available
-- name: kube-proxy
-  version: latest
-- name: aws-ebs-csi-driver
-  wellKnownPolicies:      # add IAM and service account
-    ebsCSIController: true
-- name: amazon-cloudwatch-observability
-  version: latest
-  
+  - name: vpc-cni # no version is specified so it deploys the default version
+    attachPolicyARNs:
+      - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+  - name: coredns
+    version: latest # auto discovers the latest available
+  - name: kube-proxy
+    version: latest
+  - name: aws-ebs-csi-driver
+    wellKnownPolicies: # add IAM and service account
+      ebsCSIController: true
+  - name: amazon-cloudwatch-observability
+    version: latest
+
 mangedNodeGroups:
   - name: diarkis-public
     instanceType: m5.large
@@ -47,7 +47,7 @@ mangedNodeGroups:
     volumeType: gp3
     disableIMDSv1: false
     instanceType: m5.large
-    privateNetworking: true    
+    privateNetworking: true
     desiredCapacity: 3
     minSize: 3
     maxSize: 10

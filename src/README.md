@@ -18,8 +18,8 @@ Only HTTP server is required in the cluster and the rest of the servers should b
    │            └──── connector/main.go [Connector server main]
    │
    ├─ bot/ [Bot clients for stress test]
-   │   
-   ├─ build/ [Contains build settings]   
+   │
+   ├─ build/ [Contains build settings]
    │
    ├─ mars/ ───────── main.go
    │
@@ -87,20 +87,23 @@ The following command will start the binary on your local machine.
 ```
 make server target=$(udp|tcp|http|mars)
 ```
+
 ## or, if you would like to use docker
+
 ```
 make run-docker # run diarkis servers in docker compose
-make stop-docker 
+make stop-docker
 ```
 
 **NOTE** You must have MARS and HTTP server running in order to create Diarkis server cluster properly.
 
 # Change Diarkis version
+
 ```
 make change-diarkis-version
 ```
-It will download files for code completion and rewrite go.mod.
 
+It will download files for code completion and rewrite go.mod.
 
 # Server Entry Points
 
@@ -127,7 +130,6 @@ servers/tcp/main.go
 ```
 servers/connector/main.go
 ```
-
 
 # MARS
 
@@ -247,6 +249,7 @@ Endianess is `Big Endian`.
 ```
 
 **String List**
+
 ```
 +---------+-------------+----------+-----------+
 |  *size  | Matching ID |  **size  | Unique ID |

@@ -7,6 +7,6 @@ spec:
     matchLabels:
       component: http
   endpoints:
-  - port: http
-    path: /metrics/prometheus/v/3
-    interval: 2s
+    - port: http
+      path: /metrics/prometheus/v/3
+      interval: 2s

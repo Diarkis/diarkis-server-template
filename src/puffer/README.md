@@ -2,14 +2,16 @@ This is a readme describing puffer, a packet definition generation tool.
 Reference: https://docs.diarkis.io/docs/server/v1.0.0-alpha8/diarkis/puffer/index.html
 
 ## Usage
+
 ### command
 
 `make gen` - generate packet definition files
 `make clean` - remove generated files
 
 ## Code Example
+
 ```
-func Expose() { // add command using puffer handler 
+func Expose() { // add command using puffer handler
     ...
 	// puffer version sample
 	server.HandleCommand(custom.EchoVer, custom.EchoCmd, echoPufferCmd) // sample puffer echo command
@@ -38,6 +40,7 @@ func echoPufferCmd(ver uint8, cmd uint16, payload []byte, userData *user.User, n
 ```
 
 ## directory architecture
+
 `make gen` will generate the following directories.
 go - go code
 cs - c# code
@@ -49,5 +52,6 @@ The code is generated for each runtime, and can be used on the client for cs and
 We recommend that you delete it when actually using it.
 
 ## Note
+
 The current version of puffer has a problem with overwriting the same command name even if the package name is different.
 This will be fixed in the next version.

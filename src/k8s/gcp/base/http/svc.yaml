@@ -12,7 +12,7 @@ spec:
   selector:
     component: http
   ports:
-  - port: 80
-    targetPort: 7000
-    name: http
-    protocol: TCP
+    - port: 80
+      targetPort: 7000
+      name: http
+      protocol: TCP

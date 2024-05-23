@@ -1,12 +1,12 @@
 {
-    "GetFieldInfo": {
+  "GetFieldInfo": {
     "ver": 2,
     "cmd": 4001,
     "package": "custom",
     "properties": {
-       "FieldSize": "i64",
-       "NodeCount": "i32",
-       "FieldOfVisionSize": "i64"
+      "FieldSize": "i64",
+      "NodeCount": "i32",
+      "FieldOfVisionSize": "i64"
     }
   }
 }

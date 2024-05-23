@@ -14,18 +14,18 @@ spec:
         component: mars
     spec:
       containers:
-      - name: mars
-        image: mars
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 6779
-          name: mars
-          protocol: UDP
-        volumeMounts:
-        - name: mars-conf
-          mountPath: /bin/mars
-        - name: hc-conf
-          mountPath: /bin/tools/configs
+        - name: mars
+          image: mars
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 6779
+              name: mars
+              protocol: UDP
+          volumeMounts:
+            - name: mars-conf
+              mountPath: /bin/mars
+            - name: hc-conf
+              mountPath: /bin/tools/configs
       nodeSelector:
         cloud.google.com/private-node: "true"
       volumes:

@@ -39,11 +39,14 @@
     "Cmd": 1001,
     "package": "sampleb",
     "Properties": {
-      "c": { "type":"sampleC", "comment":"This property uses the custom data type generated as SampleC" },
-      "category": { "type":"u16", "Comment":"Category is just a sample property" },
-      "message": { "type":"string", "Comment":"Message should not be too long..." },
-      "bin": { "type":"b[]" },
-      "bytes": { "type":"b[][]", "comment":"This comment is rather tricky\n\t, but it should /* work */ just fine\\t%v" }
+      "c": { "type": "sampleC", "comment": "This property uses the custom data type generated as SampleC" },
+      "category": { "type": "u16", "Comment": "Category is just a sample property" },
+      "message": { "type": "string", "Comment": "Message should not be too long..." },
+      "bin": { "type": "b[]" },
+      "bytes": {
+        "type": "b[][]",
+        "comment": "This comment is rather tricky\n\t, but it should /* work */ just fine\\t%v"
+      }
     }
   },
   "sampleC": {

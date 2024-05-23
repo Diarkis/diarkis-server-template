@@ -12,3 +12,4 @@ init: ## make init project_id={project ID} builder_token={build token} output={a
 .PHONY: fmt
 fmt:
 	gofmt -w src/
+	npx prettier --write "**/*.{yml,yaml,json,md}"

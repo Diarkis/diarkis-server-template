@@ -26,5 +26,5 @@ buildSettings:
       target: mars-stats/main.go
       output: remote_bin/ms
 diarkis:
-  project_id: {{PROJECT_ID}}
-  builder_token: {{BUILD_TOKEN}}
+  project_id: { { PROJECT_ID } }
+  builder_token: { { BUILD_TOKEN } }

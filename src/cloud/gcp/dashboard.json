@@ -27,9 +27,7 @@
                     "aggregation": {
                       "alignmentPeriod": "60s",
                       "crossSeriesReducer": "REDUCE_MEAN",
-                      "groupByFields": [
-                        "metadata.user_labels.\"component\""
-                      ],
+                      "groupByFields": ["metadata.user_labels.\"component\""],
                       "perSeriesAligner": "ALIGN_MEAN"
                     },
                     "filter": "metric.type=\"kubernetes.io/container/cpu/limit_utilization\" resource.type=\"k8s_container\" resource.label.\"cluster_name\"=monitoring.regex.full_match(\".*diarkis.*\")"
@@ -70,9 +68,7 @@
                     "aggregation": {
                       "alignmentPeriod": "60s",
                       "crossSeriesReducer": "REDUCE_MAX",
-                      "groupByFields": [
-                        "metadata.user_labels.\"component\""
-                      ],
+                      "groupByFields": ["metadata.user_labels.\"component\""],
                       "perSeriesAligner": "ALIGN_MAX"
                     },
                     "filter": "metric.type=\"kubernetes.io/container/memory/used_bytes\" resource.type=\"k8s_container\" resource.label.\"cluster_name\"=monitoring.regex.full_match(\".*diarkis.*\")"
@@ -389,10 +385,7 @@
                     "aggregation": {
                       "alignmentPeriod": "60s",
                       "crossSeriesReducer": "REDUCE_SUM",
-                      "groupByFields": [
-                        "resource.label.\"namespace\"",
-                        "metric.label.\"type\""
-                      ],
+                      "groupByFields": ["resource.label.\"namespace\"", "metric.label.\"type\""],
                       "perSeriesAligner": "ALIGN_MEAN"
                     },
                     "filter": "metric.type=\"prometheus.googleapis.com/UDP_Packets_In_UDP_node/gauge\" resource.type=\"prometheus_target\""
