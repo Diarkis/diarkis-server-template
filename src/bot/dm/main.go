@@ -7,8 +7,8 @@ import (
 
 	"github.com/Diarkis/diarkis/util"
 
-	"github.com/Diarkis/diarkis-server-template/bot/dm/parameters"
 	"github.com/Diarkis/diarkis-server-template/bot/dm/loadtest"
+	"github.com/Diarkis/diarkis-server-template/bot/dm/parameters"
 )
 
 func main() {

@@ -46,11 +46,11 @@ func addToMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User,
 	// update MatchMaker add every 40 seconds
 	timeCnt := util.NowSeconds()
 	room.SetOnTick(roomID, func(roomID_ string) {
-		if util.NowSeconds() - timeCnt < mmAddInterval {
+		if util.NowSeconds()-timeCnt < mmAddInterval {
 			return
 		}
 		if len(room.GetMemberIDs(roomID_)) == maxMembers {
-			matching.Remove(mmAdd.ID, []string{ mmAdd.UID }, 2)
+			matching.Remove(mmAdd.ID, []string{mmAdd.UID}, 2)
 			return
 		}
 		timeCnt = util.NowSeconds()
@@ -117,26 +117,26 @@ func searchMatchMaker(ver uint8, cmd uint16, payload []byte, userData *user.User
 			roomID := item["roomID"].(string)
 			logger.Sys("Try to join room %v", roomID)
 			room.Join(roomID, userData, util.CmdBuiltInVer, util.CmdJoinRoom, []byte(userData.ID),
-			func(err error, memberIDs []string, ownerID string, createdTime int64) {
-				if err != nil {
-					// discard stale room ID
-					removeFromMM(mmSearch.IDs, uniqueID)
-					// try the next room
-					index++
-					if len(list) == index {
-						done(nil)
+				func(err error, memberIDs []string, ownerID string, createdTime int64) {
+					if err != nil {
+						// discard stale room ID
+						removeFromMM(mmSearch.IDs, uniqueID)
+						// try the next room
+						index++
+						if len(list) == index {
+							done(nil)
+							return
+						}
+						moveon(nil)
 						return
 					}
-					moveon(nil)
-					return
-				}
-				logger.Sys("Successfully joined a from by MatchMaker %v", roomID)
-				joinedRoomID = roomID
-				ct = createdTime
-				isRoomFull = len(memberIDs) == int(item["maxMembers"].(float64))
-				// joined successfully
-				done(nil)
-			})
+					logger.Sys("Successfully joined a from by MatchMaker %v", roomID)
+					joinedRoomID = roomID
+					ct = createdTime
+					isRoomFull = len(memberIDs) == int(item["maxMembers"].(float64))
+					// joined successfully
+					done(nil)
+				})
 		}
 		for i, v := range results {
 			list[i] = v.(map[string]interface{})

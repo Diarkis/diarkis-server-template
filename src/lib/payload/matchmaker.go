@@ -65,17 +65,17 @@ func UnpackMMAdd(bytes []byte) *MMAdd {
 	mmID := list[0]
 	uniqueID := list[1]
 	props := make(map[string]int)
-	size = int(binary.BigEndian.Uint16(bytes[offset:offset+2]))
+	size = int(binary.BigEndian.Uint16(bytes[offset : offset+2]))
 	offset += 2
-	propsBytes := bytes[offset:offset+size]
+	propsBytes := bytes[offset : offset+size]
 	offset += size
 	index := 0
 	for index < size {
-		val := int(binary.BigEndian.Uint32(propsBytes[index:index+4]))
+		val := int(binary.BigEndian.Uint32(propsBytes[index : index+4]))
 		index += 4
-		nameSize := int(binary.BigEndian.Uint16(propsBytes[index:index+2]))
+		nameSize := int(binary.BigEndian.Uint16(propsBytes[index : index+2]))
 		index += 2
-		propName := string(propsBytes[index:index+nameSize])
+		propName := string(propsBytes[index : index+nameSize])
 		props[propName] = val
 		index += nameSize
 	}
@@ -133,16 +133,16 @@ func UnpackMMSearch(bytes []byte) *MMSearch {
 		return nil
 	}
 	size := int(binary.BigEndian.Uint16(bytes[0:2]))
-	matchingIDs := packet.BytesToStringList(bytes[2:2+size])
+	matchingIDs := packet.BytesToStringList(bytes[2 : 2+size])
 	propsBytes := bytes[2+size:]
 	index := 0
 	props := make(map[string]int)
 	for index < len(propsBytes) {
-		val := int(binary.BigEndian.Uint32(propsBytes[index:index+4]))
+		val := int(binary.BigEndian.Uint32(propsBytes[index : index+4]))
 		index += 4
-		nameSize := int(binary.BigEndian.Uint16(propsBytes[index:index+2]))
+		nameSize := int(binary.BigEndian.Uint16(propsBytes[index : index+2]))
 		index += 2
-		propName := string(propsBytes[index:index+nameSize])
+		propName := string(propsBytes[index : index+nameSize])
 		props[propName] = val
 		index += nameSize
 	}

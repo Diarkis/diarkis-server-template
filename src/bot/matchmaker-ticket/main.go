@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Diarkis/diarkis/client/go/udp"
-//	"github.com/Diarkis/diarkis/client/go/tcp"
+	//	"github.com/Diarkis/diarkis/client/go/tcp"
 	"github.com/Diarkis/diarkis/client/go/modules/matchmaker"
 	"github.com/Diarkis/diarkis/util"
 	v4 "github.com/Diarkis/diarkis/uuid/v4"
@@ -24,12 +24,16 @@ var running = true
 
 // number of tickets issued in 60 seconds
 var ticketCnt = 0
+
 // number of tickets successlly completed in 60 seconds
 var ticketSuccessCnt = 0
+
 // HTTP endpoint
 var host = "127.0.0.1:7000"
+
 // UDP or TCP
 var serverType string = ""
+
 // total number of bots
 var totalBots = 0
 var botCnt = 0
@@ -38,10 +42,13 @@ var clientTimeout int64 = 90 // 90s for a bot to timeout and die no matter what
 // interval in seconds to add bots.
 // Bots will be added upto totalBots per interval.
 var interval int64 = 100
+
 // log map to create a JSON data when process is terminated
 var logmap = make([]map[string]int, 0)
+
 // total count of tickets issued
 var ticketTotalCnt = 0
+
 // total count of successful tickets
 var successTicketTotalCnt = 0
 
@@ -94,7 +101,7 @@ func main() {
 		data["Time"] = int(elapsed)
 		data["Tickets"] = ticketCnt
 		data["Success"] = ticketSuccessCnt
-		data["Rate"] = int(float64(ticketSuccessCnt)/float64(ticketCnt)*float64(100))
+		data["Rate"] = int(float64(ticketSuccessCnt) / float64(ticketCnt) * float64(100))
 		logmap = append(logmap, data)
 		timedoutCnt = 0
 		ticketCnt = 0
@@ -126,12 +133,12 @@ func handleSignal(ch chan os.Signal) {
 
 func spawnBots() {
 	for true {
-		if totalBots - botCnt <= 0 {
+		if totalBots-botCnt <= 0 {
 			time.Sleep(time.Second * time.Duration(interval))
 			continue
 		}
-		fmt.Printf("Bots to spawn %v\n", totalBots - botCnt)
-		for i := 0; i < totalBots - botCnt; i++ {
+		fmt.Printf("Bots to spawn %v\n", totalBots-botCnt)
+		for i := 0; i < totalBots-botCnt; i++ {
 			uuid, _ := v4.New()
 			spawnBot(uuid.String)
 			time.Sleep(time.Millisecond * 100)
@@ -168,7 +175,7 @@ func spawnBot(id string) {
 		ticketCnt++
 		mm.IssueTicket()
 	})
-	go func () {
+	go func() {
 		time.Sleep(time.Second * time.Duration(clientTimeout))
 		if dead {
 			return
@@ -255,7 +262,7 @@ func convertToCSVFromLogData() string {
 			list = append(list, fmt.Sprintf("%v", row[name]))
 		}
 		csv += strings.Join(list, ",")
-		if i < len(logmap) - 1 {
+		if i < len(logmap)-1 {
 			csv += "\n"
 		}
 	}

@@ -11,7 +11,7 @@ import (
 
 /**
 * Use DIARKIS_NODE_TYPE env to set node type
-*/
+ */
 
 var logger = log.New("CONN")
 

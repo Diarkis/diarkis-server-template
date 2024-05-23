@@ -26,7 +26,7 @@ func reportP2PAddr(ver uint8, cmd uint16, payload []byte, userData *user.User, n
 		return
 	}
 	updated := true
-	room.UpdateProperties(roomID, func (props map[string]interface{}) bool {
+	room.UpdateProperties(roomID, func(props map[string]interface{}) bool {
 		if _, ok := props[p2pAddrList]; !ok {
 			props[p2pAddrList] = make([]string, 0)
 		}

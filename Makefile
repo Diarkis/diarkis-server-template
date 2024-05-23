@@ -8,3 +8,7 @@ help:
 .PHONY: init
 init: ## make init project_id={project ID} builder_token={build token} output={absolute path to install}
 	./init.sh $(project_id) $(builder_token) $(output)
+
+.PHONY: fmt
+fmt:
+	gofmt -w src/

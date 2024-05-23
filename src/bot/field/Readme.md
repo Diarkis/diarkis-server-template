@@ -4,7 +4,7 @@ Program in Go which creates a discrecionary number of clients connected to a Dia
 # Usage
 
 ## Dependencies
-The source code of the Diarkis Client is needed in order to build the bot.\
+The source code of the Diarkis Client is needed in order to build the bot.
 You can set the path to your own Diarkis folder by editing the last line of `go.mod` with:
 ```
 replace github.com/Diarkis/diarkis => /path/to/my/diarkis
@@ -51,4 +51,4 @@ var moveRatio = 25
 The covered distance at each moves is always the same, and can be modified with:
 ```
 const BOT_MOVE_RANGE = 500
-````
+```
