@@ -20,7 +20,7 @@ func main() {
 		Session:    &diarkisexec.Options{ConfigPath: "/configs/shared/session.json", ExposeCommands: true},
 	})
 
-	cmds.Setup()
+	cmds.SetupUDP()
 
 	diarkisexec.SetupDiarkisUDPServer("/configs/udp/main.json")
 

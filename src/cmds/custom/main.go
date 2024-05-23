@@ -1,10 +1,12 @@
 package customcmds
 
 import (
-	"github.com/Diarkis/diarkis-server-template/puffer/go/custom"
+	"github.com/Diarkis/diarkis/diarkisexec"
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/server"
 	"github.com/Diarkis/diarkis/user"
+
+	"github.com/Diarkis/diarkis-server-template/puffer/go/custom"
 )
 
 // Custom sample command IDs
@@ -24,25 +26,29 @@ const matchmakerComplete = 103 // sent when room is full
 const p2pReportAddr = 110
 const p2pInit = 111
 
+// Online Status command ID
+const getUserStatusListCmdID = 500
+
 const mmAddInterval = 40 // 40 seconds
 
 var logger = log.New("CUSTOM")
 
 func Expose() {
 	// defined in main.go
-	server.HandleCommand(customVer, helloCmdID, helloCmd)
-	server.HandleCommand(customVer, helloCmdID, afterHelloCmd)
-	server.HandleCommand(customVer, pushCmdID, pushCmd)
-	server.HandleCommand(customVer, pushCmdID, outputClientErrLog)
+	diarkisexec.SetServerCommandHandler(customVer, helloCmdID, helloCmd)
+	diarkisexec.SetServerCommandHandler(customVer, pushCmdID, pushCmd)
 	// puffer version sample
-	server.HandleCommand(custom.EchoVer, custom.EchoCmd, echoPufferCmd)
+	diarkisexec.SetServerCommandHandler(custom.EchoVer, custom.EchoCmd, echoPufferCmd)
 	// defined in matchmaker.go
-	server.HandleCommand(customVer, matchmakerAdd, addToMatchMaker)
-	server.HandleCommand(customVer, matchmakerSearch, searchMatchMaker)
+	diarkisexec.SetServerCommandHandler(customVer, matchmakerAdd, addToMatchMaker)
+	diarkisexec.SetServerCommandHandler(customVer, matchmakerSearch, searchMatchMaker)
 	// defined in p2p.go
-	server.HandleCommand(customVer, p2pReportAddr, reportP2PAddr)
-	server.HandleCommand(customVer, p2pInit, initP2P)
-	server.HandleCommand(custom.GetFieldInfoVer, custom.GetFieldInfoCmd, getFieldInfo)
+	diarkisexec.SetServerCommandHandler(customVer, p2pReportAddr, reportP2PAddr)
+	diarkisexec.SetServerCommandHandler(customVer, p2pInit, initP2P)
+	// defined in field.go
+	diarkisexec.SetServerCommandHandler(custom.GetFieldInfoVer, custom.GetFieldInfoCmd, getFieldInfo)
+	// defined in onlinestatus.go
+	diarkisexec.SetServerCommandHandler(customVer, getUserStatusListCmdID, getUserStatusList)
 }
 
 func helloCmd(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
@@ -52,11 +58,6 @@ func helloCmd(ver uint8, cmd uint16, payload []byte, userData *user.User, next f
 	// we send a response back to the client with the byte array sent from the client
 	userData.ServerRespond(payload, ver, cmd, server.Ok, reliable)
 	// move on to the next command handler if there is any
-	next(nil)
-}
-
-func afterHelloCmd(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
-	logger.Debug("This is executed after Hello command has been handled")
 	next(nil)
 }
 
@@ -86,10 +87,5 @@ func echoPufferCmd(ver uint8, cmd uint16, payload []byte, userData *user.User, n
 	logger.Debug("Unpacked echo data: %#v", echoData)
 	userData.ServerRespond(echoData.Pack(), ver, cmd, server.Ok, true) // You can get []byte by using Pack. ( echoData.Pack eauals payload in this example.)
 	// move on to the next command handler if there is any
-	next(nil)
-}
-
-func outputClientErrLog(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
-	logger.Error("Client error log - client sid:%v uid:%v: %v", userData.SID, userData.ID, string(payload))
 	next(nil)
 }

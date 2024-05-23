@@ -1,0 +1,19 @@
+{
+  "OnlineStatusRequest": {
+    "ver": 2,
+    "cmd": 500,
+    "package": "custom",
+    "properties": {
+      "UIDs": "string[]"
+    }
+  },
+  "OnlineStatusResponse": {
+    "ver": 2,
+    "cmd": 500,
+    "package": "custom",
+    "properties": {
+      "Status": "u16",
+      "UserStatusList": "userstatus.UserStatus[]"
+    }
+  }
+}

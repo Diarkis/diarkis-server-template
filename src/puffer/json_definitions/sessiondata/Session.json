@@ -1,0 +1,9 @@
+{
+  "UserSessionData": {
+    "package": "sessiondata",
+    "properties": {
+      "Type": "u8",
+      "ID": "string"
+    }
+  }
+}

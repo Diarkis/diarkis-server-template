@@ -19,7 +19,7 @@ func main() {
 		Session:    &diarkisexec.Options{ConfigPath: "/configs/shared/session.json", ExposeCommands: true},
 	})
 
-	cmds.ExposeCustomCommands()
+	cmds.SetupTCP()
 
 	diarkisexec.SetupDiarkisTCPServer("/configs/tcp/main.json")
 
