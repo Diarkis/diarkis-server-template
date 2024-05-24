@@ -5,16 +5,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Diarkis/diarkis/client/go/tcp"
-	"github.com/Diarkis/diarkis/client/go/udp"
-	"github.com/Diarkis/diarkis/packet"
-	"github.com/Diarkis/diarkis/util"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Diarkis/diarkis/client/go/tcp"
+	"github.com/Diarkis/diarkis/client/go/udp"
+	"github.com/Diarkis/diarkis/packet"
+	"github.com/Diarkis/diarkis/util"
 )
 
 const cmdVer uint8 = 1
@@ -306,7 +307,7 @@ func auth(uid int) (string, []byte, []byte, []byte, []byte, error) {
 	if err != nil {
 		return "", nil, nil, nil, nil, err
 	}
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	resp.Body.Close()
 	if err != nil {
 		return "", nil, nil, nil, nil, err

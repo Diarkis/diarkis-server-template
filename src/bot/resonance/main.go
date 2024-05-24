@@ -4,16 +4,17 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/Diarkis/diarkis/client/go/tcp"
-	"github.com/Diarkis/diarkis/client/go/udp"
-	"github.com/Diarkis/diarkis/util"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
+
+	"github.com/Diarkis/diarkis/client/go/tcp"
+	"github.com/Diarkis/diarkis/client/go/udp"
+	"github.com/Diarkis/diarkis/util"
 )
 
 // http timeout seconds
@@ -52,19 +53,19 @@ func parseArgs() {
 	host = os.Args[1]
 	botNum, err = strconv.Atoi(os.Args[2])
 	if err != nil {
-		fmt.Printf("bot num paramter given is invalid #{err}\n")
+		fmt.Printf("bot num parameter given is invalid #{err}\n")
 		os.Exit(1)
 	}
 
 	interval, err = strconv.Atoi(os.Args[3])
 	if err != nil {
-		fmt.Printf("bot num paramter given is invalid #{err}\n")
+		fmt.Printf("bot num parameter given is invalid #{err}\n")
 		os.Exit(1)
 	}
 
 	pktSize, err = strconv.Atoi(os.Args[4])
 	if err != nil {
-		fmt.Printf("packet size paramter given is invalid #{err}\n")
+		fmt.Printf("packet size parameter given is invalid #{err}\n")
 		os.Exit(1)
 	}
 }
@@ -79,9 +80,6 @@ func main() {
 		resonanceCnt = 0
 		respondCnt = 0
 	}
-	fmt.Printf("Exiting...\n")
-	os.Exit(0)
-
 }
 
 func spawnBots() {
@@ -157,7 +155,7 @@ func auth(uid int) (string, []byte, []byte, []byte, []byte, error) {
 	if err != nil {
 		return "", nil, nil, nil, nil, err
 	}
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	resp.Body.Close()
 	if err != nil {
 		return "", nil, nil, nil, nil, err

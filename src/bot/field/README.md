@@ -1,6 +1,6 @@
 # Field Sample Bot
 
-Program in Go which creates a discrecionary number of clients connected to a Diarkis field server and make them move randomly on the grid.
+Program in Go which creates a discretionary number of clients connected to a Diarkis field server and make them move randomly on the grid.
 
 # Usage
 
@@ -30,7 +30,6 @@ The application take 4 arguments:
 ```
 
 Example, for starting 100 bots updating every 2 seconds:
-
 ```
 ./diarkis-field-bot 127.0.0.1:7000 100 udp 2000
 ```

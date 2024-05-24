@@ -3,13 +3,14 @@ package app
 import (
 	"encoding/hex"
 	"fmt"
+	"log/slog"
+	"sync/atomic"
+	"time"
+
 	"github.com/Diarkis/diarkis/client/go/modules/room"
 	"github.com/Diarkis/diarkis/client/go/tcp"
 	"github.com/Diarkis/diarkis/client/go/udp"
 	"github.com/Diarkis/diarkis/uuid/v4"
-	"log/slog"
-	"sync/atomic"
-	"time"
 )
 
 const UDP_STRING string = "udp"
@@ -29,7 +30,7 @@ var logger *slog.Logger
 var botCounter = 0
 var joinedCnt atomic.Int64
 var broadcastSendCnt atomic.Int64
-var broadcastRecieveCnt atomic.Int64
+var broadcastReceiveCnt atomic.Int64
 
 // sleepTime is in seconds
 var sleepTime int64 = 1
@@ -200,7 +201,7 @@ func searchAndJoin(bot *bot) {
 			"message", message)
 	})
 	roomCli.OnMemberBroadcast(func(bytes []byte) {
-		broadcastRecieveCnt.Add(1)
+		broadcastReceiveCnt.Add(1)
 		bot.broadcastRcvCnt.Add(1)
 	})
 }

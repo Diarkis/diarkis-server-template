@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/Diarkis/diarkis/client/go/modules/group"
 	"github.com/Diarkis/diarkis/client/go/tcp"
 	"github.com/Diarkis/diarkis/client/go/udp"
 	"github.com/Diarkis/diarkis/util"
-	"os"
-	"time"
 )
 
 const UDP_STRING string = "udp"
@@ -127,7 +128,6 @@ func spawnTCPBot(id int, needToWait bool) {
 	cli.Connect(addr)
 	bot.group = new(group.Group)
 	bot.group.SetupAsTCP(bot.tcp)
-	bot.group.SetupOnJoinEvent(BUILTIN_CMD_VER, CMD_RANDOM_JOIN_GROUP)
 }
 
 func spawnUDPBot(id int, needToWait bool) {
@@ -174,7 +174,6 @@ func spawnUDPBot(id int, needToWait bool) {
 	cli.Connect(addr)
 	bot.group = new(group.Group)
 	bot.group.SetupAsUDP(bot.udp)
-	bot.group.SetupOnJoinEvent(BUILTIN_CMD_VER, CMD_RANDOM_JOIN_GROUP)
 }
 
 func startBot(bot *botData) {
@@ -222,7 +221,7 @@ func searchAndJoin(bot *botData) {
 		groupCli.SetupAsTCP(bot.tcp)
 	}
 	joinMessage := []byte("joinMessage")
-	groupCli.JoinRandom(60, joinMessage, 200)
+	groupCli.JoinRandom(60, joinMessage, true, 200)
 	bot.group = groupCli
 
 	groupCli.OnJoin(func(success bool, groupID string) {

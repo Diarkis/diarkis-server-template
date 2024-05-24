@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 )
@@ -23,7 +23,7 @@ func Endpoint(host string, serverType string, uid string) (string, []byte, []byt
 	if err != nil {
 		return "", nil, nil, nil, nil, err
 	}
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	resp.Body.Close()
 	if err != nil {
 		return "", nil, nil, nil, nil, err

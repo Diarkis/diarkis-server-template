@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math"
 	"math/rand"
 	"net/http"
@@ -25,8 +25,7 @@ import (
 	"github.com/Diarkis/diarkis/client/go/udp"
 	"github.com/Diarkis/diarkis/smap"
 	"github.com/Diarkis/diarkis/util"
-	v4 "github.com/Diarkis/diarkis/uuid/v4"
-	"github.com/google/uuid"
+	uuid "github.com/Diarkis/diarkis/uuid/v4"
 )
 
 const UDP_STRING string = "udp"
@@ -188,7 +187,7 @@ func endpoint(uid string, host string, proto string) (string, []byte, []byte, []
 	if err != nil {
 		return "", nil, nil, nil, nil, err
 	}
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	resp.Body.Close()
 	if err != nil {
 		return "", nil, nil, nil, nil, err
@@ -231,9 +230,9 @@ func randomSpawnBot() {
 	if botCounter >= bots {
 		return
 	}
-	id, _ := v4.New()
+	uuid, _ := uuid.New()
 	bot := new(botData)
-	bot.uid = id.String
+	bot.uid = uuid.String
 	for _, idx := range []int{8, 13, 18, 23} {
 		bot.uid = bot.uid[:idx] + "-" + bot.uid[idx:]
 	}
@@ -369,7 +368,9 @@ func createNewMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData,
 		}
 	}
 
-	newPayload.PacketGUID = uuid.New().String()
+	uuid, _ := uuid.New()
+
+	newPayload.PacketGUID = uuid.String
 	payloadBytes := newPayload.Pack()
 	payloadSizeBytes := make([]byte, 2)
 	binary.BigEndian.PutUint16(payloadSizeBytes, uint16(len(payloadBytes)))
