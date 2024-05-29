@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+
 	"github.com/Diarkis/diarkis/client/go/udp"
+
 	//	"github.com/Diarkis/diarkis/client/go/tcp"
-	"github.com/Diarkis/diarkis/client/go/modules/matchmaker"
-	"github.com/Diarkis/diarkis/util"
-	v4 "github.com/Diarkis/diarkis/uuid/v4"
-	"io/ioutil"
+
 	"net/http"
 	"os"
 	"os/signal"
@@ -18,6 +18,10 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/Diarkis/diarkis/client/go/modules/matchmaker"
+	"github.com/Diarkis/diarkis/util"
+	v4 "github.com/Diarkis/diarkis/uuid/v4"
 )
 
 var running = true
@@ -173,7 +177,7 @@ func spawnBot(id string) {
 			cli.Disconnect()
 		})
 		ticketCnt++
-		mm.IssueTicket()
+		mm.IssueTicket(1)
 	})
 	go func() {
 		time.Sleep(time.Second * time.Duration(clientTimeout))
@@ -203,7 +207,7 @@ func endpoint(uid string) (string, []byte, []byte, []byte, []byte, error) {
 	if err != nil {
 		return "", nil, nil, nil, nil, err
 	}
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	resp.Body.Close()
 	if err != nil {
 		return "", nil, nil, nil, nil, err
