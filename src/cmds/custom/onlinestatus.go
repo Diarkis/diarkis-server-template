@@ -2,16 +2,14 @@ package customcmds
 
 import (
 	"github.com/Diarkis/diarkis-server-template/lib/onlinestatus"
-	custom "github.com/Diarkis/diarkis-server-template/puffer/go/custom"
-	sessiondata "github.com/Diarkis/diarkis-server-template/puffer/go/sessiondata"
-	userstatus "github.com/Diarkis/diarkis-server-template/puffer/go/userstatus"
+	ponlinestatus "github.com/Diarkis/diarkis-server-template/puffer/go/onlinestatus"
 	"github.com/Diarkis/diarkis/server"
 	"github.com/Diarkis/diarkis/user"
 	"github.com/Diarkis/diarkis/util"
 )
 
 func getUserStatusList(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
-	req := custom.NewOnlineStatusRequest()
+	req := ponlinestatus.NewOnlineStatusRequest()
 	req.Unpack(payload)
 
 	logger.Sys("Get user online status list: UIDs:%v", req.UIDs)
@@ -24,18 +22,18 @@ func getUserStatusList(ver uint8, cmd uint16, payload []byte, userData *user.Use
 		return
 	}
 
-	resp := custom.NewOnlineStatusResponse()
-	resp.UserStatusList = make([]*userstatus.UserStatus, len(list))
+	resp := ponlinestatus.NewOnlineStatusResponse()
+	resp.UserStatusList = make([]*ponlinestatus.UserStatus, len(list))
 
 	for i := 0; i < len(list); i++ {
 		item := list[i]
-		us := userstatus.NewUserStatus()
+		us := ponlinestatus.NewUserStatus()
 		us.UID = item.UID
 		us.InRoom = item.InRoom
-		us.SessionData = make([]*sessiondata.UserSessionData, len(item.SessionData))
+		us.SessionData = make([]*ponlinestatus.UserSessionData, len(item.SessionData))
 		for j := 0; j < len(item.SessionData); j++ {
 			sd := item.SessionData[j]
-			us.SessionData[j] = sessiondata.NewUserSessionData()
+			us.SessionData[j] = ponlinestatus.NewUserSessionData()
 			us.SessionData[j].Type = sd.Type
 			us.SessionData[j].ID = sd.ID
 		}

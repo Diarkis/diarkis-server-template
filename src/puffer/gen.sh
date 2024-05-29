@@ -4,3 +4,4 @@ if [ $(uname) == 'Darwin' ]; then
 elif [ "$(expr substr $(uname -s) 1 5)" == 'Linux' ]; then
     ./puffer-linux . . github.com/Diarkis/diarkis-server-template/puffer/go
 fi
+go fmt ./go/...

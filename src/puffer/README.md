@@ -32,7 +32,7 @@ func echoPufferCmd(ver uint8, cmd uint16, payload []byte, userData *user.User, n
 	}
 
 	logger.Debug("Unpacked echo data: %#v", echoData)
-    userData.ServerRespond(echoData.Pack(), ver, cmd, server.Ok, true) // You can get []byte by using Pack. ( echoData.Pack eauals payload in this example.)
+    userData.ServerRespond(echoData.Pack(), ver, cmd, server.Ok, true) // You can get []byte by using Pack. ( echoData.Pack equals payload in this example.)
 	// move on to the next command handler if there is any
 	next(nil)
 }

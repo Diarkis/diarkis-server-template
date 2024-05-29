@@ -1,0 +1,34 @@
+{
+  "OnlineStatusRequest": {
+    "ver": 2,
+    "cmd": 500,
+    "package": "onlinestatus",
+    "properties": {
+      "UIDs": "string[]"
+    }
+  },
+  "OnlineStatusResponse": {
+    "ver": 2,
+    "cmd": 500,
+    "package": "onlinestatus",
+    "properties": {
+      "Status": "u16",
+      "UserStatusList": "UserStatus[]"
+    }
+  },
+  "UserStatus": {
+    "package": "onlinestatus",
+    "properties": {
+      "UID": "string",
+      "InRoom": "bool",
+      "SessionData": "UserSessionData[]"
+    }
+  },
+  "UserSessionData": {
+    "package": "onlinestatus",
+    "properties": {
+      "Type": "u8",
+      "ID": "string"
+    }
+  }
+}

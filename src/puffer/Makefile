@@ -8,6 +8,7 @@ help:
 .PHONY: gen
 gen: ## Generates protocol code files
 	./gen.sh
+
 .PHONY: clean
 clean: ## Delete all generated protocol code files
 	rm -rf go cs cpp
