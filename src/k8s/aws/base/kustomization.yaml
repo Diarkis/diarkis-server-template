@@ -40,6 +40,8 @@ configMapGenerator:
       - shared/conf/log.json
       - shared/conf/matching.json
       - shared/conf/mesh.json
+      - shared/conf/dm.json
+      - shared/conf/dive.json
 
   - name: http-conf
     files:
