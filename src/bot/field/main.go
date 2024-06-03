@@ -308,7 +308,6 @@ func randomSpawnBot() {
 
 func startBot(bot *botData) {
 	botCounter++
-	bot.state = STATUS_AFTER_START
 
 	for {
 		switch bot.state {
