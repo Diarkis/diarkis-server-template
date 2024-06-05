@@ -3,9 +3,9 @@ package customcmds
 import (
 	"github.com/Diarkis/diarkis-server-template/lib/onlinestatus"
 	ponlinestatus "github.com/Diarkis/diarkis-server-template/puffer/go/onlinestatus"
+	"github.com/Diarkis/diarkis/derror"
 	"github.com/Diarkis/diarkis/server"
 	"github.com/Diarkis/diarkis/user"
-	"github.com/Diarkis/diarkis/util"
 )
 
 func getUserStatusList(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
@@ -17,7 +17,7 @@ func getUserStatusList(ver uint8, cmd uint16, payload []byte, userData *user.Use
 	list, err := onlinestatus.GetUserStatusList(req.UIDs)
 
 	if err != nil {
-		userData.ServerRespond(util.ErrData(err.Error(), util.ErrCodeInvalidParams), ver, cmd, server.Bad, true)
+		userData.ServerRespond(derror.ErrData(err.Error(), derror.InvalidParameter(0)), ver, cmd, server.Bad, true)
 		next(err)
 		return
 	}
