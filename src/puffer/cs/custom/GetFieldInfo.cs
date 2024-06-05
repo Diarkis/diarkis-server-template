@@ -8,13 +8,13 @@
 using System;
 using System.Text;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Diarkis;
 
 namespace Diarkis {
 
-public class GetFieldInfo
+public class GetFieldInfo : DiarkisPufferObject
 {
-
 	public static byte VER {
 		get => 2;
 	}
@@ -26,27 +26,69 @@ public class GetFieldInfo
 	public long FieldSize = 0;
 	public int NodeCount = 0;
 
-	public byte[] Pack()
+	public override int GetRequiredBufferSize()
 	{
-		byte[] bytes = new byte[0];
+		int len = 0;
+		len += sizeof(long);
+		len += sizeof(long);
+		len += sizeof(int);
+		return len;
+	}
+
+	public override int Serialize(ref byte[] buffer, int index)
+	{
+		int idx = index;
+				/* long */
+		idx += DiarkisSerialization.Serialize(FieldOfVisionSize, ref buffer, idx);
 
 		/* long */
-		byte[] fieldOfVisionSizeBytes = BitConverter.GetBytes((ulong)FieldOfVisionSize);
-		Array.Reverse(fieldOfVisionSizeBytes);
-		bytes = DiarkisPacket.Combine(bytes, fieldOfVisionSizeBytes);
-
-		/* long */
-		byte[] fieldSizeBytes = BitConverter.GetBytes((ulong)FieldSize);
-		Array.Reverse(fieldSizeBytes);
-		bytes = DiarkisPacket.Combine(bytes, fieldSizeBytes);
+		idx += DiarkisSerialization.Serialize(FieldSize, ref buffer, idx);
 
 		/* int */
-		byte[] nodeCountBytes = BitConverter.GetBytes((uint)NodeCount);
-		Array.Reverse(nodeCountBytes);
-		bytes = DiarkisPacket.Combine(bytes, nodeCountBytes);
+		idx += DiarkisSerialization.Serialize(NodeCount, ref buffer, idx);
 
+		return idx - index;
+	}
+
+	public void Pack(ref byte[] buffer)
+	{
+		this.Serialize(ref buffer, 0);
+	}
+
+	public byte[] Pack()
+	{
+		byte[] buffer = new byte[this.GetRequiredBufferSize()];
+		this.Serialize(ref buffer, 0);
 		// done
-		return bytes;
+		return buffer;
+	}
+
+	public bool Unpack(Span<byte> bytes)
+	{
+		
+		int offset = 0;
+
+		/* long */
+		Span<byte> fieldOfVisionSizeBytes = bytes.Slice(offset, 8);
+		fieldOfVisionSizeBytes.Reverse();
+		FieldOfVisionSize = MemoryMarshal.Cast<byte, long>(fieldOfVisionSizeBytes)[0];
+		fieldOfVisionSizeBytes.Reverse();
+		offset += 8;
+
+		/* long */
+		Span<byte> fieldSizeBytes = bytes.Slice(offset, 8);
+		fieldSizeBytes.Reverse();
+		FieldSize = MemoryMarshal.Cast<byte, long>(fieldSizeBytes)[0];
+		fieldSizeBytes.Reverse();
+		offset += 8;
+
+		/* int */
+		Span<byte> nodeCountBytes = bytes.Slice(offset, 4);
+		NodeCount = (int)((nodeCountBytes[0] << 24) | (nodeCountBytes[1] << 16) | (nodeCountBytes[2] << 8) | nodeCountBytes[3]);
+		offset += 4;
+
+
+		return true;
 	}
 
 	public bool Unpack(byte[] bytes)
@@ -55,29 +97,7 @@ public class GetFieldInfo
 		{
 			return false;
 		}
-
-		int offset = 0;
-
-		/* long */
-		byte[] fieldOfVisionSizeBytes = Diarkis.DiarkisPacket.Slice(bytes, offset, 8);
-		Array.Reverse(fieldOfVisionSizeBytes);
-		FieldOfVisionSize = (long)BitConverter.ToUInt64(fieldOfVisionSizeBytes);
-		offset += 8;
-
-		/* long */
-		byte[] fieldSizeBytes = Diarkis.DiarkisPacket.Slice(bytes, offset, 8);
-		Array.Reverse(fieldSizeBytes);
-		FieldSize = (long)BitConverter.ToUInt64(fieldSizeBytes);
-		offset += 8;
-
-		/* int */
-		byte[] nodeCountBytes = Diarkis.DiarkisPacket.Slice(bytes, offset, 4);
-		Array.Reverse(nodeCountBytes);
-		NodeCount = (int)BitConverter.ToUInt32(nodeCountBytes);
-		offset += 4;
-
-
-		return true;
+		return Unpack(new Span<byte>(bytes));
 	}
 
 	public override string ToString()
@@ -88,7 +108,6 @@ public class GetFieldInfo
 		list.Add(string.Format("NodeCount = {0}", NodeCount));
 		return string.Join(" | ", list);
 	}
-
 }
 
 }
