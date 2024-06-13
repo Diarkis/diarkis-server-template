@@ -1,0 +1,93 @@
+# refer ./docker/README.md to see how to run this
+name: diarkis
+services:
+  mars:
+    build:
+      context: ./remote_bin
+      dockerfile: ../docker/mars/Dockerfile
+    image: "${AWS_ACCOUNT_NUM:-diarkis-local}.dkr.ecr.ap-northeast-1.amazonaws.com/mars"
+    platform: linux/amd64
+    ports:
+      - target: 6779
+        published: 6779
+        protocol: udp
+    volumes:
+      - type: bind
+        source: ./docker/configs/mars/main.json
+        target: /bin/mars/default.conf.json
+  http:
+    build:
+      context: ./remote_bin
+      dockerfile: ../docker/http/Dockerfile
+    image: "${AWS_ACCOUNT_NUM:-diarkis-local}.dkr.ecr.ap-northeast-1.amazonaws.com/http"
+    platform: linux/amd64
+    depends_on:
+      - mars
+    ports:
+      - target: 7000
+        published: 7000
+        protocol: tcp
+    volumes:
+      - type: bind
+        source: ./docker/configs
+        target: /configs
+    healthcheck:
+      test: "wget http://localhost:7000/hello -O /dev/null"
+      start_period: "1s"
+      retries: 3
+      timeout: "5s"
+      interval: "10s"
+  udp:
+    build:
+      context: ./remote_bin
+      dockerfile: ../docker/udp/Dockerfile
+    image: "${AWS_ACCOUNT_NUM:-diarkis-local}.dkr.ecr.ap-northeast-1.amazonaws.com/udp"
+    platform: linux/amd64
+    depends_on:
+      - mars
+    ports:
+      - target: 7100
+        published: 7100
+        protocol: udp
+    volumes:
+      - type: bind
+        source: ./docker/configs
+        target: /configs
+      - type: bind
+        source: ./docker/configs/shared/health-check.json
+        target: /bin/tools/configs/health-check.json
+    environment:
+      - DIARKIS_CLOUD_ENV=127.0.0.1
+    healthcheck:
+      test: "sh -c '/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) in && /go/bin/health-check $(cat /tmp/DIARKIS_PUBLIC_ADDR) out'"
+      start_period: "3s"
+      retries: 3
+      timeout: "5s"
+      interval: "10s"
+  tcp:
+    depends_on:
+      - mars
+    build:
+      context: ./remote_bin
+      dockerfile: ../docker/tcp/Dockerfile
+    image: "${AWS_ACCOUNT_NUM:-diarkis-local}.dkr.ecr.ap-northeast-1.amazonaws.com/tcp"
+    platform: linux/amd64
+    ports:
+      - target: 7200
+        published: 7200
+        protocol: tcp
+    volumes:
+      - type: bind
+        source: ./docker/configs
+        target: /configs
+      - type: bind
+        source: ./docker/configs/shared/health-check.json
+        target: /bin/tools/configs/health-check.json
+    environment:
+      - DIARKIS_CLOUD_ENV=127.0.0.1
+    healthcheck:
+      test: "sh -c '/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) in'"
+      start_period: "3s"
+      retries: 3
+      timeout: "5s"
+      interval: "10s"

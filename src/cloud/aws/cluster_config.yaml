@@ -1,0 +1,71 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: diarkis
+  region: ap-northeast-1
+vpc:
+  clusterEndpoints:
+    privateAccess: true
+    publicAccess: true
+
+iam:
+  withOIDC: true
+
+availabilityZones: ["ap-northeast-1a", "ap-northeast-1c", "ap-northeast-1d"]
+
+addons:
+  - name: vpc-cni # no version is specified so it deploys the default version
+    attachPolicyARNs:
+      - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+  - name: coredns
+    version: latest # auto discovers the latest available
+  - name: kube-proxy
+    version: latest
+  - name: aws-ebs-csi-driver
+    wellKnownPolicies: # add IAM and service account
+      ebsCSIController: true
+  - name: amazon-cloudwatch-observability
+    version: latest
+
+mangedNodeGroups:
+  - name: diarkis-public
+    instanceType: m5.large
+    volumeSize: 100
+    volumeType: gp3
+    disableIMDSv1: false
+    desiredCapacity: 3
+    minSize: 3
+    maxSize: 10
+    iam:
+      withAddonPolicies:
+        autoScaler: true
+        awsLoadBalancerController: true
+
+  - name: diarkis-private
+    volumeSize: 100
+    volumeType: gp3
+    disableIMDSv1: false
+    instanceType: m5.large
+    privateNetworking: true
+    desiredCapacity: 3
+    minSize: 3
+    maxSize: 10
+    iam:
+      withAddonPolicies:
+        autoScaler: true
+        awsLoadBalancerController: true
+    taints:
+      - key: "diarkis.io/network"
+        value: "private"
+        effect: NoExecute
+cloudWatch:
+  clusterLogging:
+    # enable specific types of cluster control plane logs
+    enableTypes: ["audit", "authenticator", "controllerManager"]
+    # all supported types: "api", "audit", "authenticator", "controllerManager", "scheduler"
+    # supported special values: "*" and "all"
+
+    # Sets the number of days to retain the logs for (see [CloudWatch docs](https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutRetentionPolicy.html#API_PutRetentionPolicy_RequestSyntax)).
+    # By default, log data is stored in CloudWatch Logs indefinitely.
+    logRetentionInDays: 30

@@ -1,0 +1,49 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+labels:
+  - includeSelectors: true
+    pairs:
+      app: diarkis
+
+namespace: base
+
+# build target
+resources:
+  - udp/deploy.yaml
+  - udp/hpa.yaml
+  - tcp/deploy.yaml
+  - tcp/hpa.yaml
+  - mars/sts.yaml
+  - mars/svc.yaml
+  - http/deploy.yaml
+  - http/svc.yaml
+  - http/hpa.yaml
+  - ns.yaml
+  - metrics-server.yaml
+
+configMapGenerator:
+  - files:
+      - shared/conf/field.json
+      - shared/conf/dm.json
+      - shared/conf/group.json
+      - shared/conf/log.json
+      - shared/conf/matching.json
+      - shared/conf/mesh.json
+      - shared/conf/metrics.json
+      - shared/conf/dive.json
+    name: shared-conf
+  - files:
+      - http/conf/main.json
+    name: http-conf
+  - files:
+      - udp/conf/main.json
+    name: udp-conf
+  - files:
+      - tcp/conf/main.json
+    name: tcp-conf
+  - files:
+      - mars/conf/default.conf.json
+    name: mars-conf
+  - files:
+      - hc/conf/health-check.json
+    name: hc-conf

@@ -1,0 +1,11 @@
+{
+  "nic": "eth0",
+  "address": "0.0.0.0",
+  "port": "7100",
+  "enableP2P": true,
+  "connectionTTL": 10,
+  "sendUDPInterval": 0,
+  "handleRUDPInterval": 0,
+  "retryInterval": 1000,
+  "maxRetry": 10
+}

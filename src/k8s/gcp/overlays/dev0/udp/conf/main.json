@@ -1,0 +1,9 @@
+{
+  "enableP2P": true,
+  "connectionTTL": 10,
+  "sendUDPInterval": 50,
+  "handleRUDPInterval": 100,
+  "retryInterval": 1000,
+  "maxRetry": 10,
+  "address": "0.0.0.0"
+}

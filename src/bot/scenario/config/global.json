@@ -1,0 +1,25 @@
+{
+  "host": "localhost:7000",
+  "_host": "http.dev0.svc.cluster.local",
+  "interval": 500,
+  "duration": 0,
+  "idleDuration": 20,
+  "logLevel": 20,
+  "serverType": "UDP",
+  "receiveByteSize": 1400,
+  "udpSendInterval": 100,
+  "metricsInterval": 5,
+  "userID": {
+    "defaultValue": "1000000000000000",
+    "isSequential": true
+  },
+  "matchingInterval": 3,
+  "maxMembers": 2,
+  "allowEmpty": 0,
+  "join": 1,
+  "ttl": 10,
+  "roomInterval": 100,
+  "battleDuration": 5,
+  "serverTypeMM": "UDP",
+  "serverTypeTurn": "UDP"
+}

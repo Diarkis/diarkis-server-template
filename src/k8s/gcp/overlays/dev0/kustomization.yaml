@@ -1,0 +1,34 @@
+namespace: dev0
+resources:
+  - ../../base
+
+# build target
+patches:
+  - path: http/deploy.yaml
+  - path: udp/deploy.yaml
+  - path: tcp/deploy.yaml
+#- path: ns.yaml
+
+configMapGenerator:
+  - behavior: replace
+    files:
+      - shared/conf/field.json
+      - shared/conf/group.json
+      - shared/conf/dm.json
+      - shared/conf/log.json
+      - shared/conf/matching.json
+      - shared/conf/mesh.json
+      - shared/conf/dive.json
+    name: shared-conf
+  - behavior: replace
+    files:
+      - http/conf/main.json
+    name: http-conf
+  - behavior: replace
+    files:
+      - udp/conf/main.json
+    name: udp-conf
+  - behavior: replace
+    files:
+      - tcp/conf/main.json
+    name: tcp-conf

@@ -1,0 +1,5 @@
+{
+  "nic": "eth0",
+  "marsAddress": "mars.base.svc.diarkis.cluster",
+  "marsPort": "6779"
+}

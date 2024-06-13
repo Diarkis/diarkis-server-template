@@ -1,0 +1,10 @@
+{
+  "echo": {
+    "ver": 2,
+    "cmd": 200,
+    "package": "custom",
+    "properties": {
+      "Message": "string"
+    }
+  }
+}

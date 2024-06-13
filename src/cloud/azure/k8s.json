@@ -1,0 +1,71 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "managedClusters_diarkis_sample_name": {
+      "defaultValue": "diarkis-sample",
+      "type": "String"
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "type": "Microsoft.ContainerService/managedClusters",
+      "apiVersion": "2020-02-01",
+      "name": "[parameters('managedClusters_diarkis_sample_name')]",
+      "location": "japaneast",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "kubernetesVersion": "1.28.5",
+        "dnsPrefix": "diarkis",
+        "agentPoolProfiles": [
+          {
+            "name": "agentpool",
+            "count": 3,
+            "vmSize": "Standard_DS2_v2",
+            "osDiskSizeGB": 30,
+            "maxPods": 10,
+            "type": "VirtualMachineScaleSets",
+            "orchestratorVersion": "1.28.5",
+            "enableNodePublicIP": true,
+            "osType": "Linux"
+          }
+        ],
+        "servicePrincipalProfile": {
+          "clientId": "msi"
+        },
+        "nodeResourceGroup": "[concat('MC_root_', parameters('managedClusters_diarkis_sample_name'), '_japaneast')]",
+        "enableRBAC": false,
+        "networkProfile": {
+          "networkPlugin": "azure",
+          "loadBalancerSku": "Basic",
+          "podCidr": "10.244.0.0/16",
+          "serviceCidr": "10.0.0.0/16",
+          "dnsServiceIP": "10.0.0.10",
+          "dockerBridgeCidr": "172.17.0.1/16",
+          "outboundType": "loadBalancer"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ContainerService/managedClusters/agentPools",
+      "apiVersion": "2020-02-01",
+      "name": "[concat(parameters('managedClusters_diarkis_sample_name'), '/agentpool')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerService/managedClusters', parameters('managedClusters_diarkis_sample_name'))]"
+      ],
+      "properties": {
+        "count": 3,
+        "vmSize": "Standard_DS2_v2",
+        "osDiskSizeGB": 30,
+        "maxPods": 10,
+        "type": "VirtualMachineScaleSets",
+        "orchestratorVersion": "1.28.5",
+        "enableNodePublicIP": true,
+        "osType": "Linux"
+      }
+    }
+  ]
+}

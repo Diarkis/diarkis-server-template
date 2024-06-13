@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: diarkis
+    component: bot
+  name: bot
+  namespace: bot
+spec:
+  # replicas: 1
+  selector:
+    matchLabels:
+      app: diarkis
+      component: bot
+  template:
+    metadata:
+      labels:
+        app: diarkis
+        component: bot
+    spec:
+      containers:
+        - command: ["/go/bin/bot"]
+          ports:
+            - name: bot
+              containerPort: 9500
+          env:
+            - name: DIARKIS_BOT_SERVER_MODE
+              value: "true"
+            - name: DIARKIS_BOT_ADDRESS
+              value: "0.0.0.0"
+            - name: DIARKIS_BOT_PORT
+              value: "9500"
+            - name: DIARKIS_BOT_CONFIG
+              value: "/go/bin/config"
+          image: __YOUR_REPOSITORY__/bot:dev0
+          imagePullPolicy: Always
+          name: bot
+          resources:
+            limits:
+              cpu: 100m
+            requests:
+              cpu: 100m
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 9500
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 9500
+          volumeMounts:
+            - mountPath: /go/bin/config
+              name: bot-conf
+            - mountPath: /tmp
+              name: tmp
+      terminationGracePeriodSeconds: 10
+      volumes:
+        - emptyDir: {}
+          name: tmp
+        - configMap:
+            name: bot-conf
+          name: bot-conf

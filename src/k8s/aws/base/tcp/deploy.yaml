@@ -1,0 +1,115 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tcp
+  labels:
+    component: tcp
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
+      maxSurge: 10%
+  selector:
+    matchLabels:
+      component: tcp
+  template:
+    metadata:
+      labels:
+        component: tcp
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+    spec:
+      hostNetwork: true
+      terminationGracePeriodSeconds: 600
+      dnsPolicy: ClusterFirstWithHostNet
+      initContainers:
+        - image: alpine:latest
+          name: tuner
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              sysctl -w kernel.msgmax=65536
+              sysctl -w kernel.msgmnb=65536
+              sysctl -w net.core.somaxconn=32768
+              sysctl -w net.netfilter.nf_conntrack_max=1048576
+              sysctl -w net.ipv4.tcp_syncookies=0
+              sysctl -w net.core.somaxconn=32768
+              sysctl -w net.ipv4.tcp_max_syn_backlog=32768
+              sysctl -w net.core.wmem_default=25165824
+              sysctl -w net.core.wmem_max=25165824
+              sysctl -w net.core.rmem_default=25165824
+              sysctl -w net.core.rmem_max=25165824
+              sysctl -w net.core.optmem_max=25165824
+              sysctl -w net.core.netdev_max_backlog=65536
+              sysctl -w net.ipv4.udp_mem="65536 131072 262144"
+              sysctl -w net.ipv4.udp_rmem_min=16384
+              sysctl -w net.ipv4.udp_wmem_min=16384
+              sysctl -w net.ipv4.tcp_tw_reuse=1
+          imagePullPolicy: Always
+          securityContext:
+            privileged: true
+
+      containers:
+        - name: tcp
+          startupProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) mars"
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) in"
+          securityContext:
+            runAsUser: 1000
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            privileged: false
+          image: tcp
+          imagePullPolicy: Always
+          env:
+            - name: ROLE
+              value: tcp
+            - name: DIARKIS_CLOUD_ENV
+              value: AWS
+            - name: DIARKIS_FIELD_MOD
+              value: "true"
+            - name: DIARKIS_SHUTDOWN_TIMEOUT
+              value: "600"
+          command:
+            - /go/bin/tcp
+          args:
+            - -c
+            - "1"
+          volumeMounts:
+            - mountPath: /configs/tcp
+              name: tcp-conf
+            - mountPath: /configs/shared
+              name: shared-conf
+            - name: hc-conf
+              mountPath: /bin/tools/configs
+            - name: tmp
+              mountPath: /tmp
+      nodeSelector:
+        alpha.eksctl.io/nodegroup-name: diarkis-public
+      volumes:
+        - name: shared-conf
+          configMap:
+            name: shared-conf
+        - name: tcp-conf
+          configMap:
+            name: tcp-conf
+        - name: hc-conf
+          configMap:
+            name: hc-conf
+        - name: tmp
+          emptyDir: {}

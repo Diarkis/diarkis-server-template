@@ -1,0 +1,5 @@
+{
+  "nic": "eth0",
+  "marsAddress": "mars",
+  "marsPort": "6779"
+}
