@@ -15,4 +15,4 @@ else
     echo "Unsupported OS"
     uname -a
     exit 1
-end
+fi

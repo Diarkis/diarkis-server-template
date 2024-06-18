@@ -28,7 +28,7 @@ addons:
   - name: amazon-cloudwatch-observability
     version: latest
 
-mangedNodeGroups:
+managedNodeGroups:
   - name: diarkis-public
     instanceType: m5.large
     volumeSize: 100
