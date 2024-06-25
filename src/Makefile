@@ -8,6 +8,9 @@ help:
 DIARKIS_VERSION = $(shell go list -m github.com/Diarkis/diarkis | cut -d " " -f 2)
 DIARKIS_CLI = ./diarkis-cli/os/linux/bin/diarkis-cli
 BUILD_CONFIG = ./build/linux-build.yml
+AWS_ACCOUNT_NUM = __AWS_ACCOUNT_NUM__
+GCP_PROJECT_ID = __GCP_PROJECT_ID__
+ACR_DOMAIN = __ACR_DOMAIN__
 
 ifeq ($(shell uname), Darwin)
 	DIARKIS_CLI = ./diarkis-cli/os/mac/bin/diarkis-cli
@@ -73,19 +76,23 @@ stop-docker: ## Stop Diarkis
 setup-aws:
 	./script/setup_aws.sh
 
+.PHONY: auth-docker-aws
+auth-docker-aws:
+	aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin $(AWS_ACCOUNT_NUM).dkr.ecr.ap-northeast-1.amazonaws.com
+
 .PHONY: build-container-aws
 build-container-aws: build-linux ## Build container for AWS
-	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/http
-	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/udp
-	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/tcp
-	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/mars
+	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t $(AWS_ACCOUNT_NUM).dkr.ecr.ap-northeast-1.amazonaws.com/http
+	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t $(AWS_ACCOUNT_NUM).dkr.ecr.ap-northeast-1.amazonaws.com/udp
+	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t $(AWS_ACCOUNT_NUM).dkr.ecr.ap-northeast-1.amazonaws.com/tcp
+	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t $(AWS_ACCOUNT_NUM).dkr.ecr.ap-northeast-1.amazonaws.com/mars
 
 .PHONY: push-container-aws
 push-container-aws: ## Push container to AWS
-	docker push __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/http
-	docker push __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/udp
-	docker push __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/tcp
-	docker push __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/mars
+	docker push $(AWS_ACCOUNT_NUM).dkr.ecr.ap-northeast-1.amazonaws.com/http
+	docker push $(AWS_ACCOUNT_NUM).dkr.ecr.ap-northeast-1.amazonaws.com/udp
+	docker push $(AWS_ACCOUNT_NUM).dkr.ecr.ap-northeast-1.amazonaws.com/tcp
+	docker push $(AWS_ACCOUNT_NUM).dkr.ecr.ap-northeast-1.amazonaws.com/mars
 
 .PHONY: setup-gcp
 setup-gcp: ## Set up GCP
@@ -93,17 +100,17 @@ setup-gcp: ## Set up GCP
 
 .PHONY: build-container-gcp
 build-container-gcp: build-linux ## Build container for GCP
-	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/http
-	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t  asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/udp
-	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t  asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/tcp
-	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t  asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/mars
+	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/http
+	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/udp
+	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/tcp
+	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/mars
 
 .PHONY: push-container-gcp
 push-container-gcp: ## Push container to GCP
-	docker push  asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/http
-	docker push  asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/udp
-	docker push  asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/tcp
-	docker push  asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/mars
+	docker push  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/http
+	docker push  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/udp
+	docker push  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/tcp
+	docker push  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/mars
 
 .PHONY: setup-azure
 setup-azure: ## Set up Azure
@@ -112,14 +119,14 @@ setup-azure: ## Set up Azure
 
 .PHONY: build-container-azure
 build-container-azure: build-linux ## Build container for azure
-	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t __ACR_DOMAIN__/http
-	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t  __ACR_DOMAIN__/udp
-	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t  __ACR_DOMAIN__/tcp
-	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t __ACR_DOMAIN__/mars
+	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t $(ACR_DOMAIN)/http
+	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t  $(ACR_DOMAIN)/udp
+	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t  $(ACR_DOMAIN)/tcp
+	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t $(ACR_DOMAIN)/mars
 
 .PHONY: push-container-azure
 push-container-azure: ## Push container to azure
-	docker push __ACR_DOMAIN__/http
-	docker push __ACR_DOMAIN__/udp
-	docker push __ACR_DOMAIN__/tcp
-	docker push __ACR_DOMAIN__/mars
+	docker push $(ACR_DOMAIN)/http
+	docker push $(ACR_DOMAIN)/udp
+	docker push $(ACR_DOMAIN)/tcp
+	docker push $(ACR_DOMAIN)/mars
