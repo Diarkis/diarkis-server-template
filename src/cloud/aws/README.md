@@ -47,7 +47,7 @@ aws eks --region ap-northeast-1 update-kubeconfig --name diarkis # get credetial
 
 EKSのNodeに対してfirewallで、0.0.0.0/0からtcp,udpの7000-8000を開放します。
 
-eks-cluster-sg-diarkis-* のようなセキュリティグループが作成されているので、それに対して設定を行ってください。
+eks-cluster-sg-diarkis-\* のようなセキュリティグループが作成されているので、それに対して設定を行ってください。
 
 ## 6. tagging the server image and push
 
