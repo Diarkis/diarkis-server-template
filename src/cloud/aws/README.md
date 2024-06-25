@@ -45,31 +45,27 @@ aws eks --region ap-northeast-1 update-kubeconfig --name diarkis # get credetial
 
 ## 5. Open EKS firewall
 
-EKSのNodeに対してfirewallで、0.0.0.0/0からtcp,udpの7000-8000を開放する
+EKSのNodeに対してfirewallで、0.0.0.0/0からtcp,udpの7000-8000を開放します。
+
+eks-cluster-sg-diarkis-* のようなセキュリティグループが作成されているので、それに対して設定を行ってください。
 
 ## 6. tagging the server image and push
 
-server-templateから生成した project の root から下記を実行
+server-templateから生成した project の root から下記を実行します。
 ※ 詳細は[こちら](https://help.diarkis.io/ja/running-diarkis-server-on-local)をご覧ください。
 
 ```
 make build-local
 ```
 
-./remote_bin にサーバーの実行ファイル郡(udp, tcp, http, mars)が生成された後、コンテナイメージをビルド
+./remote_bin にサーバーの実行ファイル郡(udp, tcp, http, mars)が生成された後、コンテナイメージをビルドします。
 
 ```
 make setup-aws
 make build-container-aws
 ```
 
-dockerに認証を通す
-
-```
-aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_NUM}.dkr.ecr.ap-northeast-1.amazonaws.com
-```
-
-imageをpush
+imageをpushします。
 
 ```
 make push-container-aws
@@ -94,23 +90,23 @@ udp-fdc6bbccc-dwc5w     1/1     Running   0          3d14h
 
 ## 8. check diarkis cluster
 
-まずpublic endpointを取得する
+まずpublic endpointを取得します。
 
 ```
 EXTERNAL_IP=$(kubectl get svc http -o json -n dev0 | jq -r '.status.loadBalancer.ingress[].hostname')
 kubectl get svc -n dev0 -o wide # このコマンドで表示されるEXTERNAL IPと同一なのでどちらで見ていただいても構いません。
 ```
 
-取得できたEXTERNAL-IPに対してAPIを叩く
+取得できたEXTERNAL-IPに対して HTTP GET リクエストを送信します。
 
 ```
 curl ${EXTERNAL_IP}/auth/1
 ```
 
-下記の様なレスポンスが返ってくればOK
+下記の様なレスポンスが返ってくればOKです。
 
 ```
-{"TCP":"ec2-xx-xx-xx-xx.ap-northeast-1.compute.amazonaws.com:7201","UDP":"ec2-yy-yy-yy-yy.ap-northeast-1.compute.amazonaws.com:7101","sid":"xxxxxxxxxx","encryptionKey":"xxxxxxxxxx","encryptionIV":"xxxxxxxxxx","encryptionMacKey":"xxxxxxxxxx"}%
+{"TCP":"ec2-xx-xx-xx-xx.ap-northeast-1.compute.amazonaws.com:7201","UDP":"ec2-yy-yy-yy-yy.ap-northeast-1.compute.amazonaws.com:7101","sid":"xxxxxxxxxx","encryptionKey":"xxxxxxxxxx","encryptionIV":"xxxxxxxxxx","encryptionMacKey":"xxxxxxxxxx"}
 ```
 
 抜けている項目等があれば、何かのコンポーネントに異常をきたしている可能性があるため、お問合せください。
