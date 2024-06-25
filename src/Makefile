@@ -88,7 +88,7 @@ build-container-aws: build-linux ## Build container for AWS
 	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t $(AWS_ACCOUNT_NUM).dkr.ecr.ap-northeast-1.amazonaws.com/mars
 
 .PHONY: push-container-aws
-push-container-aws: ## Push container to AWS
+push-container-aws: auth-docker-aws ## Push container to AWS
 	docker push $(AWS_ACCOUNT_NUM).dkr.ecr.ap-northeast-1.amazonaws.com/http
 	docker push $(AWS_ACCOUNT_NUM).dkr.ecr.ap-northeast-1.amazonaws.com/udp
 	docker push $(AWS_ACCOUNT_NUM).dkr.ecr.ap-northeast-1.amazonaws.com/tcp
