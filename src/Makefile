@@ -64,6 +64,10 @@ gen: ## Generate go, cpp, and cs code files using puffer (Diarkis packet gen mod
 clean: ## Deletes all puffer generated code files
 	make -C puffer clean
 
+.PHONY: go-cli
+go-cli: ## Starts Go test client: host=<HTTP address> uid=<client user ID> clientKey=<client key> puffer=<true/false>
+	./remote_bin/testcli --host=$(host) --uid=$(uid) --clientKey=$(clientKey) --puffer=$(puffer)
+
 .PHONY: run-docker
 run-docker: build-linux ## Run Diarkis locally with docker compose
 	docker compose up -d
