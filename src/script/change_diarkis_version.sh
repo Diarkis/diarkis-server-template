@@ -14,7 +14,7 @@ SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd)
 VERSION=$1
 if [ $# -ne 1 ]; then
     # prompt the user to enter the version of Diarkis to use
-    echo -n "Enter the version of Diarkis to use:"
+    echo -n "Enter the version of Diarkis to use: "
     read -r version
     VERSION=${version}
 fi
