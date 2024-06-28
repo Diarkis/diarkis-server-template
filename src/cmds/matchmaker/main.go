@@ -82,13 +82,11 @@ func Setup() {
 	})
 	matching.SetOnTicketMatch(sampleTicketType1,
 		func(t *matching.Ticket, owner, userData *user.User, roomID string, memberIDs []string) bool {
-			logger.Debugf("sampleTicketType1 is matched!", "owner", owner, "userData.ID", userData.ID, "memberIDs", memberIDs)
 			// add custom logic to decide matchmaking completion here
 			return false
 		})
 
 	matching.SetOnTicketComplete(sampleTicketType1, func(ticketProps *matching.TicketProperties, owner *user.User) []byte {
-		logger.Debug("SetOnTickerComplete")
 		memberIDs, _ := matching.GetTicketMemberIDs(sampleTicketType1, owner)
 
 		list := make([]string, len(memberIDs)+1)
