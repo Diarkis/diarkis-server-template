@@ -6,6 +6,7 @@ import (
 	"github.com/Diarkis/diarkis/packet"
 	"github.com/Diarkis/diarkis/user"
 	"github.com/Diarkis/diarkis/util"
+	"fmt"
 )
 
 const sampleTicketType0 uint8 = 0 // max member 2
@@ -30,6 +31,7 @@ func Setup() {
 			// Change here as you see fit according to your application needs
 			AddProperties:    map[string]int{"rank": 1},
 			SearchProperties: map[string][]int{"rank": {1, 2, 3, 4, 5}},
+			IsLeaveNotification: true,
 		}
 	})
 
@@ -38,7 +40,7 @@ func Setup() {
 	// By returning true, the callback allows the found match to be matched.
 	// By returning false, the callback rejects the found match and ignores it.
 	matching.SetOnTicketMatch(sampleTicketType0,
-		func(t *matching.Ticket, owner, userData *user.User, roomID string, memberIDs []string) bool {
+		func(t *matching.Ticket, matchedUser, ownerUser *user.User, roomID string, memberIDs []string) bool {
 
 			// add custom logic to decide matchmaking completion here
 			return false
@@ -71,17 +73,18 @@ func Setup() {
 			SearchInterval: 100, // 100ms
 			SearchTries:    uint8(util.RandomInt(0, 300)),
 			EmptySearches:  3,
-			TicketDuration: 60, // 1m
+			TicketDuration: 180, // 1m
 			HowMany:        20,
 			// Change here as you see fit according to your application needs
 			Tag: "",
 			// Change here as you see fit according to your application needs
 			AddProperties:    map[string]int{"rank": 1},
 			SearchProperties: map[string][]int{"rank": {1, 2, 3, 4, 5}},
+			IsLeaveNotification: true,
 		}
 	})
 	matching.SetOnTicketMatch(sampleTicketType1,
-		func(t *matching.Ticket, owner, userData *user.User, roomID string, memberIDs []string) bool {
+		func(t *matching.Ticket, matchedUser, ownerUser *user.User, roomID string, memberIDs []string) bool {
 			// add custom logic to decide matchmaking completion here
 			return false
 		})
