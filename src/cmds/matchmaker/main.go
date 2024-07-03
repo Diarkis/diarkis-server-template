@@ -6,7 +6,6 @@ import (
 	"github.com/Diarkis/diarkis/packet"
 	"github.com/Diarkis/diarkis/user"
 	"github.com/Diarkis/diarkis/util"
-	"fmt"
 )
 
 const sampleTicketType0 uint8 = 0 // max member 2
@@ -29,8 +28,8 @@ func Setup() {
 			// Change here as you see fit according to your application needs
 			Tag: "",
 			// Change here as you see fit according to your application needs
-			AddProperties:    map[string]int{"rank": 1},
-			SearchProperties: map[string][]int{"rank": {1, 2, 3, 4, 5}},
+			AddProperties:       map[string]int{"rank": 1},
+			SearchProperties:    map[string][]int{"rank": {1, 2, 3, 4, 5}},
 			IsLeaveNotification: true,
 		}
 	})
@@ -78,8 +77,8 @@ func Setup() {
 			// Change here as you see fit according to your application needs
 			Tag: "",
 			// Change here as you see fit according to your application needs
-			AddProperties:    map[string]int{"rank": 1},
-			SearchProperties: map[string][]int{"rank": {1, 2, 3, 4, 5}},
+			AddProperties:       map[string]int{"rank": 1},
+			SearchProperties:    map[string][]int{"rank": {1, 2, 3, 4, 5}},
 			IsLeaveNotification: true,
 		}
 	})
