@@ -3,6 +3,7 @@ package meshCmds
 import (
 	"errors"
 
+	"github.com/Diarkis/diarkis/diarkisexec"
 	"github.com/Diarkis/diarkis/mesh"
 	"github.com/Diarkis/diarkis/room"
 	"github.com/Diarkis/diarkis/user"
@@ -16,7 +17,7 @@ const GetOnlineStatusListCmd uint16 = 2100
 const createRemoteRoomCmd uint16 = 2000
 
 func Setup() {
-	mesh.HandleCommand(createRemoteRoomCmd, handleCreateRemoteRoom)
+	diarkisexec.SetMeshCommandHandler(createRemoteRoomCmd, handleCreateRemoteRoom)
 }
 
 func CreateRemoteRoom(serverType string, maxMembers int, ttl, interval int64, cb func(error, string)) {
