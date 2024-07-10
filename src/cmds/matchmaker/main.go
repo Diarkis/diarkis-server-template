@@ -66,6 +66,7 @@ func Setup() {
 		return packet.StringListToBytes(list)
 	})
 
+	// If OnTicketMemberLeave is not set, notification is NOT sent when matched member leaves.
 	matching.SetOnTicketMemberLeaveAnnounce(sampleTicketType0, func(ticket *matching.Ticket, leftUser, ownerUser *user.User, memberIDs []string) (ver uint8, cmd uint16, message []byte) {
 		logger.Sys("Matched Member Leave Announce")
 		return customVer, customCmdMatchedMemberLeave, []byte(leftUser.ID)
@@ -110,6 +111,7 @@ func Setup() {
 
 		return packet.StringListToBytes(list)
 	})
+	// If OnTicketMemberLeave is not set, notification is NOT sent when matched member leaves.
 	matching.SetOnTicketMemberLeaveAnnounce(sampleTicketType1, func(ticket *matching.Ticket, leftUser, ownerUser *user.User, memberIDs []string) (ver uint8, cmd uint16, message []byte) {
 		logger.Sys("Ticket:1 Matched Member Leave Announce")
 		return customVer, customCmdMatchedMemberLeave, []byte(leftUser.ID)
