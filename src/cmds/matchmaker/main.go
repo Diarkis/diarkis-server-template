@@ -1,6 +1,7 @@
 package matchmakercmds
 
 import (
+	customcmds "github.com/Diarkis/diarkis-server-template/cmds/custom"
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/matching"
 	"github.com/Diarkis/diarkis/packet"
@@ -10,8 +11,6 @@ import (
 
 const sampleTicketType0 uint8 = 0 // max member 2
 const sampleTicketType1 uint8 = 1 // max member 4
-const customVer uint8 = 3
-const customCmdMatchedMemberLeave uint16 = 1011
 
 var logger = log.New("matching")
 
@@ -69,7 +68,7 @@ func Setup() {
 	// If OnTicketMemberLeave is not set, notification is NOT sent when matched member leaves.
 	matching.SetOnTicketMemberLeaveAnnounce(sampleTicketType0, func(ticket *matching.Ticket, leftUser, ownerUser *user.User, memberIDs []string) (ver uint8, cmd uint16, message []byte) {
 		logger.Sys("Matched Member Leave Announce")
-		return customVer, customCmdMatchedMemberLeave, []byte(leftUser.ID)
+		return customcmds.CustomVer, customcmds.MatchedMemberLeaveCmdID, []byte(leftUser.ID)
 	})
 
 	matching.SetOnIssueTicket(sampleTicketType1, func(userData *user.User) *matching.TicketParams {
@@ -114,6 +113,6 @@ func Setup() {
 	// If OnTicketMemberLeave is not set, notification is NOT sent when matched member leaves.
 	matching.SetOnTicketMemberLeaveAnnounce(sampleTicketType1, func(ticket *matching.Ticket, leftUser, ownerUser *user.User, memberIDs []string) (ver uint8, cmd uint16, message []byte) {
 		logger.Sys("Ticket:1 Matched Member Leave Announce")
-		return customVer, customCmdMatchedMemberLeave, []byte(leftUser.ID)
+		return customcmds.CustomVer, customcmds.MatchedMemberLeaveCmdID, []byte(leftUser.ID)
 	})
 }
