@@ -1,6 +1,7 @@
 package matchmakercmds
 
 import (
+	customcmds "github.com/Diarkis/diarkis-server-template/cmds/custom"
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/matching"
 	"github.com/Diarkis/diarkis/packet"
@@ -28,9 +29,8 @@ func Setup() {
 			// Change here as you see fit according to your application needs
 			Tag: "",
 			// Change here as you see fit according to your application needs
-			AddProperties:       map[string]int{"rank": 1},
-			SearchProperties:    map[string][]int{"rank": {1, 2, 3, 4, 5}},
-			IsLeaveNotification: true,
+			AddProperties:    map[string]int{"rank": 1},
+			SearchProperties: map[string][]int{"rank": {1, 2, 3, 4, 5}},
 		}
 	})
 
@@ -65,6 +65,12 @@ func Setup() {
 		return packet.StringListToBytes(list)
 	})
 
+	// If OnTicketMemberLeave is not set, notification is NOT sent when matched member leaves.
+	matching.SetOnTicketMemberLeaveAnnounce(sampleTicketType0, func(ticket *matching.Ticket, leftUser, ownerUser *user.User, memberIDs []string) (ver uint8, cmd uint16, message []byte) {
+		logger.Sys("Matched Member Leave Announce")
+		return customcmds.CustomVer, customcmds.MatchedMemberLeaveCmdID, []byte(leftUser.ID)
+	})
+
 	matching.SetOnIssueTicket(sampleTicketType1, func(userData *user.User) *matching.TicketParams {
 		return &matching.TicketParams{
 			ProfileIDs:     []string{"RankMatch"},
@@ -77,9 +83,8 @@ func Setup() {
 			// Change here as you see fit according to your application needs
 			Tag: "",
 			// Change here as you see fit according to your application needs
-			AddProperties:       map[string]int{"rank": 1},
-			SearchProperties:    map[string][]int{"rank": {1, 2, 3, 4, 5}},
-			IsLeaveNotification: true,
+			AddProperties:    map[string]int{"rank": 1},
+			SearchProperties: map[string][]int{"rank": {1, 2, 3, 4, 5}},
 		}
 	})
 	matching.SetOnTicketMatch(sampleTicketType1,
@@ -104,5 +109,10 @@ func Setup() {
 		}
 
 		return packet.StringListToBytes(list)
+	})
+	// If OnTicketMemberLeave is not set, notification is NOT sent when matched member leaves.
+	matching.SetOnTicketMemberLeaveAnnounce(sampleTicketType1, func(ticket *matching.Ticket, leftUser, ownerUser *user.User, memberIDs []string) (ver uint8, cmd uint16, message []byte) {
+		logger.Sys("Ticket:1 Matched Member Leave Announce")
+		return customcmds.CustomVer, customcmds.MatchedMemberLeaveCmdID, []byte(leftUser.ID)
 	})
 }
