@@ -29,7 +29,7 @@ func Setup() {
 			TicketDuration: 60, // 1m
 			HowMany:        20,
 			// Change here as you see fit according to your application needs
-			Tag: "",
+			Tags: []string{""},
 			// Change here as you see fit according to your application needs
 			AddProperties:    map[string]int{"rank": 1},
 			SearchProperties: map[string][]int{"rank": {1, 2, 3, 4, 5}},
@@ -83,7 +83,7 @@ func Setup() {
 			TicketDuration: 180, // 1m
 			HowMany:        20,
 			// Change here as you see fit according to your application needs
-			Tag: "",
+			Tags: []string{""},
 			// Change here as you see fit according to your application needs
 			AddProperties:    map[string]int{"rank": 1},
 			SearchProperties: map[string][]int{"rank": {1, 2, 3, 4, 5}},
