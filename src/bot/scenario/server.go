@@ -1,4 +1,5 @@
 // © 2019-2024 Diarkis Inc. All rights reserved.
+
 // Used to wait for the scenario run online like to use in k8s.
 package main
 

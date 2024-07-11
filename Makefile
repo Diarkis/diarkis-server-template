@@ -5,7 +5,7 @@ help:
 ## Set default command of make to help, so that running make will output help texts
 .DEFAULT_GOAL := help
 
-COPYRIGHT := // © 2019-2024 Diarkis Inc. All rights reserved.
+COPYRIGHT := Diarkis Inc. All rights reserved.
 
 .PHONY: init
 init: ## make init project_id={project ID} builder_token={build token} output={absolute path to install}
@@ -16,9 +16,10 @@ fmt: add-license
 	gofmt -w src/
 	npx prettier --write "**/*.{yml,yaml,json,md}"
 
-.PHONY: add-license
+.PHONY: add-license ## add license header to all go files
 add-license: $(shell find . -type f -name '*.go')
 	for f in $^; do \
-		head -n 1 "$$f" | grep -q '^$(COPYRIGHT)' && continue; \
-		echo $(COPYRIGHT) | cat - "$$f" > temp && mv temp "$$f"; \
+		head -n 1 "$$f" | grep -q '$(COPYRIGHT)' && tail -n +2 "$$f" > temp && mv temp "$$f"; \
+		head -n 1 "$$f" | grep -q '^$$' && tail -n +2 "$$f" > temp && mv temp "$$f"; \
+		echo "// © 2019-$(shell date +%Y) $(COPYRIGHT)\n" | cat - "$$f" > temp && mv temp "$$f"; \
 	done
