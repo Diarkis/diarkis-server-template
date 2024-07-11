@@ -14,7 +14,7 @@ import (
 // GetOnlineStatusListCmd is the mesh command ID
 const GetOnlineStatusListCmd uint16 = 2100
 
-const createRemoteRoomCmd uint16 = 2000
+const createRemoteRoomCmd uint16 = 10001
 
 func Setup() {
 	diarkisexec.SetMeshCommandHandler(createRemoteRoomCmd, handleCreateRemoteRoom)
