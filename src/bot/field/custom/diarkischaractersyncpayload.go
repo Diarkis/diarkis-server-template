@@ -7,10 +7,11 @@
 // - Maximum length of any array is 65535 elements
 package custom
 
+import "encoding/binary"
 import "errors"
 import "fmt"
 import "strings"
-import "encoding/binary"
+
 // DiarkisCharacterSyncPayloadVer represents the ver of the protocol's command.
 //
 //	[NOTE] The value is optional and if ver is not given in the definition JSON, it will be 0.
@@ -29,11 +30,13 @@ type DiarkisCharacterSyncPayload struct {
 	Cmd uint16
 	Engine uint8
 	Frames []*DiarkisCharacterFrameData
+	FramesInterval uint16
+	TimeStamp int64
 }
 
 // NewDiarkisCharacterSyncPayload creates a new instance of DiarkisCharacterSyncPayload struct.
 func NewDiarkisCharacterSyncPayload() *DiarkisCharacterSyncPayload {
-	return &DiarkisCharacterSyncPayload{ Ver: 0, Cmd: 0, Engine: 0, Frames: make([]*DiarkisCharacterFrameData, 0) }
+	return &DiarkisCharacterSyncPayload{ Ver: 0, Cmd: 0, Engine: 0, Frames: make([]*DiarkisCharacterFrameData, 0), FramesInterval: 0, TimeStamp: 0 }
 }
 
 // Pack encodes DiarkisCharacterSyncPayload struct to a byte array to be delivered over the command.
@@ -41,9 +44,7 @@ func (proto *DiarkisCharacterSyncPayload) Pack() []byte {
 	bytes := make([]byte, 0)
 
 	/* uint8 */
-	engineBytes := make([]byte, 1)
-	engineBytes[0] = proto.Engine
-	bytes = append(bytes, engineBytes...)
+	bytes = append(bytes, proto.Engine)
 
 	/* []DiarkisCharacterFrameData */
 	framesLengthBytes := make([]byte, 2)
@@ -58,13 +59,23 @@ func (proto *DiarkisCharacterSyncPayload) Pack() []byte {
 		bytes = append(bytes, framesPacked...)
 	}
 
+	/* uint16 */
+	framesIntervalBytes := make([]byte, 2)
+	binary.BigEndian.PutUint16(framesIntervalBytes, uint16(proto.FramesInterval))
+	bytes = append(bytes, framesIntervalBytes...)
+
+	/* int64 */
+	timeStampBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(timeStampBytes, uint64(proto.TimeStamp))
+	bytes = append(bytes, timeStampBytes...)
+
 	// done
 	return bytes
 }
 
 // Unpack decodes the command payload byte array to DiarkisCharacterSyncPayload struct.
 func (proto *DiarkisCharacterSyncPayload) Unpack(bytes []byte) error {
-	if len(bytes) < 3 {
+	if len(bytes) < 13 {
 		return errors.New("DiarkisCharacterSyncPayloadUnpackError")
 	}
 
@@ -91,6 +102,14 @@ func (proto *DiarkisCharacterSyncPayload) Unpack(bytes []byte) error {
 		offset += framesSize
 	}
 
+	/* uint16 */
+	proto.FramesInterval = binary.BigEndian.Uint16(bytes[offset:offset + 2])
+	offset += 2
+
+	/* int64 */
+	proto.TimeStamp = int64(binary.BigEndian.Uint64(bytes[offset:offset + 8]))
+	offset += 8
+
 
 	return nil
 }
@@ -99,6 +118,8 @@ func (proto *DiarkisCharacterSyncPayload) String() string {
 	list := make([]string, 0)
 	list = append(list, fmt.Sprint("Engine = ", proto.Engine))
 	for i, item := range proto.Frames { list = append(list, fmt.Sprint("Frames[", i, "] = ", "[", item.String(), "]")) }
+	list = append(list, fmt.Sprint("FramesInterval = ", proto.FramesInterval))
+	list = append(list, fmt.Sprint("TimeStamp = ", proto.TimeStamp))
 	return strings.Join(list, " | ")
 }
 

@@ -297,11 +297,11 @@ func createNewMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData,
 	newRot := direction
 	for i := 0; i < nbMoveData; i++ {
 		frameData := custom.NewDiarkisCharacterFrameData()
-		frameData.RotationAngles = newRot
+		frameData.RotationAngles = uint16(newRot)
 		frameData.Position.X = float32(currentX)
 		frameData.Position.Z = -float32(currentY)
 		frameData.Position.Y = 0
-		frameData.TimeStamp = time.Now().Unix()
+
 		frameData.AnimationBlend = 5.
 		frameData.AnimationID = 1
 		currentX += frameDistanceX
@@ -314,6 +314,8 @@ func createNewMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData,
 	}
 
 	newPayload.Engine = 0
+	newPayload.TimeStamp = time.Now().Unix()
+	newPayload.FramesInterval = uint16((1. / 60.) * float32(nbMoveData) * 1000)
 	payloadBytes := newPayload.Pack()
 	payloadSizeBytes := make([]byte, 2)
 	binary.BigEndian.PutUint16(payloadSizeBytes, uint16(len(payloadBytes)))

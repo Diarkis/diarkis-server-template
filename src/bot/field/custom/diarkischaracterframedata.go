@@ -10,9 +10,7 @@ package custom
 import "encoding/binary"
 import "errors"
 import "fmt"
-import "math"
 import "strings"
-import "github.com/Diarkis/diarkis/util"
 
 // DiarkisCharacterFrameDataVer represents the ver of the protocol's command.
 //
@@ -30,35 +28,26 @@ type DiarkisCharacterFrameData struct {
 	Ver uint8
 	// Command ID of the protocol
 	Cmd uint16
-	AnimationBlend float32
+	AnimationBlend uint8
 	AnimationID uint8
 	Position *DiarkisVector3
-	RotationAngles float32
-	TimeStamp int64
+	RotationAngles uint16
 }
 
 // NewDiarkisCharacterFrameData creates a new instance of DiarkisCharacterFrameData struct.
 func NewDiarkisCharacterFrameData() *DiarkisCharacterFrameData {
-	return &DiarkisCharacterFrameData{ Ver: 0, Cmd: 0, AnimationBlend: 0, AnimationID: 0, Position: NewDiarkisVector3(), RotationAngles: 0, TimeStamp: 0 }
+	return &DiarkisCharacterFrameData{ Ver: 0, Cmd: 0, AnimationBlend: 0, AnimationID: 0, Position: NewDiarkisVector3(), RotationAngles: 0 }
 }
 
 // Pack encodes DiarkisCharacterFrameData struct to a byte array to be delivered over the command.
 func (proto *DiarkisCharacterFrameData) Pack() []byte {
 	bytes := make([]byte, 0)
 
-	/* float32 */
-	animationBlendBytes := make([]byte, 4)
-	animationBlendBits := math.Float32bits(proto.AnimationBlend)
-	animationBlendBytes[0] = byte(animationBlendBits >> 24)
-	animationBlendBytes[1] = byte(animationBlendBits >> 16)
-	animationBlendBytes[2] = byte(animationBlendBits >> 8)
-	animationBlendBytes[3] = byte(animationBlendBits)
-	bytes = append(bytes, animationBlendBytes...)
+	/* uint8 */
+	bytes = append(bytes, proto.AnimationBlend)
 
 	/* uint8 */
-	animationIDBytes := make([]byte, 1)
-	animationIDBytes[0] = proto.AnimationID
-	bytes = append(bytes, animationIDBytes...)
+	bytes = append(bytes, proto.AnimationID)
 
 	/* DiarkisVector3 */
 	positionSizeBytes := make([]byte, 2)
@@ -67,19 +56,10 @@ func (proto *DiarkisCharacterFrameData) Pack() []byte {
 	bytes = append(bytes, positionSizeBytes...)
 	bytes = append(bytes, positionPacked...)
 
-	/* float32 */
-	rotationAnglesBytes := make([]byte, 4)
-	rotationAnglesBits := math.Float32bits(proto.RotationAngles)
-	rotationAnglesBytes[0] = byte(rotationAnglesBits >> 24)
-	rotationAnglesBytes[1] = byte(rotationAnglesBits >> 16)
-	rotationAnglesBytes[2] = byte(rotationAnglesBits >> 8)
-	rotationAnglesBytes[3] = byte(rotationAnglesBits)
+	/* uint16 */
+	rotationAnglesBytes := make([]byte, 2)
+	binary.BigEndian.PutUint16(rotationAnglesBytes, uint16(proto.RotationAngles))
 	bytes = append(bytes, rotationAnglesBytes...)
-
-	/* int64 */
-	timeStampBytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(timeStampBytes, uint64(proto.TimeStamp))
-	bytes = append(bytes, timeStampBytes...)
 
 	// done
 	return bytes
@@ -87,17 +67,15 @@ func (proto *DiarkisCharacterFrameData) Pack() []byte {
 
 // Unpack decodes the command payload byte array to DiarkisCharacterFrameData struct.
 func (proto *DiarkisCharacterFrameData) Unpack(bytes []byte) error {
-	if len(bytes) < 19 {
+	if len(bytes) < 6 {
 		return errors.New("DiarkisCharacterFrameDataUnpackError")
 	}
 
 	offset := 0
 
-	/* float32 */
-	animationBlendBytes := util.ReverseBytes(bytes[offset:offset + 4])
-	animationBlendBits := binary.BigEndian.Uint32(animationBlendBytes)
-	offset += 4
-	proto.AnimationBlend = math.Float32frombits(animationBlendBits)
+	/* uint8 */
+	proto.AnimationBlend = uint8(bytes[offset])
+	offset++
 
 	/* uint8 */
 	proto.AnimationID = uint8(bytes[offset])
@@ -114,15 +92,9 @@ func (proto *DiarkisCharacterFrameData) Unpack(bytes []byte) error {
 	proto.Position.Unpack(positionBytes)
 	offset += positionSize
 
-	/* float32 */
-	rotationAnglesBytes := util.ReverseBytes(bytes[offset:offset + 4])
-	rotationAnglesBits := binary.BigEndian.Uint32(rotationAnglesBytes)
-	offset += 4
-	proto.RotationAngles = math.Float32frombits(rotationAnglesBits)
-
-	/* int64 */
-	proto.TimeStamp = int64(binary.BigEndian.Uint64(bytes[offset:offset + 8]))
-	offset += 8
+	/* uint16 */
+	proto.RotationAngles = binary.BigEndian.Uint16(bytes[offset:offset + 2])
+	offset += 2
 
 
 	return nil
@@ -134,7 +106,6 @@ func (proto *DiarkisCharacterFrameData) String() string {
 	list = append(list, fmt.Sprint("AnimationID = ", proto.AnimationID))
 	list = append(list, fmt.Sprint("Position = ", proto.Position.String()))
 	list = append(list, fmt.Sprint("RotationAngles = ", proto.RotationAngles))
-	list = append(list, fmt.Sprint("TimeStamp = ", proto.TimeStamp))
 	return strings.Join(list, " | ")
 }
 
