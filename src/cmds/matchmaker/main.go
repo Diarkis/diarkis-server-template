@@ -75,12 +75,12 @@ func Setup() {
 
 	matching.SetOnIssueTicket(sampleTicketType1, func(userData *user.User) *matching.TicketParams {
 		return &matching.TicketParams{
-			ProfileIDs:     []string{"RankMatch"},
+			ProfileIDs:     []string{"RankMatch20"},
 			MaxMembers:     4,
 			SearchInterval: 100, // 100ms
 			SearchTries:    uint8(util.RandomInt(0, 300)),
 			EmptySearches:  3,
-			TicketDuration: 180, // 1m
+			TicketDuration: 60, // 1m
 			HowMany:        20,
 			// Change here as you see fit according to your application needs
 			Tags: []string{""},
