@@ -1,0 +1,8 @@
+{
+  "ConnectUDP": {
+    "serverType": "UDP",
+    "userID": {
+      "isRandom": true
+    }
+  }
+}
