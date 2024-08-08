@@ -56,5 +56,5 @@ go build
 ```
 # example
 cd field
-./field %(http host) $(how many bots) $(protocol: UDP or TCP) $(update interval in milliseconds) $(map size) $(movement range)
+./field %(http host) $(how many bots) $(protocol: UDP or TCP) $(payload format [1 = old, 2 = new]) $(update interval in milliseconds) $(map size) $(movement range)
 ```

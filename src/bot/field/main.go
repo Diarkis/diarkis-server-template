@@ -296,30 +296,28 @@ func createNewMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData,
 
 	currentX := prevXUnity
 	currentY := prevYUnity
-	newRot := eulerToQuaternion(float64(int(direction+90) % 360))
-
+	newRot := direction
 	for i := 0; i < nbMoveData; i++ {
 		frameData := custom.NewDiarkisCharacterFrameData()
-		frameData.Rotation.Y = newRot.Y
-		frameData.Rotation.W = newRot.W
+		frameData.RotationAngles = uint16(newRot)
 		frameData.Position.X = float32(currentX)
 		frameData.Position.Z = -float32(currentY)
 		frameData.Position.Y = 0
-		frameData.PreviousFrameInterval = 0.02
-		newPayload.Frames = append(newPayload.Frames, frameData)
+
+		frameData.AnimationBlend = 5.
+		frameData.AnimationID = 1
 		currentX += frameDistanceX
 		currentY += frameDistanceY
-		frameData.AnimationBlend = 10.
-		frameData.IsMoving = true
 		if isLast {
-			frameData.IsMoving = false
+			frameData.AnimationID = 0
 			frameData.AnimationBlend = 0
 		}
+		newPayload.Frames = append(newPayload.Frames, frameData)
 	}
 
-	uuid, _ := uuid.New()
-
-	newPayload.PacketGUID = uuid.String
+	newPayload.Engine = 0
+	newPayload.TimeStamp = time.Now().Unix()
+	newPayload.FramesInterval = uint16((1. / 60.) * float32(nbMoveData) * 1000)
 	payloadBytes := newPayload.Pack()
 	payloadSizeBytes := make([]byte, 2)
 	binary.BigEndian.PutUint16(payloadSizeBytes, uint16(len(payloadBytes)))
