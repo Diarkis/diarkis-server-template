@@ -1,6 +1,9 @@
+// © 2019-2024 Diarkis Inc. All rights reserved.
+
 package onlinestatus
 
 import (
+	"github.com/Diarkis/diarkis"
 	"github.com/Diarkis/diarkis/dive"
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/mesh"
@@ -67,6 +70,12 @@ func Setup() {
 	// we will let the status be deleted by TTL expiration
 	user.OnNew(setUserAsOnline)
 
+	// set up user status updater on every keep alive
+	diarkis.OnReady(func(next func(error)) {
+		server.OnKeepAlive(updateUserStatus)
+		next(nil)
+	})
+
 	mesh.HandleRPC(meshCmds.GetOnlineStatusListCmd, handleGetUserStatusList)
 }
 
@@ -87,8 +96,6 @@ func setUserAsOnline(userData *user.User) {
 		return
 	}
 	logger.Debug("Set user as online: UID:%s", userData.ID)
-	// set up user status updater on every keep alive
-	server.OnKeepAlive(updateUserStatus)
 }
 
 func updateUserStatus(userData *user.User, next func(error)) {

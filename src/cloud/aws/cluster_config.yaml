@@ -4,6 +4,7 @@ kind: ClusterConfig
 metadata:
   name: diarkis
   region: ap-northeast-1
+  version: "1.29"
 vpc:
   clusterEndpoints:
     privateAccess: true
@@ -28,7 +29,7 @@ addons:
   - name: amazon-cloudwatch-observability
     version: latest
 
-mangedNodeGroups:
+managedNodeGroups:
   - name: diarkis-public
     instanceType: m5.large
     volumeSize: 100
