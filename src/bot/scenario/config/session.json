@@ -6,8 +6,8 @@
       "isSequential": true
     },
     "interval": 100,
-    "howMany": 100,
-    "duration": 50,
+    "howMany": 2000,
+    "duration": 300,
     "idleDuration": 5,
     "sessionType": 1,
     "SessionMaxMember": 4,

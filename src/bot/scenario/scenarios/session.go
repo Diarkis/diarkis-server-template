@@ -5,7 +5,6 @@ package scenarios
 import (
 	"encoding/binary"
 	"encoding/json"
-	"sync/atomic"
 
 	bot_client "github.com/Diarkis/diarkis-server-template/bot/scenario/lib/client"
 	"github.com/Diarkis/diarkis-server-template/bot/scenario/lib/report"
@@ -20,18 +19,20 @@ type SessionScenarioParams struct {
 	UID              string `json:"userID"`
 	SessionType      uint8  `json:"sessionType"`
 	SessionMaxMember uint8  `json:"sessionMaxMember"`
-	SessionTTL       uint8  `json:"sessionTTL"`
+	// TTL in seconds. This is applied both for session TTL and session scenario.
+	SessionTTL uint8 `json:"sessionTTL"`
 }
 
 type SessionScenario struct {
-	gp               *GlobalParams
-	params           *SessionScenarioParams
-	metrics          *report.CustomMetrics
-	client           *bot_client.UDPClient
-	IsSessionMember  bool
-	IsSessionOwner   bool
-	IsInSession      bool
-	sessionMemberCnt atomic.Uint32
+	gp             *GlobalParams
+	params         *SessionScenarioParams
+	metrics        *report.CustomMetrics
+	client         *bot_client.UDPClient
+	IsSessionOwner bool
+	SessionID      *string
+	CurrentNum     uint8
+	// If TTL is over, the session scenario will be reset.
+	TTL int64
 }
 
 var _ Scenario = &SessionScenario{}
@@ -43,6 +44,10 @@ func NewSessionScenario() Scenario {
 // // // // // Interface Functions // // // // //
 func (s *SessionScenario) GetUserID() string {
 	return s.params.UID
+}
+
+func (s *SessionScenario) IsInSession() bool {
+	return s.SessionID != nil
 }
 
 func (s *SessionScenario) ParseParam(index int, params []byte) error {
@@ -83,18 +88,31 @@ func (s *SessionScenario) Run(gp *GlobalParams) error {
 
 func (s *SessionScenario) OnIdle() {
 	logger.Infou(s.GetUserID(), "Triggering OnIdle Session...")
-	currentMemberCnt := uint8(s.sessionMemberCnt.Load())
-	if s.IsSessionOwner && currentMemberCnt < s.params.SessionMaxMember {
-		logger.Infou(s.GetUserID(), "Session has not got maxMember. Invite more members. %d/%d", currentMemberCnt, s.params.SessionMaxMember)
-		s.inviteSession()
-		return
-	} else if s.IsSessionOwner && currentMemberCnt == s.params.SessionMaxMember {
-		logger.Infou(s.GetUserID(), "Session has got maxMember. Do nothing. %d/%d", currentMemberCnt, s.params.SessionMaxMember)
-	}
 
-	// broadcast message if in session and member count is more than 1
-	if s.IsInSession && currentMemberCnt > 1 {
-		s.sessionBroadcast()
+	if s.IsInSession() {
+		if s.IsSessionOwner {
+			if s.CurrentNum < s.params.SessionMaxMember {
+				logger.Infou(s.GetUserID(), "Session has not got maxMember. Invite more members. %d/%d", s.CurrentNum, s.params.SessionMaxMember)
+				s.inviteSession()
+				return
+			}
+		}
+
+		// if TTL is over, leave the session
+		if s.TTL < util.NowSeconds() {
+			logger.Infou(s.GetUserID(), "Session TTL is over. Leaving the session.")
+			s.leaveSession()
+			return
+		}
+
+		// broadcast message if in session and member count is more than 1
+		if s.CurrentNum > 1 {
+			s.sessionBroadcast()
+		}
+	} else {
+		// restart session scenario
+		s.resetSessionScenario()
+		s.startSessionScenario()
 	}
 }
 
@@ -108,10 +126,18 @@ func (s *SessionScenario) RegisterSessionHandlers() {
 	s.client.RegisterOnPush(util.CmdBuiltInVer, util.CmdSessionBroadcast, s.handleBroadcast)
 	s.client.RegisterOnResponse(util.CmdBuiltInVer, util.CmdSessionCreate, []uint8{bot_client.ResponseOk}, s.handleOnCreateSession)
 	s.client.RegisterOnResponse(util.CmdBuiltInVer, util.CmdSessionJoin, []uint8{bot_client.ResponseOk}, s.handleOnJoinedSession)
-	s.client.RegisterOnResponse(util.CmdBuiltInVer, util.CmdSessionJoin, []uint8{bot_client.ResponseOk}, s.handleOnLeaveSession)
+	s.client.RegisterOnResponse(util.CmdBuiltInVer, util.CmdSessionLeave, []uint8{bot_client.ResponseOk}, s.handleOnLeaveSession)
+	s.client.RegisterOnResponse(util.CmdBuiltInVer, util.CmdSessionGetSessionInfoBySessionType, []uint8{bot_client.ResponseOk}, s.handleOnGetSessionInfoBySessionType)
+}
+
+func (s *SessionScenario) resetSessionScenario() {
+	s.IsSessionOwner = false
+	s.SessionID = nil
+	s.gp.UserState.Set(s.GetUserID(), StateWaitingAsSessionMember, false)
 }
 
 func (s *SessionScenario) startSessionScenario() {
+	s.TTL = util.NowSeconds() + int64(s.params.SessionTTL)
 	isOwner := util.RandomInt(1, int(s.params.SessionMaxMember)) == 1
 	if isOwner {
 		s.createSession()
@@ -136,38 +162,47 @@ func (s *SessionScenario) handleBroadcast(payload []byte) {
 }
 
 func (s *SessionScenario) handleSessionJoined(payload []byte) {
-	logger.Sysu(s.GetUserID(), "Someone joined to Session")
-	if s.IsSessionOwner {
-		s.sessionMemberCnt.Add(1)
-		if uint8(s.sessionMemberCnt.Load()) == s.params.SessionMaxMember {
-			logger.Debugu(s.GetUserID(), "Session has been ready as it's got all members joined.")
-		}
-	}
+	logger.Debugu(s.GetUserID(), "Someone joined to Session. Session owner?: %v", s.IsSessionOwner)
+
+	s.getSessionInfo()
 }
 
-func (s *SessionScenario) handleOnCreateSession(_ []byte) {
-	s.IsInSession = true
+func (s *SessionScenario) handleOnCreateSession(payload []byte) {
+	sessionID := string(payload[1:])
+	s.SessionID = &sessionID
 	s.IsSessionOwner = true
-	s.sessionMemberCnt.Add(1)
 	logger.Debugu(s.GetUserID(), "Created as a Session Owner.")
 }
 
-func (s *SessionScenario) handleOnJoinedSession(_ []byte) {
-	s.IsInSession = true
-	s.IsSessionMember = true
+func (s *SessionScenario) handleOnJoinedSession(payload []byte) {
+	sessionID := string(payload[1:])
+	s.SessionID = &sessionID
 	logger.Debugu(s.GetUserID(), "Joined as a Session member.")
 }
 
 func (s *SessionScenario) handleOnLeaveSession(_ []byte) {
-	s.IsInSession = false
-	s.IsSessionOwner = false
-	s.IsSessionMember = false
-	s.gp.UserState.Set(s.GetUserID(), StateWaitingAsSessionMember, true)
+	s.resetSessionScenario()
 	logger.Debugu(s.GetUserID(), "Left the session.")
 }
 
+func (s *SessionScenario) handleOnGetSessionInfoBySessionType(payload []byte) {
+	sessionType := payload[0]
+	sessionIDLen := binary.BigEndian.Uint16(payload[1:3])
+	sessionID := string(payload[3 : 3+sessionIDLen])
+	currentMembers := binary.BigEndian.Uint16(payload[3+sessionIDLen : 3+sessionIDLen+2])
+	maxMembers := binary.BigEndian.Uint16(payload[3+sessionIDLen+2 : 3+sessionIDLen+2+2])
+	memberIDsLen := binary.BigEndian.Uint16(payload[3+sessionIDLen+2+2 : 3+sessionIDLen+2+2+2])
+	memberIDs := dpacket.BytesToStringList(payload[3+sessionIDLen+2+2+2 : 3+sessionIDLen+2+2+2+memberIDsLen])
+	ownerID := string(payload[3+sessionIDLen+2+2+2+memberIDsLen:])
+
+	s.CurrentNum = uint8(currentMembers)
+
+	logger.Debugu(s.GetUserID(), "Get Session Info By Session Type: %d, ID: %s, Members: %d/%d, Members: %v, Owner: %s",
+		sessionType, sessionID, currentMembers, maxMembers, memberIDs, ownerID)
+}
+
 func (s *SessionScenario) createSession() {
-	if s.IsInSession {
+	if s.IsInSession() {
 		return
 	}
 	sessionType := s.params.SessionType
@@ -178,7 +213,7 @@ func (s *SessionScenario) createSession() {
 }
 
 func (s *SessionScenario) joinSession(sessionID string) {
-	if s.IsInSession {
+	if s.IsInSession() {
 		return
 	}
 	sessionType := s.params.SessionType
@@ -188,7 +223,7 @@ func (s *SessionScenario) joinSession(sessionID string) {
 }
 
 func (s *SessionScenario) leaveSession() {
-	if !s.IsInSession {
+	if !s.IsInSession() {
 		return
 	}
 	sessionType := s.params.SessionType
@@ -197,14 +232,16 @@ func (s *SessionScenario) leaveSession() {
 }
 
 func (s *SessionScenario) inviteSession() {
+	if !s.IsSessionOwner {
+		return
+	}
 	sessionType := s.params.SessionType
-	currentMemberCnt := uint8(s.sessionMemberCnt.Load())
 	maxMembers := s.params.SessionMaxMember
 	// invite members
 	memberIDs := []string{}
-	userIDs := s.gp.UserState.Search(StateWaitingAsSessionMember, true, int(maxMembers-currentMemberCnt))
+	userIDs := s.gp.UserState.Search(StateWaitingAsSessionMember, true, int(maxMembers-s.CurrentNum))
 	if len(userIDs) == 0 {
-		logger.Debugu(s.GetUserID(), "There are no members to invite to the session, change myself as a session member and wait for the invitation.")
+		logger.Debugu(s.GetUserID(), "There are no members to invite to the session, therefore leaving the session.")
 		s.leaveSession()
 		return
 	}
@@ -230,6 +267,12 @@ func (s *SessionScenario) inviteSession() {
 func (s *SessionScenario) sessionBroadcast() {
 	sessionType := s.params.SessionType
 	payload := []byte{sessionType}
-	payload = append(payload, []byte("session broadcast message")...)
+	payload = append(payload, []byte(s.GetUserID()+" Hello")...)
 	s.client.RSend(util.CmdBuiltInVer, util.CmdSessionBroadcast, payload)
+}
+
+func (s *SessionScenario) getSessionInfo() {
+	sessionType := s.params.SessionType
+	payload := []byte{sessionType}
+	s.client.RSend(util.CmdBuiltInVer, util.CmdSessionGetSessionInfoBySessionType, payload)
 }
