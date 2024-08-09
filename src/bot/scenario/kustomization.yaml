@@ -17,3 +17,4 @@ configMapGenerator:
       - config/connect.json
       - config/global.json
       - config/ticket.json
+      - config/session.json
