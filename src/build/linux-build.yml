@@ -23,6 +23,9 @@ buildSettings:
     health-check:
       target: healthcheck/main.go
       output: remote_bin/health-check
+    testcli:
+      target: testcli/main.go
+      output: remote_bin/testcli
 diarkis:
   project_id: "{{PROJECT_ID}}"
   builder_token: "{{BUILD_TOKEN}}"
