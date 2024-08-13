@@ -15,6 +15,7 @@ type EndpointResponse struct {
 	ServerHost       string `json:"serverHost"`
 	ServerPort       int    `json:"serverPort"`
 	Sid              string `json:"sid"`
+	UDP              string `json:"UDP"`
 	EncryptionKey    string `json:"encryptionKey"`
 	EncryptionIV     string `json:"encryptionIV"`
 	EncryptionMacKey string `json:"encryptionMacKey"`

@@ -188,7 +188,8 @@ func randomSpawnBot() {
 	time.Sleep(time.Millisecond * time.Duration(int64(util.RandomInt(MIN_WAIT_MS, MIN_WAIT_MS))))
 
 	eResp, err := utils.Endpoint(host, bot.uid, proto)
-	addr := eResp.ServerHost + ":" + fmt.Sprintf("%v", eResp.ServerPort)
+	// addr := eResp.ServerHost + ":" + fmt.Sprintf("%v", eResp.ServerPort)
+	addr := eResp.UDP
 	sid, _ := hex.DecodeString(eResp.Sid)
 	key, _ := hex.DecodeString(eResp.EncryptionKey)
 	iv, _ := hex.DecodeString(eResp.EncryptionIV)
