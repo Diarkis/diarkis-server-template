@@ -26,6 +26,9 @@ buildSettings:
     testcli:
       target: testcli/main.go
       output: remote_bin/testcli
+    field-bot:
+      target: bot/field/main.go
+      output: remote_bin/field-bot
 diarkis:
   project_id: "{{PROJECT_ID}}"
   builder_token: "{{BUILD_TOKEN}}"
