@@ -242,6 +242,7 @@ func (s *SessionScenario) inviteSession() {
 	userIDs := s.gp.UserState.Search(StateWaitingAsSessionMember, true, int(maxMembers-s.CurrentNum))
 	if len(userIDs) == 0 {
 		logger.Debugu(s.GetUserID(), "There are no members to invite to the session, therefore leaving the session.")
+		s.metrics.Increment("NO_MEMBERS", "")
 		s.leaveSession()
 		return
 	}
