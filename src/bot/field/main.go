@@ -414,8 +414,8 @@ func randomSync(bot *botData) {
 			r := float64(movementRange)
 			angle := float64(util.RandomInt(1, 360))
 			theta := (angle / 360.0) * 2.0 * math.Pi
-			newX := int((float64(prevX) + r*float64(math.Cos(theta))) * (0.3 + rand.Float64() * (3.0 - 0.3)))
-			newY := int((float64(prevY) + r*float64(math.Sin(theta))) * (0.3 + rand.Float64() * (3.0 - 0.3)))
+			newX := int(float64(prevX) + r*float64(math.Cos(theta)))
+			newY := int(float64(prevY) + r*float64(math.Sin(theta)))
 			limitXUp := mapSize / 2
 			limitXDown := -mapSize / 2
 			limitYUp := mapSize / 2
