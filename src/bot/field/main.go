@@ -449,7 +449,7 @@ func randomSync(bot *botData) {
 			go bot.field.Sync(int64(nextX), int64(nextY), 0, 300, 0, message, false, bot.uid)
 			currentX = nextX
 			currentY = nextY
-			//time.Sleep(time.Millisecond * time.Duration(100))
+			time.Sleep(time.Millisecond * time.Duration(100))
 		}
 		message := createMovementPayload(bot.angle, bot.x, bot.y, bot.x, bot.y, 6, 60, useNewPayloadFormat, true)
 		go bot.field.Sync(int64(bot.x), int64(bot.y), 0, 300, 0, message, false, bot.uid)
@@ -466,7 +466,7 @@ func randomSync(bot *botData) {
 			go bot.field.Sync(int64(nextX), int64(nextY), 0, 300, 0, message, false, bot.uid)
 			currentX = nextX
 			currentY = nextY
-			//time.Sleep(time.Millisecond * time.Duration(100))
+			time.Sleep(time.Millisecond * time.Duration(100))
 		}
 		message := createMovementPayload(bot.angle, bot.x, bot.y, bot.x, bot.y, 6, 60, useNewPayloadFormat, true)
 		go bot.field.Sync(int64(bot.x), int64(bot.y), 0, 300, 0, message, false, bot.uid)
