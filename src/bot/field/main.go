@@ -402,7 +402,7 @@ func createMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData, fp
 func randomSync(bot *botData) {
 	prevX := bot.x
 	prevY := bot.y
-	nbSyncPerMovement := 1//9
+	nbSyncPerMovement := 9
 	if rand.Intn(100) < moveRatio {
 		nextMoveIsInArea := false
 		tryLimit := 20
