@@ -170,7 +170,7 @@ func start() error {
 					}
 
 					if lastActiveTime.Add(time.Duration(gp.IdleDuration) * time.Second).Before(time.Now()) {
-						logger.Infou(userID, "Triggering OnIdle... ")
+						logger.Verboseu(userID, "Triggering OnIdle... ")
 						// trigger on Idle if the user is idling over IdleDuration
 						scenarioClient.OnIdle()
 						// reset lastActiveTime
