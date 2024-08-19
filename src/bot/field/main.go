@@ -183,8 +183,8 @@ func randomSpawnBot() {
 	bot.state = STATUS_BEFORE_START
 	bot.inSightCnt = 0
 	bot.userMap = smap.New()
-	bot.x = util.RandomInt(-mapSize/2, mapSize/2)
-	bot.y = util.RandomInt(-mapSize/2, mapSize/2)
+	bot.x = 500
+	bot.y = 500
 	time.Sleep(time.Millisecond * time.Duration(int64(util.RandomInt(MIN_WAIT_MS, MIN_WAIT_MS))))
 
 	eResp, err := utils.Endpoint(host, bot.uid, proto)
