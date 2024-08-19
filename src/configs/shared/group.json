@@ -1,1 +1,4 @@
-{}
+{
+  "staticGroups": [{ "groupID": "AA11111222223333344444555556666677777888889999900000", "interval": 200 }],
+  "$comment": "If you do not use static groups, delete the above."
+}

@@ -1,0 +1,16 @@
+{
+  "SessionTestFor4": {
+    "serverType": "UDP",
+    "userID": {
+      "defaultValue": "1000000000000000",
+      "isSequential": true
+    },
+    "interval": 100,
+    "howMany": 2000,
+    "duration": 300,
+    "idleDuration": 5,
+    "sessionType": 1,
+    "SessionMaxMember": 4,
+    "sessionTTL": 60
+  }
+}

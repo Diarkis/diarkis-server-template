@@ -1,3 +1,5 @@
+// © 2019-2024 Diarkis Inc. All rights reserved.
+
 package fieldlib
 
 import (
@@ -71,7 +73,8 @@ func (f *Field) Sync(x, y, z int64, syncLimit uint16, customFilterID uint8, msg 
 }
 
 func CreateHeader(oid string) []byte {
-	header := []byte{0, 0, uint8(len(oid))}
+	header := []byte{0, 0, 0}
+	binary.BigEndian.PutUint16(header[1:3], uint16(len(oid)))
 	oidBytes := []byte(oid)
 	header = append(header[:], oidBytes[:]...)
 	return header

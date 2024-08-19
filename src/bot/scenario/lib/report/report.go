@@ -1,3 +1,5 @@
+// © 2019-2024 Diarkis Inc. All rights reserved.
+
 package report
 
 import (
@@ -181,11 +183,11 @@ func TouchAsActiveUser(userID string) {
 
 	decrement := func() {
 		time.Sleep(time.Second * time.Duration(Interval))
+		activeUsers.Lock()
 		if lastTouched := activeUsers.list[userID]; lastTouched.Equal(now) {
-			activeUsers.Lock()
 			activeUsers.gauge.Add(-1)
-			activeUsers.Unlock()
 		}
+		activeUsers.Unlock()
 	}
 	go decrement()
 }

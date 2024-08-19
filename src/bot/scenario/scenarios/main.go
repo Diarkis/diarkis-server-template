@@ -1,3 +1,5 @@
+// © 2019-2024 Diarkis Inc. All rights reserved.
+
 package scenarios
 
 import (
@@ -81,6 +83,7 @@ var logger = log.New("BOT/SCENARIO")
 var ScenarioFactoryList map[string]func() Scenario = map[string]func() Scenario{
 	"Connect": NewConnectScenario,
 	"Ticket":  NewTicketScenario,
+	"Session": NewSessionScenario,
 }
 
 type ApiParamAttributes struct {

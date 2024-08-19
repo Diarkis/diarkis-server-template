@@ -1,13 +1,13 @@
+// © 2019-2024 Diarkis Inc. All rights reserved.
+
 package roomcmds
 
 import (
-	"encoding/binary"
 	"github.com/Diarkis/diarkis-server-template/lib/meshCmds"
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/room"
 	"github.com/Diarkis/diarkis/roomsupport"
 	"github.com/Diarkis/diarkis/user"
-	"strconv"
 )
 
 const ver uint8 = 3
@@ -32,15 +32,7 @@ func Setup() {
 
 func onDiscardCustomMessage(roomID string, userID string, sid string) []byte {
 	logger.Debug("OnDiscardCustomMessage roomID:%v userID:%v sid:%v", roomID, userID, sid)
-	// UE4 sample client uses uin64 as the data type for userID
-	conv, err := strconv.ParseUint(userID, 10, 64)
-	if err != nil {
-		return []byte(userID)
-	}
-	bytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(bytes, uint64(conv))
-	logger.Debug("OnDiscardCustomMessage message user ID %v bytes %v", conv, bytes)
-	return bytes
+	return []byte(userID)
 }
 
 func onRoomOwnerChange(roomID string, ownerID string) {
