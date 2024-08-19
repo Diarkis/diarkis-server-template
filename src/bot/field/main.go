@@ -183,8 +183,8 @@ func randomSpawnBot() {
 	bot.state = STATUS_BEFORE_START
 	bot.inSightCnt = 0
 	bot.userMap = smap.New()
-	bot.x = util.RandomInt(-mapSize/2, mapSize/2)
-	bot.y = util.RandomInt(-mapSize/2, mapSize/2)
+	bot.x = 500
+	bot.y = 500
 	time.Sleep(time.Millisecond * time.Duration(int64(util.RandomInt(MIN_WAIT_MS, MIN_WAIT_MS))))
 
 	eResp, err := utils.Endpoint(host, bot.uid, proto)
@@ -289,8 +289,8 @@ func createNewMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData,
 	xUnity := float32(x) / 100.
 	yUnity := float32(y) / 100.
 
-	distanceX := xUnity - prevXUnity
-	distanceY := yUnity - prevYUnity
+	distanceX := 0
+	distanceY := 0
 	frameDistanceX := float32(distanceX) / float32(nbMoveData)
 	frameDistanceY := float32(distanceY) / float32(nbMoveData)
 
