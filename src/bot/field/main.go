@@ -46,7 +46,7 @@ var host string
 var bots = 10
 var packetSize = 10
 var interval int64
-var moveRatio = 50
+var moveRatio = 10
 var mapSize = 4500
 var movementRange = 1200
 
@@ -298,8 +298,8 @@ func createNewMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData,
 	for i := 0; i < nbMoveData; i++ {
 		frameData := custom.NewDiarkisCharacterFrameData()
 		frameData.RotationAngles = uint16(newRot)
-		frameData.Position.X = float32(currentX)
-		frameData.Position.Z = -float32(currentY)
+		frameData.Position.X = float32(currentX) * 100
+		frameData.Position.Z = float32(currentY) * 100
 		frameData.Position.Y = 0
 
 		frameData.AnimationBlend = 5.
@@ -317,10 +317,10 @@ func createNewMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData,
 	newPayload.TimeStamp = time.Now().Unix()
 	newPayload.FramesInterval = uint16((1. / 60.) * float32(nbMoveData) * 1000)
 	payloadBytes := newPayload.Pack()
-	payloadSizeBytes := make([]byte, 2)
-	binary.BigEndian.PutUint16(payloadSizeBytes, uint16(len(payloadBytes)))
+	//payloadSizeBytes := make([]byte, 2)
+	//binary.BigEndian.PutUint16(payloadSizeBytes, uint16(len(payloadBytes)))
 
-	return append(payloadSizeBytes, payloadBytes...)
+	return payloadBytes
 }
 
 func eulerToQuaternion(angle float64) *custom.DiarkisQuaternion {
