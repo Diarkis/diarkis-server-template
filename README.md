@@ -6,9 +6,9 @@ Server: ![kubernetes](https://img.shields.io/badge/-kubernetes-black.svg?logo=ku
 
 Client: ![golang](https://img.shields.io/badge/-go-black.svg?logo=go&style=flat) ![c#](https://img.shields.io/badge/-csharp-black.svg?logo=csharp&style=flat) ![c++](https://img.shields.io/badge/-c++-black?logo=c%2B%2B&style=flat)
 
-This repository is the source code to use when starting a project with the network engine **diarkis**.
+This repository is a template for **Diarkis** engine's server-side code for a project.
 
-One thing to note about this project is that diarkis itself is proprietary software and will not pass the build process as is, but must be built using diarkis-cli.
+One thing to note about this project is that **Diarkis** itself is proprietary software and will not pass the build process as is, but must be built using diarkis-cli.
 
 A skeleton source code with function definitions and variable definitions is also provided for use with the IDE's completion functions, etc.
 
@@ -18,7 +18,7 @@ Each protocol servers run independently within the cluster, but you do not have 
 
 Only HTTP server is required in the cluster and the rest of the servers should be chosen according to your application's requirements.
 
-# Use
+# How To Use The Template
 
 The repository itself is under the src directory.
 When you actually start using this repository, it is assumed that you will start your project using the src directory as a template.
