@@ -204,7 +204,7 @@ func randomSpawnBot() {
 
 	switch proto {
 	case UDP_STRING:
-		udpSendInterval := int64(100)
+		udpSendInterval := int64(interval)
 		bot.udp = udp.New(rcvByteSize, udpSendInterval)
 		//udp.LogLevel(9)
 		bot.udp.SetEncryptionKeys(sid, key, iv, mkey)
@@ -459,22 +459,22 @@ func randomSync(bot *botData) {
 		bot.state = STATUS_SYNC
 		syncCnt += nbSyncPerMovement + 1
 	} else {
-		currentX := prevX
-		currentY := prevY
+		// currentX := prevX
+		// currentY := prevY
 		for i := 0; i < nbSyncPerMovement; i++ {
-			nextX := currentX
-			nextY := currentY
-			message := createMovementPayload(bot.angle, currentX, currentY, currentX, currentY, 6, 60, useNewPayloadFormat, true)
-			go bot.field.Sync(int64(nextX), int64(nextY), 0, 300, 0, message, false, bot.uid)
-			currentX = nextX
-			currentY = nextY
-			time.Sleep(time.Millisecond * time.Duration(100))
+			// nextX := currentX
+			// nextY := currentY
+			// message := createMovementPayload(bot.angle, currentX, currentY, currentX, currentY, 12, 60, useNewPayloadFormat, true)
+			// go bot.field.Sync(int64(nextX), int64(nextY), 0, 300, 0, message, false, bot.uid)
+			// currentX = nextX
+			// currentY = nextY
+			time.Sleep(time.Millisecond * time.Duration(10))
 		}
-		message := createMovementPayload(bot.angle, bot.x, bot.y, bot.x, bot.y, 6, 60, useNewPayloadFormat, true)
-		go bot.field.Sync(int64(bot.x), int64(bot.y), 0, 300, 0, message, false, bot.uid)
+		// message := createMovementPayload(bot.angle, bot.x, bot.y, bot.x, bot.y, 12, 60, useNewPayloadFormat, true)
+		// go bot.field.Sync(int64(bot.x), int64(bot.y), 0, 300, 0, message, false, bot.uid)
 
-		bot.state = STATUS_SYNC
-		syncCnt += nbSyncPerMovement + 1
+		// bot.state = STATUS_SYNC
+		// syncCnt += nbSyncPerMovement + 1
 	}
 }
 
