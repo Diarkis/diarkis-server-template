@@ -289,8 +289,8 @@ func createNewMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData,
 	xUnity := float32(x) / 100.
 	yUnity := float32(y) / 100.
 
-	distanceX := 0 * (xUnity - prevXUnity)
-	distanceY := 0 * (yUnity - prevYUnity)
+	distanceX := xUnity - prevXUnity
+	distanceY := yUnity - prevYUnity
 	frameDistanceX := float32(distanceX) / float32(nbMoveData)
 	frameDistanceY := float32(distanceY) / float32(nbMoveData)
 
