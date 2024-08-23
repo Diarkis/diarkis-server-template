@@ -88,6 +88,9 @@ func getStorage() *dive.Storage {
 func setUserAsOnline(userData *user.User) {
 	us := userStatus.New()
 	us.SetAsString("UID", userData.ID)
+	us.SetAsBool("InRoom", false)
+	usd := userSessionData.New()
+	us.SetAsBytes("SessionData", usd.Pack())
 	err := getStorage().SetEx(userData.ID, us.Pack(), userStatusTTL)
 	if err != nil {
 		logger.Error("Failed to set user as online: UID:%s Error:%v", userData.ID, err.Error())
