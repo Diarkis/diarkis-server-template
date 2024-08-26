@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
-	"fmt"
+	"fmt"eblouida
 	"math"
 	"math/rand"
 	"os"
@@ -33,6 +33,34 @@ const (
 	STATUS_SYNC
 )
 
+// Config represents the structure of the configuration file
+type Config struct {
+	HostURL                    string `json:"Host"`
+	BotCnt                     int    `json:"BotCnt"`
+	NewPayloadFormat           bool   `json:"NewPayloadFormat"`
+	MovementIntervalMs         int    `json:"MoveIntervalMs"`
+	AreaWidth                  int    `json:"AreaWidth"`
+	MovementRange              int    `json:"MovementRange"`
+	SyncCountPerMovement       int    `json:"SyncCountPerMovement"`
+	MoveDataCountPerSync       int    `json:"MoveDataCountPerSync"`
+	MoveProbabilityPerInterval int    `json:"MoveProbabilityPerInterval"`
+	ProtocolSource 			   string `json:"Protocol"`
+}
+
+// DefaultConfig holds the default values for the configuration
+var DefaultConfig = Config{
+	HostURL:                    "127.0.0.1:7000",
+	BotCnt:                     50,
+	NewPayloadFormat:           true,
+	MovementIntervalMs:         2000,
+	AreaWidth:                  10000,
+	MovementRange:              500,
+	MoveProbabilityPercentagePerInterval: 5,
+	MoveDataCountPerSync: 16,
+	SyncCountPerMovement: 3,
+	ProtocolSource: "udp",
+}
+
 const MIN_WAIT_MS = 1000
 const MAX_WAIT_MS = 90000
 
@@ -49,7 +77,8 @@ var interval int64
 var moveRatio = 5
 var mapSize = 4500
 var movementRange = 1200
-
+var nbSyncPerMovement = 3
+var nbMoveFrame = 16
 // metrics counter
 var botCounter = 0
 var syncCnt int
@@ -88,12 +117,6 @@ type BotTask struct {
 }
 
 func main() {
-	if len(os.Args) < 8 {
-		fmt.Printf("Bot requires 8 parameters: {http host:port} {how many bots} {protocol} {payloadFormat 1 or 2} {packet interval in milliseconds} {map size} {range}")
-		os.Exit(1)
-		return
-	}
-
 	parseFieldArgs()
 
 	if mapSize <= movementRange {
@@ -238,7 +261,9 @@ func startBot(bot *botData) {
 			fmt.Printf("This is unexpected status!!! status is %v\n", bot.state)
 			break
 		}
-		time.Sleep(time.Millisecond * time.Duration(interval))
+		if !bot.isMoving {
+			time.Sleep(time.Millisecond * time.Duration(interval))
+		}
 	}
 }
 
@@ -524,7 +549,6 @@ func createMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData, fp
 func randomSync(bot *botData) {
 	prevX := bot.x
 	prevY := bot.y
-	nbSyncPerMovement := 1
 	if bot.isMoving == false && rand.Intn(100) < moveRatio {
 		bot.isMoving = true
 		nextMoveIsInArea := false
@@ -551,16 +575,14 @@ func randomSync(bot *botData) {
 		for i := 0; i < nbSyncPerMovement; i++ {
 			nextX := currentX + stepX
 			nextY := currentY + stepY
-			nbMoveFrame := 16
-			frameInterval := movementRange / 10
+			frameInterval := (movementRange / 10) / nbSyncPerMovement
 
-			message := createMovementPayload(bot.angle, currentX, currentY, nextX, nextY, nbMoveFrame, frameInterval/2, useNewPayloadFormat, false)
+			message := createMovementPayload(bot.angle, currentX, currentY, nextX, nextY, nbMoveFrame, frameInterval, useNewPayloadFormat, false)
 
 			bot.field.Sync(int64(nextX), int64(nextY), 0, 0, 0, message, false, bot.uid)
-
-			time.Sleep(time.Millisecond * time.Duration(frameInterval*(nbMoveFrame)))
 			currentX = nextX
 			currentY = nextY
+			time.Sleep(time.Millisecond * time.Duration(frameInterval*(nbMoveFrame-1)))
 		}
 		//message := createMovementPayload(bot.angle, bot.x, bot.y, bot.x, bot.y, 1, 60, useNewPayloadFormat, true)
 		//bot.field.Sync(int64(bot.x), int64(bot.y), 0, 300, 0, message, false, bot.uid)
@@ -572,51 +594,62 @@ func randomSync(bot *botData) {
 }
 
 func parseFieldArgs() {
-	host = os.Args[1]
-	botsSource, err := strconv.Atoi(os.Args[2])
-	if err != nil {
-		fmt.Printf("How many bot parameter given is invalid %v\n", err)
-		os.Exit(1)
-		return
+	configFilePath := "config.json"
+	if len(os.Args) > 0 {
+		configFilePath = os.Args[1]
 	}
-	bots = botsSource
 
-	protocolSource := strings.ToLower(os.Args[3]) // only tcp or udp
-	if protocolSource != "udp" && protocolSource != "tcp" {
-		fmt.Printf("Protocol value is only udp or tcp %v\n", err)
-		os.Exit(1)
-		return
-	}
-	proto = protocolSource
+	// Check if the config file exists
+	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
+		// Config File doesn't exist, create it with default values
+		file, err := os.Create(configFilePath)
+		if err != nil {
+			fmt.Println("Error creating config file:", err)
+			return
+		}
+		defer file.Close()
 
-	payloadVer := strings.ToLower(os.Args[4]) // only tcp or udp
-	if payloadVer != "1" {
-		useNewPayloadFormat = true
+		// Encode the default config to JSON and write it to the file
+		encoder := json.NewEncoder(file)
+		if err := encoder.Encode(DefaultConfig); err != nil {
+			fmt.Println("Error writing default config to file:", err)
+			return
+		}
+
+		fmt.Println("Config file created with default values.")
 	} else {
-		useNewPayloadFormat = false
+		// File exists, read it
+		file, err := os.Open(configFilePath)
+		if err != nil {
+			fmt.Println("Error opening config file:", err)
+			return
+		}
+		defer file.Close()
+
+		// Decode the JSON data into the Config struct
+		var config Config
+		decoder := json.NewDecoder(file)
+		if err := decoder.Decode(&config); err != nil {
+			fmt.Println("Error decoding config file:", err)
+			return
+		}
+
+		fmt.Println("Config file loaded:", config)
+		host = config.HostURL
+		bots = config.BotCnt
+		proto = config.ProtocolSource
+		if proto != "udp" && proto != "tcp" {
+			fmt.Printf("Protocol value is only udp or tcp %v\n", err)
+			os.Exit(1)
+			return
+		}
+		useNewPayloadFormat = config.NewPayloadFormat
+		interval = int64(config.MovementIntervalMs)
+		mapSize = config.AreaWidth
+		movementRange = config.MovementRange
+		moveRatio = config.MoveProbabilityPerInterval
+		nbSyncPerMovement = config.SyncCountPerMovement
+		nbMoveFrame = config.MoveDataCountPerSync
 	}
 
-	intervalSource, err := strconv.Atoi(os.Args[5])
-	if err != nil {
-		fmt.Printf("Interval of broadcast parameter given is invalid %v\n", err)
-		os.Exit(1)
-		return
-	}
-	interval = int64(intervalSource)
-
-	mapSizeSource, err := strconv.Atoi(os.Args[6])
-	if err != nil {
-		fmt.Printf("Map size parameter given is invalid %v\n", err)
-		os.Exit(1)
-		return
-	}
-	mapSize = mapSizeSource
-
-	rangeSource, err := strconv.Atoi(os.Args[7])
-	if err != nil {
-		fmt.Printf("Movement range parameter given is invalid %v\n", err)
-		os.Exit(1)
-		return
-	}
-	movementRange = rangeSource
 }
