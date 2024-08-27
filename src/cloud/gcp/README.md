@@ -37,17 +37,28 @@ gcloud compute --project=$PROJECT_NAME firewall-rules create diarkis-ingress-all
 
 network tag は diarkis という名前で設定していきます
 
-## インフラ構築手順2 - GCR,CloudDNS の有効化及び設定
+## インフラ構築手順2 - Artifact Registry API, CloudDNS の有効化及び設定
 
-GCR は Diarkis のコンテナイメージを配置する場所として今回使用しますので、有効化と Docker の設定を行います。
-またCloudDNSはkubernetesクラスターで使用するので、有効化します。
-まず https://console.cloud.google.com/flows/enableapi?apiid=containerregistry.googleapis.com にアクセスして対象プロジェクトの GCR API を有効化します。
-次に、https://console.cloud.google.com/flows/enableapi?apiid=dns にアクセスしてCloudDNSを有効化します。
-そして、有効化したGCRに対してアクセスが通るように下記コマンドを実行します。
+Artifact Registry は Diarkis のコンテナイメージを配置する場所として今回使用しますので、有効化と Docker の設定を行います。
+また CloudDNS は kubernetes クラスターで使用するので、有効化します。
 
+1. https://console.cloud.google.com/marketplace/product/google/artifactregistry.googleapis.com にアクセスして対象プロジェクトの Artifact Registry API を有効化します。
+2. https://console.cloud.google.com/flows/enableapi?apiid=dns にアクセスして CloudDNS を有効化します。
+3. 有効化した Artifact Registry に対してアクセスが通るように下記コマンドを実行します。
+
+```bash
+gcloud auth configure-docker asia-northeast1-docker.pkg.dev --quiet
 ```
-gcloud auth configure-docker # docker が gcloud を使って認証するように設定する
-```
+
+4. Artifact Registry に標準リポジトリを作成します。
+
+- 名前には `diarkis` と入力
+- 形式は `Docker` を選択
+- モードは `標準` を選択
+- ロケーションタイプは `リージョン` , ロケーションは `asia-northeast1` を選択
+- その他の設定はデフォルトを選択
+
+> 上記は asia-northeast1 に Artifact Registry を作成するための設定です。異なるロケーション・またはマルチリージョンに配置したい場合は場合は適宜修正してください。
 
 ## インフラ構築手順3 - GKE クラスタの作成(by web console)
 
