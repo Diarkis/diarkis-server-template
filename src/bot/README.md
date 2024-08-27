@@ -56,5 +56,33 @@ go build
 ```
 # example
 cd field
-./field %(http host) $(how many bots) $(protocol: UDP or TCP) $(payload format [1 = old, 2 = new]) $(update interval in milliseconds) $(map size) $(movement range)
+./field /path/to/your/config.json
 ```
+
+The config.json should contain all these values:
+```
+{
+  "Host": "127.0.0.1:7000",
+  "BotCnt": 50,
+  "NewPayloadFormat": true,
+  "MoveIntervalMs": 2000,
+  "AreaWidth": 10000,
+  "MovementRange": 500,
+  "SyncCountPerMovement": 3,
+  "MoveDataCountPerSync": 16,
+  "MoveProbabilityPercenntagePerInterval": 5,
+  "Protocol": "udp"
+}
+```
+
+Host: http endpoint of the diarkis server
+BotCnt: number of bots
+NewPayloadFormat: true if the old format is not used
+MoveIntervalMs: Bot can have a chance of moving every x milliseconds
+AreaWidth: Width of the area where bots will move (center is 0,0)
+MovementRange: Every movement will make the bots move of x centimeters
+SyncCountPerMovement: Number of Field Sync call for one movement (number of packet sent)
+MoveDataCountPerSync: Number of Move Data per packet (higher means bigger packets, but also higher movement accuracy/ less interpolation)
+MoveProbabilityPercentagePerInterval: change of bot to move at every interval in percent
+Protocol: udp or tcp
+

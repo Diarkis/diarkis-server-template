@@ -3,13 +3,12 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"encoding/hex"
-	"fmt"eblouida
+	"fmt"
 	"math"
 	"math/rand"
 	"os"
-	"strconv"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -43,7 +42,7 @@ type Config struct {
 	MovementRange              int    `json:"MovementRange"`
 	SyncCountPerMovement       int    `json:"SyncCountPerMovement"`
 	MoveDataCountPerSync       int    `json:"MoveDataCountPerSync"`
-	MoveProbabilityPerInterval int    `json:"MoveProbabilityPerInterval"`
+	MoveProbabilityPercentagePerInterval int    `json:"MoveProbabilityPercenntagePerInterval"`
 	ProtocolSource 			   string `json:"Protocol"`
 }
 
@@ -52,7 +51,7 @@ var DefaultConfig = Config{
 	HostURL:                    "127.0.0.1:7000",
 	BotCnt:                     50,
 	NewPayloadFormat:           true,
-	MovementIntervalMs:         2000,
+	MovementIntervalMs:         200,
 	AreaWidth:                  10000,
 	MovementRange:              500,
 	MoveProbabilityPercentagePerInterval: 5,
@@ -595,7 +594,7 @@ func randomSync(bot *botData) {
 
 func parseFieldArgs() {
 	configFilePath := "config.json"
-	if len(os.Args) > 0 {
+	if len(os.Args) > 1 {
 		configFilePath = os.Args[1]
 	}
 
@@ -609,12 +608,21 @@ func parseFieldArgs() {
 		}
 		defer file.Close()
 
-		// Encode the default config to JSON and write it to the file
-		encoder := json.NewEncoder(file)
+		// Encode the default config to JSON and write it to the file with indentation
+		var buffer bytes.Buffer
+		encoder := json.NewEncoder(&buffer)
+		encoder.SetIndent("", "  ") // Set indentation for JSON
 		if err := encoder.Encode(DefaultConfig); err != nil {
+			fmt.Println("Error encoding default config to JSON:", err)
+			return
+		}
+		
+		_, err = file.Write(buffer.Bytes())
+		if err != nil {
 			fmt.Println("Error writing default config to file:", err)
 			return
 		}
+
 
 		fmt.Println("Config file created with default values.")
 	} else {
@@ -647,7 +655,7 @@ func parseFieldArgs() {
 		interval = int64(config.MovementIntervalMs)
 		mapSize = config.AreaWidth
 		movementRange = config.MovementRange
-		moveRatio = config.MoveProbabilityPerInterval
+		moveRatio = config.MoveProbabilityPercentagePerInterval
 		nbSyncPerMovement = config.SyncCountPerMovement
 		nbMoveFrame = config.MoveDataCountPerSync
 	}
