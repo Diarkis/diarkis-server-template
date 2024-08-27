@@ -13,7 +13,7 @@ GKE で Diarkis を動作させるためのインフラの構築手順及び、K
 下記の手順でインフラの構築手順を述べていきます。
 
 1. firewall の作成
-2. GCRとCloudDNS の有効化
+2. Artifact Registry と CloudDNS の有効化
 3. GKE クラスタの作成
 4. GKE への接続
 5. manifest の修正
@@ -37,9 +37,9 @@ gcloud compute --project=$PROJECT_NAME firewall-rules create diarkis-ingress-all
 
 network tag は diarkis という名前で設定していきます
 
-## インフラ構築手順2 - Artifact Registry API, CloudDNS の有効化及び設定
+## インフラ構築手順2 - Artifact Registry と CloudDNS の有効化及び設定
 
-Artifact Registry は Diarkis のコンテナイメージを配置する場所として今回使用しますので、有効化と Docker の設定を行います。
+Artifact Registry を Diarkis のコンテナイメージを配置する場所として利用するために、有効化と Docker の設定を行います。
 また CloudDNS は kubernetes クラスターで使用するので、有効化します。
 
 1. https://console.cloud.google.com/marketplace/product/google/artifactregistry.googleapis.com にアクセスして対象プロジェクトの Artifact Registry API を有効化します。
@@ -58,7 +58,7 @@ gcloud auth configure-docker asia-northeast1-docker.pkg.dev --quiet
 - ロケーションタイプは `リージョン` , ロケーションは `asia-northeast1` を選択
 - その他の設定はデフォルトを選択
 
-> 上記は asia-northeast1 に Artifact Registry を作成するための設定です。異なるロケーション・またはマルチリージョンに配置したい場合は場合は適宜修正してください。
+> 上記は asia-northeast1 に Artifact Registry を作成するための設定です。異なるロケーションまたはマルチリージョンに配置したい場合は適宜修正してください。
 
 ## インフラ構築手順3 - GKE クラスタの作成(by web console)
 
