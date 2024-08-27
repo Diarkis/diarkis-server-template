@@ -32,7 +32,7 @@ spec:
               value: "9500"
             - name: DIARKIS_BOT_CONFIG
               value: "/go/bin/config"
-          image: __YOUR_REPOSITORY__/bot:dev0
+          image: bot
           imagePullPolicy: Always
           name: bot
           resources:

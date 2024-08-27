@@ -28,6 +28,9 @@ buildSettings:
     testcli:
       target: testcli/main.go
       output: remote_bin/testcli
+    bot:
+      target: ./bot/scenario
+      output: remote_bin/bot
 diarkis:
   project_id: "{{PROJECT_ID}}"
   builder_token: "{{BUILD_TOKEN}}"

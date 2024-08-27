@@ -65,8 +65,8 @@ curl http://x.x.x.x:9500/metrics/
 
 ```
 REPOSITORY_NAME=__YOUR_REPOSITORY__
-docker build --platform=linux/amd64 -f docker/bot/Dockerfile remote_bin -t ${REPOSITORY_NAME}/bot:dev0
-docker push ${REPOSITORY_NAME}/bot:dev0
+docker build --platform=linux/amd64 -f docker/bot/Dockerfile remote_bin -t __YOUR_REPOSITORY__/bot:dev0
+docker push __YOUR_REPOSITORY__/bot:dev0
 ```
 
 #### Deploy on a Cluster

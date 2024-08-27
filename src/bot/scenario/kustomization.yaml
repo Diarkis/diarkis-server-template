@@ -18,3 +18,8 @@ configMapGenerator:
       - config/global.json
       - config/ticket.json
       - config/session.json
+
+images:
+  - name: bot
+    newName: __YOUR_REPOSITORY__/bot
+    newTag: dev0
