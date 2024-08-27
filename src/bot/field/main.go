@@ -1,10 +1,12 @@
+// © 2019-2024 Diarkis Inc. All rights reserved.
+
 package main
 
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"math"
 	"math/rand"
@@ -34,30 +36,30 @@ const (
 
 // Config represents the structure of the configuration file
 type Config struct {
-	HostURL                    string `json:"Host"`
-	BotCnt                     int    `json:"BotCnt"`
-	NewPayloadFormat           bool   `json:"NewPayloadFormat"`
-	MovementIntervalMs         int    `json:"MoveIntervalMs"`
-	AreaWidth                  int    `json:"AreaWidth"`
-	MovementRange              int    `json:"MovementRange"`
-	SyncCountPerMovement       int    `json:"SyncCountPerMovement"`
-	MoveDataCountPerSync       int    `json:"MoveDataCountPerSync"`
+	HostURL                              string `json:"Host"`
+	BotCnt                               int    `json:"BotCnt"`
+	NewPayloadFormat                     bool   `json:"NewPayloadFormat"`
+	MovementIntervalMs                   int    `json:"MoveIntervalMs"`
+	AreaWidth                            int    `json:"AreaWidth"`
+	MovementRange                        int    `json:"MovementRange"`
+	SyncCountPerMovement                 int    `json:"SyncCountPerMovement"`
+	MoveDataCountPerSync                 int    `json:"MoveDataCountPerSync"`
 	MoveProbabilityPercentagePerInterval int    `json:"MoveProbabilityPercenntagePerInterval"`
-	ProtocolSource 			   string `json:"Protocol"`
+	ProtocolSource                       string `json:"Protocol"`
 }
 
 // DefaultConfig holds the default values for the configuration
 var DefaultConfig = Config{
-	HostURL:                    "127.0.0.1:7000",
-	BotCnt:                     50,
-	NewPayloadFormat:           true,
-	MovementIntervalMs:         200,
-	AreaWidth:                  10000,
-	MovementRange:              500,
+	HostURL:                              "127.0.0.1:7000",
+	BotCnt:                               50,
+	NewPayloadFormat:                     true,
+	MovementIntervalMs:                   200,
+	AreaWidth:                            10000,
+	MovementRange:                        500,
 	MoveProbabilityPercentagePerInterval: 5,
-	MoveDataCountPerSync: 16,
-	SyncCountPerMovement: 3,
-	ProtocolSource: "udp",
+	MoveDataCountPerSync:                 16,
+	SyncCountPerMovement:                 3,
+	ProtocolSource:                       "udp",
 }
 
 const MIN_WAIT_MS = 1000
@@ -78,6 +80,7 @@ var mapSize = 4500
 var movementRange = 1200
 var nbSyncPerMovement = 3
 var nbMoveFrame = 16
+
 // metrics counter
 var botCounter = 0
 var syncCnt int
@@ -616,13 +619,12 @@ func parseFieldArgs() {
 			fmt.Println("Error encoding default config to JSON:", err)
 			return
 		}
-		
+
 		_, err = file.Write(buffer.Bytes())
 		if err != nil {
 			fmt.Println("Error writing default config to file:", err)
 			return
 		}
-
 
 		fmt.Println("Config file created with default values.")
 	} else {

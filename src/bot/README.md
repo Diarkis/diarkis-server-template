@@ -60,6 +60,7 @@ cd field
 ```
 
 The config.json should contain all these values:
+
 ```
 {
   "Host": "127.0.0.1:7000",
@@ -85,4 +86,3 @@ SyncCountPerMovement: Number of Field Sync call for one movement (number of pack
 MoveDataCountPerSync: Number of Move Data per packet (higher means bigger packets, but also higher movement accuracy/ less interpolation)
 MoveProbabilityPercentagePerInterval: change of bot to move at every interval in percent
 Protocol: udp or tcp
-
