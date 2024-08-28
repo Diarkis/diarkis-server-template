@@ -56,29 +56,35 @@ spec:
 
       containers:
         - name: tcp
-          # Configure Probes: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
-          readinessProbe:
+          startupProbe: &probe
             exec:
               command:
                 - sh
                 - -c
-                - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) mars && /go/bin/health-check $(cat /tmp/DIARKIS_PUBLIC_ADDR) out"
+                - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) mars /bin/tools/configs/health-check-for-startup-probe.json"
+                - "&& /go/bin/health-check $(cat /tmp/DIARKIS_PUBLIC_ADDR) out /bin/tools/configs/health-check-for-startup-probe.json"
+            # Configure Probes: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
             initialDelaySeconds: 0
             periodSeconds: 10
-            timeoutSeconds: 3
+            timeoutSeconds: 1
             successThreshold: 1
-            failureThreshold: 5
+            failureThreshold: 3
           livenessProbe:
+            <<: *probe
             exec:
               command:
                 - sh
                 - -c
-                - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) in && /go/bin/health-check $(cat /tmp/DIARKIS_PUBLIC_ADDR) out"
-            initialDelaySeconds: 0
-            periodSeconds: 10
-            timeoutSeconds: 3
-            successThreshold: 1
-            failureThreshold: 5
+                - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) in /bin/tools/configs/health-check-for-liveness-probe.json"
+                - "&& /go/bin/health-check $(cat /tmp/DIARKIS_PUBLIC_ADDR) out /bin/tools/configs/health-check-for-liveness-probe.json"
+          readinessProbe:
+            <<: *probe
+            exec:
+              command:
+                - sh
+                - -c
+                - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) in /bin/tools/configs/health-check-for-readiness-probe.json"
+                - "&& /go/bin/health-check $(cat /tmp/DIARKIS_PUBLIC_ADDR) out /bin/tools/configs/health-check-for-readiness-probe.json"
           securityContext:
             runAsUser: 1000
             readOnlyRootFilesystem: true

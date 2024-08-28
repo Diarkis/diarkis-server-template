@@ -4,13 +4,14 @@ package main
 
 import (
 	"fmt"
+	"net"
+	"os"
+	"time"
+
 	"github.com/Diarkis/diarkis"
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/mesh"
 	"github.com/Diarkis/diarkis/util"
-	"net"
-	"os"
-	"time"
 )
 
 // health check will terminate with error if no response in 5000ms
@@ -20,15 +21,19 @@ var logger = log.New("H-CHK")
 
 func main() {
 	if len(os.Args) < 2 {
-		logger.Fatal("Address and port missing: ./bin/tools/health-check <address:port> <in|out>")
+		logger.Fatal("Address and port missing: ./bin/tools/health-check <address:port> <in|out> <config file if needed>")
 		os.Exit(1)
 	}
 	rootpath, err := os.Getwd()
 	if err != nil {
 		panic(err)
 	}
-	log.Setup(util.StrConcat(rootpath, "/bin/tools/configs/health-check.json"))
-	mesh.Guest(util.StrConcat(rootpath, "/bin/tools/configs/health-check.json"))
+	configFile := "/bin/tools/configs/health-check.json" // default config file path
+	if len(os.Args) >= 3 {
+		configFile = os.Args[3]
+	}
+	log.Setup(util.StrConcat(rootpath, configFile))
+	mesh.Guest(util.StrConcat(rootpath, configFile))
 	diarkis.OnReady(onReady)
 	diarkis.Start()
 }
