@@ -55,6 +55,7 @@ spec:
             privileged: true
       containers:
         - name: udp
+          # Configure Probes: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
           startupProbe: &probe
             exec:
               command:
@@ -62,7 +63,6 @@ spec:
                 - -c
                 - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) mars /bin/tools/configs/health-check-for-startup-probe.json"
                 - "&& /go/bin/health-check $(cat /tmp/DIARKIS_PUBLIC_ADDR) out /bin/tools/configs/health-check-for-startup-probe.json"
-            # Configure Probes: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
             initialDelaySeconds: 0
             periodSeconds: 10
             timeoutSeconds: 1
