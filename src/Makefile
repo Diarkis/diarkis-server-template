@@ -104,17 +104,17 @@ setup-gcp: ## Set up GCP
 
 .PHONY: build-container-gcp
 build-container-gcp: build-linux ## Build container for GCP
-	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis/http
-	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis/udp
-	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis/tcp
-	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis/mars
+	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/http
+	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/udp
+	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/tcp
+	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/mars
 
 .PHONY: push-container-gcp
 push-container-gcp: ## Push container to GCP
-	docker push  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis/http
-	docker push  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis/udp
-	docker push  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis/tcp
-	docker push  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis/mars
+	docker push  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/http
+	docker push  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/udp
+	docker push  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/tcp
+	docker push  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/mars
 
 .PHONY: setup-azure
 setup-azure: ## Set up Azure
