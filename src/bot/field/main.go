@@ -467,8 +467,6 @@ func createNewMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData,
 	newPayload.TimeStamp = time.Now().UTC().UnixNano() / int64(time.Millisecond)
 	newPayload.FramesInterval = uint16(frameInterval)
 	payloadBytes := newPayload.Pack()
-	//payloadSizeBytes := make([]byte, 2)
-	//binary.BigEndian.PutUint16(payloadSizeBytes, uint16(len(payloadBytes)))
 
 	return payloadBytes
 }
@@ -586,8 +584,6 @@ func randomSync(bot *botData) {
 			currentY = nextY
 			time.Sleep(time.Millisecond * time.Duration(frameInterval*(nbMoveFrame-1)))
 		}
-		//message := createMovementPayload(bot.angle, bot.x, bot.y, bot.x, bot.y, 1, 60, useNewPayloadFormat, true)
-		//bot.field.Sync(int64(bot.x), int64(bot.y), 0, 300, 0, message, false, bot.uid)
 
 		bot.state = STATUS_SYNC
 		syncCnt += nbSyncPerMovement + 1
