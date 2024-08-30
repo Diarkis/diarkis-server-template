@@ -77,6 +77,7 @@ var packetSize = 10
 var interval int64
 var moveRatio = 5
 var mapSize = 4500
+var halfMapSize = 2250
 var movementRange = 1200
 var nbSyncPerMovement = 3
 var nbMoveFrame = 16
@@ -145,8 +146,8 @@ func main() {
 		bot.state = STATUS_BEFORE_START
 		bot.inSightCnt = 0
 		bot.userMap = smap.New()
-		bot.x = util.RandomInt(-mapSize/2, mapSize/2)
-		bot.y = util.RandomInt(-mapSize/2, mapSize/2)
+		bot.x = util.RandomInt(-halfMapSize, halfMapSize)
+		bot.y = util.RandomInt(-halfMapSize, halfMapSize)
 
 		// Create a new task and send it to the worker pool
 		tasks <- BotTask{ID: i, bot: bot}
@@ -347,8 +348,8 @@ func randomSpawnBot() {
 	bot.state = STATUS_BEFORE_START
 	bot.inSightCnt = 0
 	bot.userMap = smap.New()
-	bot.x = util.RandomInt(-mapSize/2, mapSize/2)
-	bot.y = util.RandomInt(-mapSize/2, mapSize/2)
+	bot.x = util.RandomInt(-halfMapSize, halfMapSize)
+	bot.y = util.RandomInt(-halfMapSize, halfMapSize)
 	time.Sleep(time.Millisecond * time.Duration(int64(util.RandomInt(MIN_WAIT_MS, MIN_WAIT_MS))))
 
 	eResp, err := utils.Endpoint(host, bot.uid, proto)
@@ -560,7 +561,7 @@ func randomSync(bot *botData) {
 			theta := (angle / 360.0) * 2.0 * math.Pi
 			newX := int(float64(prevX) + r*float64(math.Cos(theta)))
 			newY := int(float64(prevY) + r*float64(math.Sin(theta)))
-			if newX >= -mapSize/2 && newX <= mapSize/2 && newY >= -mapSize/2 && newY <= mapSize/2 {
+			if newX >= -halfMapSize && newX <= halfMapSize && newY >= -halfMapSize && newY <= halfMapSize {
 				nextMoveIsInArea = true
 				bot.angle = float32(angle)
 				bot.x = newX
@@ -656,6 +657,7 @@ func parseFieldArgs() {
 		moveRatio = config.MoveProbabilityPercentagePerInterval
 		nbSyncPerMovement = config.SyncCountPerMovement
 		nbMoveFrame = config.MoveDataCountPerSync
+		halfMapSize = mapSize / 2
 	}
 
 }
