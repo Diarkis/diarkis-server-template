@@ -22,7 +22,7 @@ spec:
         ad.datadoghq.com/nginx.instances: '[{"nginx_status_url": "http://%%host%%:8080/nginx_status"}]'
         ad.datadoghq.com/nginx.logs: '[{"source": "nginx", "service": "nginx"}]'
     spec:
-      terminationGracePeriodSeconds: 10
+      terminationGracePeriodSeconds: 600
       initContainers:
         - image: alpine:latest
           name: tuner
