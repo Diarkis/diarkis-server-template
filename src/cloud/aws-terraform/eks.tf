@@ -18,6 +18,8 @@ module "eks_al2" {
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
 
+  enable_cluster_creator_admin_permissions = true
+
   eks_managed_node_groups = {
     diarkis-private = {
       ami_type       = "AL2_x86_64"
