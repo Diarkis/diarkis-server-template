@@ -20,10 +20,31 @@ module "eks_al2" {
 
   enable_cluster_creator_admin_permissions = true
 
+  create_node_security_group = true
+
+  node_security_group_additional_rules = {
+    ingress_self_all = {
+      description = "Node to node all ports/protocols"
+      protocol    = "-1"
+      from_port   = 0
+      to_port     = 0
+      type        = "ingress"
+      self        = true
+    }
+    ingress_diarkis = {
+      description = "Node to node all ports/protocols"
+      protocol    = "-1"
+      from_port   = 7000
+      to_port     = 8000
+      type        = "ingress"
+      cidr_blocks = ["0.0.0.0/0"]
+      ipv6_cidr_blocks = ["::/0"]
+    }
+  }
   eks_managed_node_groups = {
     diarkis-private = {
       ami_type       = "AL2_x86_64"
-      instance_types = ["m6i.large"]
+      instance_types = local.instance_types
       subnet_ids = module.vpc.private_subnets
 
       min_size = 1

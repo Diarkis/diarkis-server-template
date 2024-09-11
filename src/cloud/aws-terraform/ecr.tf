@@ -1,5 +1,5 @@
-resource "aws_ecr_repository" "diarkis-http" {
-  name                 = "diarkis-http"
+resource "aws_ecr_repository" "http" {
+  name                 = "http"
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
@@ -7,8 +7,8 @@ resource "aws_ecr_repository" "diarkis-http" {
   }
 }
 
-resource "aws_ecr_repository" "diarkis-udp" {
-  name                 = "diarkis-udp"
+resource "aws_ecr_repository" "udp" {
+  name                 = "udp"
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
@@ -16,8 +16,8 @@ resource "aws_ecr_repository" "diarkis-udp" {
   }
 }
 
-resource "aws_ecr_repository" "diarkis-mars" {
-  name                 = "diarkis-mars"
+resource "aws_ecr_repository" "mars" {
+  name                 = "mars"
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
