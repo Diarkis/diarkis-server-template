@@ -22,16 +22,16 @@ resources:
 
 images:
   - name: udp
-    newName: asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/udp
+    newName: asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/diarkis/udp
     newTag: latest
   - name: tcp
-    newName: asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/tcp
+    newName: asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/diarkis/tcp
     newTag: latest
   - name: mars
-    newName: asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/mars
+    newName: asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/diarkis/mars
     newTag: latest
   - name: http
-    newName: asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/http
+    newName: asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/diarkis/http
     newTag: latest
 
 configMapGenerator:
