@@ -30,7 +30,7 @@ func main() {
 	if os.Args[3][0:1] == "/" {
 		dest = os.Args[3]
 	} else {
-		dest = fmt.Sprintf("%s/%s", cwd, os.Args[4])
+		dest = filepath.Join(cwd, os.Args[3])
 	}
 	list := strings.Split(dest, "/")
 	pkg := list[len(list)-1]
