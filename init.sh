@@ -5,22 +5,32 @@ function usage {
 $(basename ${0}) is a generate diarkis project tool.
 
 Usage:
-    $(basename ${0}) moduleName builderToken outputPath
+    $(basename ${0}) projectID builderToken outputPath <moduleName optional>
 Sample:
-    $(basename ${0}) github.com/sample-origanization/sample-project sampleToken /tmp/sample-project
+    $(basename ${0}) 012345678 sampleToken /tmp/sample-project
+    or
+    $(basename ${0}) 012345678 sampleToken /tmp/sample-project github.com/sample-origanization/sample-project
 
 EOF
     exit 1
 }
 
-if [ $# -ne 3 ]; then
+# Accept optional module name
+if [ $# -ne 3 -a $# -ne 4 ]; then
     usage
+fi
+
+if [ $# -eq 4 ]; then
+    module_name=$4
 fi
 
 project_id=$1
 builder_token=$2
 output_path=$3
-module_name=$(basename $output_path)
+if [ -z "${module_name}" ]; then
+    module_name=$(basename $output_path)
+fi
+
 go run ./tools/install.go $project_id $builder_token $output_path
 pushd $output_path
     go mod edit -module $module_name
