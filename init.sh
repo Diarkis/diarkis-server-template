@@ -32,18 +32,8 @@ if [ -z "${module_name}" ]; then
 fi
 
 go run ./tools/install.go $project_id $builder_token $output_path
+go run ./tools/rewrite_import.go $output_path "github.com/Diarkis/diarkis-server-template" "$module_name"
 pushd $output_path
     go mod edit -module $module_name
-    if [ $(uname) == 'Darwin' ]; then
-        find . -type f -name '*.go'  -exec sed -i '' -e "s%github.com/Diarkis/diarkis-server-template%$module_name%g" {} \;
-        sed -i '' -e "s%github.com/Diarkis/diarkis-server-template%$module_name%g" puffer/gen.sh
-    elif [ "$(expr substr $(uname -s) 1 5)" == 'Linux' ]; then
-        find . -type f -name '*.go'  -exec sed -i -e "s%github.com/Diarkis/diarkis-server-template%$module_name%g" {} \;
-        sed -i -e "s%github.com/Diarkis/diarkis-server-template%$module_name%g" puffer/gen.sh
-        echo "Linux"
-    else
-        echo "Unsupported OS"
-        uname -a
-        exit 1
-    fi
+    echo "PROJECT_NAME=$module_name" > puffer/vars.sh
 popd
