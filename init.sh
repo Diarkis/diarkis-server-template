@@ -9,7 +9,7 @@ Usage:
 Sample:
     $(basename ${0}) 012345678 sampleToken /tmp/sample-project
     or
-    $(basename ${0}) 012345678 sampleToken /tmp/sample-project github.com/sample-origanization/sample-project
+    $(basename ${0}) 012345678 sampleToken /tmp/sample-project github.com/sample-organization/sample-project
 
 EOF
     exit 1
