@@ -56,18 +56,35 @@ spec:
 
       containers:
         - name: tcp
-          startupProbe:
+          # Configure Probes: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+          startupProbe: &probe
             exec:
               command:
                 - sh
                 - -c
-                - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) mars"
+                - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) mars /bin/tools/configs/health-check-for-startup-probe.json"
+                - "&& /go/bin/health-check $(cat /tmp/DIARKIS_PUBLIC_ADDR) out /bin/tools/configs/health-check-for-startup-probe.json"
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 3
           livenessProbe:
+            <<: *probe
             exec:
               command:
                 - sh
                 - -c
-                - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) in"
+                - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) in /bin/tools/configs/health-check-for-liveness-probe.json"
+                - "&& /go/bin/health-check $(cat /tmp/DIARKIS_PUBLIC_ADDR) out /bin/tools/configs/health-check-for-liveness-probe.json"
+          readinessProbe:
+            <<: *probe
+            exec:
+              command:
+                - sh
+                - -c
+                - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) in /bin/tools/configs/health-check-for-readiness-probe.json"
+                - "&& /go/bin/health-check $(cat /tmp/DIARKIS_PUBLIC_ADDR) out /bin/tools/configs/health-check-for-readiness-probe.json"
           securityContext:
             runAsUser: 1000
             readOnlyRootFilesystem: true

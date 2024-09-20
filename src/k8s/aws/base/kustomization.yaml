@@ -61,4 +61,6 @@ configMapGenerator:
 
   - name: hc-conf
     files:
-      - hc/conf/health-check.json
+      - hc/conf/health-check-for-liveness-probe.json
+      - hc/conf/health-check-for-readiness-probe.json
+      - hc/conf/health-check-for-startup-probe.json

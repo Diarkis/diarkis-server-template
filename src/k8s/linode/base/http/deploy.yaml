@@ -42,14 +42,18 @@ spec:
             privileged: true
       containers:
         - name: http
-          readinessProbe:
+          # Configure Probes: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+          readinessProbe: &probe
             httpGet:
               path: /healthcheck
               port: 7000
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
           livenessProbe:
-            httpGet:
-              path: /healthcheck
-              port: 7000
+            <<: *probe
           securityContext:
             runAsUser: 1000
             readOnlyRootFilesystem: true
