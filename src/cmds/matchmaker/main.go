@@ -20,12 +20,14 @@ func Setup() {
 	// Set up matching ticket with sampleTicketType
 	// This callback is invoked when a new ticket is issued.
 	matching.SetOnIssueTicket(sampleTicketType0, func(userData *user.User) *matching.TicketParams {
+		searchTries := util.RandomInt(1, 300)
+		emptySearches := util.RandomInt(1, searchTries)
 		return &matching.TicketParams{
 			ProfileIDs:     []string{"RankMatch"},
 			MaxMembers:     2,
 			SearchInterval: 100, // 100ms
-			SearchTries:    uint8(util.RandomInt(0, 300)),
-			EmptySearches:  3,
+			SearchTries:    uint8(searchTries),
+			EmptySearches:  uint8(emptySearches),
 			TicketDuration: 60, // 1m
 			HowMany:        20,
 			// Change here as you see fit according to your application needs
@@ -74,12 +76,14 @@ func Setup() {
 	})
 
 	matching.SetOnIssueTicket(sampleTicketType1, func(userData *user.User) *matching.TicketParams {
+		searchTries := util.RandomInt(1, 300)
+		emptySearches := util.RandomInt(1, searchTries)
 		return &matching.TicketParams{
 			ProfileIDs:     []string{"RankMatch20"},
 			MaxMembers:     4,
 			SearchInterval: 100, // 100ms
-			SearchTries:    uint8(util.RandomInt(0, 300)),
-			EmptySearches:  3,
+			SearchTries:    uint8(searchTries),
+			EmptySearches:  uint8(emptySearches),
 			TicketDuration: 60, // 1m
 			HowMany:        20,
 			// Change here as you see fit according to your application needs
