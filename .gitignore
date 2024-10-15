@@ -1,3 +1,5 @@
 .secrets
 .DS_Store
 .vscode/
+tools/add_example/add_example
+*.exe
