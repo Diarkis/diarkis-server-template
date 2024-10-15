@@ -1,0 +1,17 @@
+buildSettings:
+  version: "2"
+  root: ..
+  goVersion: 1.22.4
+  env:
+    CGO_ENABLED: 0
+    CGO_CFLAGS: -I${PROJECT_DIR}
+    CGO_LDFLAGS: -L${PROJECT_DIR} -Wl,-rpath,${PROJECT_DIR}
+    GOOS: darwin
+    GOARCH: arm64 # if you use intel mac, replace from arm64 to amd64
+  projects:
+    http:
+      target: http.go
+      output: remote_bin/http
+diarkis:
+  project_id: "{{PROJECT_ID}}"
+  builder_token: "{{BUILD_TOKEN}}"
