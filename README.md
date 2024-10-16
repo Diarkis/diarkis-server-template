@@ -28,7 +28,7 @@ To generate it, use the following command.
 
 or to use a custom module name
 
-`make init project_id={project ID} builder_token={build token} output={absolute path to install} module_name=github.com/sample-organization/sample-project`
+`make init project_id={project ID} builder_token={build token} output={absolute path to install} module_name={custom module name}`
 
 The repository itself is under the src directory.
 When you actually start using this repository, it is assumed that you will start your project using the src directory as a template.
