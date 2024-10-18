@@ -436,28 +436,27 @@ func createNewMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData,
 
 	distanceX := xUnity - prevXUnity
 	distanceY := yUnity - prevYUnity
+	distanceMagn := math.Sqrt(math.Pow(float64(distanceX), 2) + math.Pow(float64(distanceY), 2)) * 150
 	frameDistanceX := float32(distanceX) / float32(nbMoveData)
 	frameDistanceY := float32(distanceY) / float32(nbMoveData)
 
 	currentX := prevXUnity
 	currentY := prevYUnity
 	newRot := direction
+	newPayload.Timestamp = time.Now().UTC().UnixNano() 
+	frameInterval = int(distanceMagn / float64(nbMoveData))
 	for i := 0; i < nbMoveData; i++ {
 		frameData := custom.NewDiarkisCharacterFrameData()
 		frameData.RotationAngles = uint16(newRot)
 		frameData.Position.X = float32(currentX) * 100
 		frameData.Position.Z = float32(currentY) * 100
 		frameData.Position.Y = 0
-
+		frameData.TimestampInterval = uint16(i * frameInterval)
 		frameData.AnimationBlend = 5.
 		frameData.AnimationID = 1
 		currentX += frameDistanceX
 		currentY += frameDistanceY
-		if isLast {
-			frameData.AnimationID = 0
-			frameData.AnimationBlend = 0
-		}
-		if i >= nbMoveData-1 {
+		if isLast && i >= nbMoveData-1 {
 			frameData.AnimationID = 0
 			frameData.AnimationBlend = 0
 		}
@@ -465,8 +464,6 @@ func createNewMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData,
 	}
 
 	newPayload.Engine = 0
-	newPayload.TimeStamp = time.Now().UTC().UnixNano() / int64(time.Millisecond)
-	newPayload.FramesInterval = uint16(frameInterval)
 	payloadBytes := newPayload.Pack()
 
 	return payloadBytes
@@ -577,8 +574,8 @@ func randomSync(bot *botData) {
 			nextX := currentX + stepX
 			nextY := currentY + stepY
 			frameInterval := (movementRange / 10) / nbSyncPerMovement
-
-			message := createMovementPayload(bot.angle, currentX, currentY, nextX, nextY, nbMoveFrame, frameInterval, useNewPayloadFormat, false)
+			isLast := i >= nbSyncPerMovement - 1
+			message := createMovementPayload(bot.angle, currentX, currentY, nextX, nextY, nbMoveFrame, frameInterval, useNewPayloadFormat, isLast)
 
 			bot.field.Sync(int64(nextX), int64(nextY), 0, 0, 0, message, false, bot.uid)
 			currentX = nextX
