@@ -59,7 +59,7 @@ pushd ${tmp_dir}
     fi
 popd
 
-go run ./tools/install.go $project_id $builder_token $output_path
+go run ./tools/install $project_id $builder_token $output_path
 go run ./tools/rewrite_import.go $output_path "github.com/Diarkis/diarkis-server-template" "$module_name"
 pushd $output_path
     go mod edit -module $module_name
