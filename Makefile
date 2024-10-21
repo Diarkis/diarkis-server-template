@@ -18,8 +18,4 @@ fmt: add-license
 
 .PHONY: add-license ## add license header to all go files
 add-license: $(shell find . -type f -name '*.go')
-	for f in $^; do \
-		head -n 1 "$$f" | grep -q '$(COPYRIGHT)' && tail -n +2 "$$f" > temp && mv temp "$$f"; \
-		head -n 1 "$$f" | grep -q '^$$' && tail -n +2 "$$f" > temp && mv temp "$$f"; \
-		echo "// © 2019-$(shell date +%Y) $(COPYRIGHT)\n" | cat - "$$f" > temp && mv temp "$$f"; \
-	done
+	go run ./tools/add_license.go
