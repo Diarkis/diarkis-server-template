@@ -5,7 +5,7 @@ help:
 ## Set default command of make to help, so that running make will output help texts
 .DEFAULT_GOAL := help
 
-DIARKIS_VERSION = $(shell go list -m github.com/Diarkis/diarkis | cut -d " " -f 2)
+DIARKIS_VERSION = $(shell go mod edit -json | jq -r '.Require[] | select(.Path | contains("github.com/Diarkis/diarkis")).Version')
 DIARKIS_CLI = ./diarkis-cli/os/linux/bin/diarkis-cli
 BUILD_CONFIG = ./build/linux-build.yml
 AWS_ACCOUNT_NUM = __AWS_ACCOUNT_NUM__
