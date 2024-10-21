@@ -61,7 +61,7 @@ func processDir(dir, oldImport, newImport string) error {
 func fixImport(filename, oldImport, newImport string) (string, bool, error) {
 	fset := token.NewFileSet()
 
-	expr, err := parser.ParseFile(fset, filename, nil, parser.Mode(0))
+	expr, err := parser.ParseFile(fset, filename, nil, parser.ParseComments)
 	if err != nil {
 		return "", false, err
 	}
@@ -75,10 +75,14 @@ func fixImport(filename, oldImport, newImport string) (string, bool, error) {
 		}
 	}
 
+	if !found {
+		return "", false, nil
+	}
+
 	var buf strings.Builder
 
 	// write into buf
-	if err := format.Node(&buf, token.NewFileSet(), expr); err != nil {
+	if err := format.Node(&buf, fset, expr); err != nil {
 		return "", false, err
 	}
 
