@@ -5,12 +5,9 @@ package main
 import (
 	"fmt"
 	"os"
-	"unicode/utf8"
-
-	"io"
 	"path/filepath"
 	"strings"
-	"syscall"
+	"unicode/utf8"
 )
 
 var projectID = ""
@@ -23,30 +20,21 @@ func main() {
 		os.Exit(1)
 		return
 	}
-	src := fmt.Sprintf("%s/src/", cwd)
-	dest := ""
+	src := filepath.Join(cwd, "src")
 	projectID = os.Args[1]
 	buildToken = os.Args[2]
-	if os.Args[3][0:1] == "/" {
-		dest = os.Args[3]
-	} else {
-		dest = filepath.Join(cwd, os.Args[3])
+	dest := os.Args[3]
+
+	if !filepath.IsAbs(dest) {
+		dest = filepath.Join(cwd, dest)
 	}
-	list := strings.Split(dest, "/")
+
+	list := strings.Split(filepath.ToSlash(dest), "/")
 	pkg := list[len(list)-1]
-	fmt.Printf("\x1b[0;90m Installing the template as package %s to %s \x1b[0m\n", pkg, dest)
-	_, err = os.Stat(dest)
-	if err != nil {
-		if os.IsNotExist(err) {
-			err = os.Mkdir(dest, os.FileMode(0777))
-			if err != nil {
-				fmt.Printf("Error \x1b[0;91m %v \x1b[0m\n", err)
-				os.Exit(1)
-			}
-		} else {
-			fmt.Printf("Error \x1b[0;91m %v \x1b[0m\n", err)
-			os.Exit(1)
-		}
+	fmt.Printf("\x1b[0;90m Installing the template to %s \x1b[0m\n", dest)
+	if err := os.MkdirAll(dest, os.FileMode(0777)); err != nil {
+		fmt.Printf("Error \x1b[0;91m %v \x1b[0m\n", err)
+		os.Exit(1)
 	}
 	err = copyDirectory(pkg, src, dest)
 	if err != nil {
@@ -98,10 +86,6 @@ func copyDirectory(pkg string, src string, dest string) error {
 				continue
 			}
 		}
-		stat, ok := fileInfo.Sys().(*syscall.Stat_t)
-		if !ok {
-			return fmt.Errorf("Failed to get raw syscall.Stat_t data for \x1b[0;91m %v \x1b[0m", sourcePath)
-		}
 		switch fileInfo.Mode() & os.ModeType {
 		case os.ModeDir:
 			if err := createIfNotExists(destPath, 0755); err != nil {
@@ -120,9 +104,10 @@ func copyDirectory(pkg string, src string, dest string) error {
 			}
 		}
 
-		if err := os.Lchown(destPath, int(stat.Uid), int(stat.Gid)); err != nil {
+		if err := applyOwnership(sourcePath, destPath, fileInfo); err != nil {
 			return err
 		}
+
 		info, err := entry.Info()
 		if err != nil {
 			fmt.Printf("\x1b[0;91mFailed to get file info from %s\x1b[0m\n", entry.Name())
@@ -146,12 +131,8 @@ func copyFile(pkg string, srcFile string, dstFile string) error {
 		return err
 	}
 	defer out.Close()
-	in, err := os.Open(srcFile)
-	defer in.Close()
-	if err != nil {
-		return err
-	}
-	data, err := io.ReadAll(in)
+
+	data, err := os.ReadFile(srcFile)
 	if err != nil {
 		return err
 	}
@@ -162,17 +143,18 @@ func copyFile(pkg string, srcFile string, dstFile string) error {
 	} else {
 		fmt.Printf("\x1b[38;5;220mBinary file detected, skipping the replace. %s\x1b[0m\n", srcFile)
 	}
-	_, err = io.WriteString(out, fileData)
+	_, err = out.Write([]byte(fileData))
 	if err != nil {
 		return err
 	}
-	in.Sync()
-	os.Chmod(dstFile, 0700)
+
+	_ = os.Chmod(dstFile, 0700)
 	return nil
 }
 
 func exists(filePath string) bool {
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+	_, err := os.Stat(filePath)
+	if err != nil && os.IsNotExist(err) {
 		return false
 	}
 	return true
