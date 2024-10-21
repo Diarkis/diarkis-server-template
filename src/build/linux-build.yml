@@ -23,6 +23,9 @@ buildSettings:
     health-check:
       target: healthcheck/main.go
       output: remote_bin/health-check
+    ms:
+      target: mars-stats/main.go
+      output: remote_bin/ms
     testcli:
       target: testcli/main.go
       output: remote_bin/testcli
