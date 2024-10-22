@@ -46,7 +46,7 @@ type Config struct {
 	MoveDataCountPerSync                 int    `json:"MoveDataCountPerSync"`
 	MoveProbabilityPercentagePerInterval int    `json:"MoveProbabilityPercenntagePerInterval"`
 	ProtocolSource                       string `json:"Protocol"`
-	MovementDuration                     int `json:"MoveDurationMs"`
+	MovementDuration                     int    `json:"MoveDurationMs"`
 }
 
 // DefaultConfig holds the default values for the configuration
@@ -61,7 +61,7 @@ var DefaultConfig = Config{
 	MoveDataCountPerSync:                 5,
 	SyncCountPerMovement:                 3,
 	ProtocolSource:                       "udp",
-	MovementDuration:		      1000,
+	MovementDuration:                     1000,
 }
 
 const MIN_WAIT_MS = 1000
@@ -84,6 +84,7 @@ var movementRange = 1200
 var nbSyncPerMovement = 3
 var nbMoveFrame = 16
 var movementDuration = 1000
+
 // metrics counter
 var botCounter = 0
 var syncCnt int
@@ -575,7 +576,7 @@ func randomSync(bot *botData) {
 		for i := 0; i < nbSyncPerMovement; i++ {
 			nextX := currentX + stepX
 			nextY := currentY + stepY
-			isLast := i >= nbSyncPerMovement - 1
+			isLast := i >= nbSyncPerMovement-1
 			message := createMovementPayload(bot.angle, currentX, currentY, nextX, nextY, nbMoveFrame, timeStamp, frameInterval, useNewPayloadFormat, isLast)
 			bot.field.Sync(int64(nextX), int64(nextY), 0, 0, 0, message, false, bot.uid)
 			currentX = nextX
