@@ -1,0 +1,20 @@
+{
+  "DiarkisCharacterSyncPayload": {
+    "package": "custom",
+    "properties": {
+      "Engine": "u8",
+      "Frames": "custom.DiarkisCharacterFrameData[]",
+      "Timestamp": "i64"
+    }
+  },
+  "DiarkisCharacterFrameData": {
+    "package": "custom",
+    "properties": {
+      "AnimationBlend": "u8",
+      "AnimationID": "u8",
+      "Position": "custom.DiarkisVector3",
+      "RotationAngles": "u16",
+      "TimestampInterval": "u16"
+    }
+  }
+}

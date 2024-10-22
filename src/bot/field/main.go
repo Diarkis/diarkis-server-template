@@ -46,20 +46,22 @@ type Config struct {
 	MoveDataCountPerSync                 int    `json:"MoveDataCountPerSync"`
 	MoveProbabilityPercentagePerInterval int    `json:"MoveProbabilityPercenntagePerInterval"`
 	ProtocolSource                       string `json:"Protocol"`
+	MovementDuration                     int `json:"MoveDurationMs"`
 }
 
 // DefaultConfig holds the default values for the configuration
 var DefaultConfig = Config{
 	HostURL:                              "127.0.0.1:7000",
-	BotCnt:                               50,
+	BotCnt:                               250,
 	NewPayloadFormat:                     true,
-	MovementIntervalMs:                   200,
+	MovementIntervalMs:                   2000,
 	AreaWidth:                            10000,
 	MovementRange:                        500,
-	MoveProbabilityPercentagePerInterval: 5,
-	MoveDataCountPerSync:                 16,
+	MoveProbabilityPercentagePerInterval: 50,
+	MoveDataCountPerSync:                 5,
 	SyncCountPerMovement:                 3,
 	ProtocolSource:                       "udp",
+	MovementDuration:		      1000,
 }
 
 const MIN_WAIT_MS = 1000
@@ -81,7 +83,7 @@ var halfMapSize = 2250
 var movementRange = 1200
 var nbSyncPerMovement = 3
 var nbMoveFrame = 16
-
+var movementDuration = 1000
 // metrics counter
 var botCounter = 0
 var syncCnt int
@@ -427,7 +429,7 @@ func float32ToByte(f float32) []byte {
 	return buf.Bytes()
 }
 
-func createNewMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData, frameInterval int, isLast bool) []byte {
+func createNewMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData int, timeStamp int64, frameInterval int, isLast bool) []byte {
 	newPayload := custom.NewDiarkisCharacterSyncPayload()
 	prevXUnity := float32(prevX) / 100.
 	prevYUnity := float32(prevY) / 100.
@@ -436,22 +438,20 @@ func createNewMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData,
 
 	distanceX := xUnity - prevXUnity
 	distanceY := yUnity - prevYUnity
-	distanceMagn := math.Sqrt(math.Pow(float64(distanceX), 2) + math.Pow(float64(distanceY), 2)) * 150
 	frameDistanceX := float32(distanceX) / float32(nbMoveData)
 	frameDistanceY := float32(distanceY) / float32(nbMoveData)
 
 	currentX := prevXUnity
 	currentY := prevYUnity
 	newRot := direction
-	newPayload.Timestamp = time.Now().UTC().UnixNano() 
-	frameInterval = int(distanceMagn / float64(nbMoveData))
+	newPayload.Timestamp = timeStamp
 	for i := 0; i < nbMoveData; i++ {
 		frameData := custom.NewDiarkisCharacterFrameData()
-		frameData.RotationAngles = uint16(newRot)
+		frameData.RotationAngles = uint16((((newRot + 180) / 360) * 65535) + 0.5)
 		frameData.Position.X = float32(currentX) * 100
 		frameData.Position.Z = float32(currentY) * 100
 		frameData.Position.Y = 0
-		frameData.TimestampInterval = uint16(i * frameInterval)
+		frameData.TimestampInterval = uint16(frameInterval * (i + 1))
 		frameData.AnimationBlend = 5.
 		frameData.AnimationID = 1
 		currentX += frameDistanceX
@@ -465,7 +465,6 @@ func createNewMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData,
 
 	newPayload.Engine = 0
 	payloadBytes := newPayload.Pack()
-
 	return payloadBytes
 }
 
@@ -497,9 +496,9 @@ func eulerToQuaternion(angle float64) *custom.DiarkisQuaternion {
 	return quat
 }
 
-func createMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData, fps int, useNewPayload, isLast bool) []byte {
+func createMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData int, timeStamp int64, frameInterval int, useNewPayload, isLast bool) []byte {
 	if useNewPayload {
-		return createNewMovementPayload(direction, prevX, prevY, x, y, nbMoveData, fps, isLast)
+		return createNewMovementPayload(direction, prevX, prevY, x, y, nbMoveData, timeStamp, frameInterval, isLast)
 	}
 
 	payloadSize := 1 + (4 * 8) + (nbMoveData)*(13)
@@ -532,7 +531,7 @@ func createMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData, fp
 	payload = append(payload, float32ToByte(float32(velocityX))...)
 	payload = append(payload, float32ToByte(float32(velocityY))...)
 	payload = append(payload, float32ToByte(float32(0))...)
-	payload = append(payload, float32ToByte(float32(fps))...)
+	payload = append(payload, float32ToByte(float32(frameInterval))...)
 	payload = append(payload, []byte{byte(nbMoveData)}...)
 
 	for i := 0; i < nbMoveData; i++ {
@@ -544,6 +543,7 @@ func createMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData, fp
 
 	return append(payloadSizeBytes, payload...)
 }
+
 func randomSync(bot *botData) {
 	prevX := bot.x
 	prevY := bot.y
@@ -570,17 +570,18 @@ func randomSync(bot *botData) {
 		stepY := (bot.y - prevY) / nbSyncPerMovement
 		currentX := prevX
 		currentY := prevY
+		frameInterval := movementDuration / (nbSyncPerMovement * nbMoveFrame)
+		timeStamp := time.Now().UTC().UnixMilli()
 		for i := 0; i < nbSyncPerMovement; i++ {
 			nextX := currentX + stepX
 			nextY := currentY + stepY
-			frameInterval := (movementRange / 10) / nbSyncPerMovement
 			isLast := i >= nbSyncPerMovement - 1
-			message := createMovementPayload(bot.angle, currentX, currentY, nextX, nextY, nbMoveFrame, frameInterval, useNewPayloadFormat, isLast)
-
+			message := createMovementPayload(bot.angle, currentX, currentY, nextX, nextY, nbMoveFrame, timeStamp, frameInterval, useNewPayloadFormat, isLast)
 			bot.field.Sync(int64(nextX), int64(nextY), 0, 0, 0, message, false, bot.uid)
 			currentX = nextX
 			currentY = nextY
 			time.Sleep(time.Millisecond * time.Duration(frameInterval*(nbMoveFrame-1)))
+			timeStamp += int64(nbMoveFrame * frameInterval)
 		}
 
 		bot.state = STATUS_SYNC
@@ -651,6 +652,7 @@ func parseFieldArgs() {
 		interval = int64(config.MovementIntervalMs)
 		mapSize = config.AreaWidth
 		movementRange = config.MovementRange
+		movementDuration = config.MovementDuration
 		moveRatio = config.MoveProbabilityPercentagePerInterval
 		nbSyncPerMovement = config.SyncCountPerMovement
 		nbMoveFrame = config.MoveDataCountPerSync

@@ -32,13 +32,12 @@ type DiarkisCharacterSyncPayload struct {
 	Cmd uint16
 	Engine uint8
 	Frames []*DiarkisCharacterFrameData
-	FramesInterval uint16
 	Timestamp int64
 }
 
 // NewDiarkisCharacterSyncPayload creates a new instance of DiarkisCharacterSyncPayload struct.
 func NewDiarkisCharacterSyncPayload() *DiarkisCharacterSyncPayload {
-	return &DiarkisCharacterSyncPayload{ Ver: 0, Cmd: 0, Engine: 0, Frames: make([]*DiarkisCharacterFrameData, 0), FramesInterval: 0, Timestamp: 0 }
+	return &DiarkisCharacterSyncPayload{ Ver: 0, Cmd: 0, Engine: 0, Frames: make([]*DiarkisCharacterFrameData, 0), Timestamp: 0 }
 }
 
 // Pack encodes DiarkisCharacterSyncPayload struct to a byte array to be delivered over the command.
@@ -64,10 +63,6 @@ func (proto *DiarkisCharacterSyncPayload) Pack() []byte {
 	}
 
 
-	/* uint16 */
-	bytes = binary.BigEndian.AppendUint16(bytes, uint16(proto.FramesInterval))
-
-
 	/* int64 */
 	bytes = binary.BigEndian.AppendUint64(bytes, uint64(proto.Timestamp))
 
@@ -77,7 +72,7 @@ func (proto *DiarkisCharacterSyncPayload) Pack() []byte {
 
 // Unpack decodes the command payload byte array to DiarkisCharacterSyncPayload struct.
 func (proto *DiarkisCharacterSyncPayload) Unpack(bytes []byte) error {
-	if len(bytes) < 13 {
+	if len(bytes) < 11 {
 		return errors.New("DiarkisCharacterSyncPayloadUnpackError")
 	}
 
@@ -107,11 +102,6 @@ func (proto *DiarkisCharacterSyncPayload) Unpack(bytes []byte) error {
 	}
 
 
-	/* uint16 */
-	proto.FramesInterval = binary.BigEndian.Uint16(bytes[offset:offset + 2])
-	offset += 2
-
-
 	/* int64 */
 	proto.Timestamp = int64(binary.BigEndian.Uint64(bytes[offset:offset + 8]))
 	offset += 8
@@ -124,7 +114,6 @@ func (proto *DiarkisCharacterSyncPayload) String() string {
 	list := make([]string, 0)
 	list = append(list, fmt.Sprint("Engine = ", proto.Engine))
 	for i, item := range proto.Frames { list = append(list, fmt.Sprint("Frames[", i, "] = ", "[", item.String(), "]")) }
-	list = append(list, fmt.Sprint("FramesInterval = ", proto.FramesInterval))
 	list = append(list, fmt.Sprint("Timestamp = ", proto.Timestamp))
 	return strings.Join(list, " | ")
 }
