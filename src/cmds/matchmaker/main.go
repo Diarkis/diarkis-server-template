@@ -20,6 +20,7 @@ func Setup() {
 	// Set up matching ticket with sampleTicketType
 	// This callback is invoked when a new ticket is issued.
 	matching.SetOnIssueTicket(sampleTicketType0, func(userData *user.User) *matching.TicketParams {
+		// Randomize searchTries and emptySearches to not move to the wait mode at the same time considering all clients issue tickets at the same time.
 		searchTries := util.RandomInt(1, 300)
 		emptySearches := util.RandomInt(1, searchTries)
 		return &matching.TicketParams{
@@ -76,6 +77,7 @@ func Setup() {
 	})
 
 	matching.SetOnIssueTicket(sampleTicketType1, func(userData *user.User) *matching.TicketParams {
+		// Randomize searchTries and emptySearches to not move to the wait mode at the same time considering all clients issue tickets at the same time.
 		searchTries := util.RandomInt(1, 300)
 		emptySearches := util.RandomInt(1, searchTries)
 		return &matching.TicketParams{
