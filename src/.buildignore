@@ -14,3 +14,11 @@ coderefs/*
 configs/*
 # docker
 docker/*
+docker-compose.yml
+# git
+.git/*
+.github/*
+.gitignore
+# IDE
+.vscode/*
+.idea/*
