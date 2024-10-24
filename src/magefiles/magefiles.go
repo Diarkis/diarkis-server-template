@@ -50,6 +50,7 @@ func (Diarkis) ChangeVersion(version string) error {
 
 // Local Build server binary for local use
 func (Build) Local() error {
+	mg.Deps(Puffer.Gen)
 	fmt.Println("Build server binaries for local use")
 
 	var buildCfg string
@@ -67,6 +68,7 @@ func (Build) Local() error {
 
 // Linux Build server binary for linux or container environment
 func (Build) Linux() error {
+	mg.Deps(Puffer.Gen)
 	fmt.Println("Build server binaries")
 
 	return build("./build/linux-build.yml")
@@ -74,6 +76,7 @@ func (Build) Linux() error {
 
 // Mac Build server binary for mac use
 func (Build) Mac() error {
+	mg.Deps(Puffer.Gen)
 	fmt.Println("Build server binaries")
 
 	return build("./build/mac-build.yml")
@@ -128,7 +131,7 @@ func (Puffer) Gen() error {
 	case "darwin":
 		pufferBin = filepath.Join("puffer", "puffer-mac")
 	case "windows":
-		pufferBin = filepath.Join("puffer", "puffer-windows.exe")
+		pufferBin = filepath.Join("puffer", "puffer-win.exe")
 	}
 
 	pufferBin = filepath.Join(cwd, pufferBin)
