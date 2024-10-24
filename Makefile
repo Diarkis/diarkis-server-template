@@ -9,7 +9,7 @@ COPYRIGHT := Diarkis Inc. All rights reserved.
 
 .PHONY: init
 init: ## make init project_id={project ID} builder_token={build token} output={absolute path to install} module_name={go module name}
-	./init.sh $(project_id) $(builder_token) $(output) $(module_name)
+	go run ./tools/init.go $(project_id) $(builder_token) $(output) $(module_name)
 
 .PHONY: fmt
 fmt: add-license
