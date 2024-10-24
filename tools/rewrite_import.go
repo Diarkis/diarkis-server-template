@@ -1,5 +1,7 @@
 // © 2019-2024 Diarkis Inc. All rights reserved.
 
+//go:build ignore
+
 package main
 
 import (
