@@ -27,6 +27,12 @@ type Diarkis mg.Namespace
 type Build mg.Namespace
 type Puffer mg.Namespace
 
+// Init Initialize project
+func Init(version string) error {
+	// dirty alias to init
+	return diarkisChangeVersion(version)
+}
+
 // Version Print the version of diarkis currently used.
 func (Diarkis) Version() error {
 	version, err := getDiarkisVersion()
@@ -39,48 +45,7 @@ func (Diarkis) Version() error {
 
 // ChangeVersion Change diarkis version.
 func (Diarkis) ChangeVersion(version string) error {
-	fmt.Printf("version: %s\n", version)
-
-	// check if the version exists
-	url := fmt.Sprintf("https://docs.diarkis.io/sdk/server_coderef/%s.tar.gz", version)
-	resp, err := http.Head(url)
-	if err != nil {
-		return fmt.Errorf("error cannot check the coderefs version: %w", err)
-	}
-	if resp.StatusCode != http.StatusOK {
-		fmt.Printf("cannot find diarkis version %s\n", version)
-		return errors.New("version not found")
-	}
-
-	resp, err = http.Get(url)
-	if err != nil {
-		return fmt.Errorf("error cannot download the coderefs: %w", err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		fmt.Printf("cannot find diarkis version %s\n", version)
-		return errors.New("version not found")
-	}
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("error cannot read request body: %w", err)
-	}
-
-	err = sh.Rm(filepath.Join("coderefs", version))
-	if err != nil {
-		return err
-	}
-	err = extractDocRefs(data, "coderefs")
-	if err != nil {
-		return fmt.Errorf("error cannot extract coderefs: %w", err)
-	}
-
-	// update go mod
-	err = updateGoMod(version)
-	if err != nil {
-		return err
-	}
-	return nil
+	return diarkisChangeVersion(version)
 }
 
 // Local Build server binary for local use
@@ -163,12 +128,10 @@ func (Puffer) Gen() error {
 	case "darwin":
 		pufferBin = filepath.Join("puffer", "puffer-mac")
 	case "windows":
-		// TODO
+		pufferBin = filepath.Join("puffer", "puffer-windows.exe")
 	}
 
-	if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
-		pufferBin = filepath.Join(cwd, pufferBin)
-	}
+	pufferBin = filepath.Join(cwd, pufferBin)
 
 	cmd := exec.Command(pufferBin, ".", ".", projectName)
 	cmd.Dir = "puffer"
@@ -253,7 +216,6 @@ func build(buildCfg string) error {
 		return err
 	}
 
-	// $(DIARKIS_CLI) build -c $(BUILD_CONFIG) --host v3.builder.diarkis.io
 	return sh.RunV(diarkisCli, "build", "-c", buildCfg, "--host", "v3.builder.diarkis.io")
 }
 
@@ -335,5 +297,50 @@ func cleanDir(dir string) error {
 		}
 	}
 
+	return nil
+}
+
+func diarkisChangeVersion(version string) error {
+	fmt.Printf("version: %s\n", version)
+
+	// check if the version exists
+	url := fmt.Sprintf("https://docs.diarkis.io/sdk/server_coderef/%s.tar.gz", version)
+	resp, err := http.Head(url)
+	if err != nil {
+		return fmt.Errorf("error cannot check the coderefs version: %w", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("cannot find diarkis version %s\n", version)
+		return errors.New("version not found")
+	}
+
+	resp, err = http.Get(url)
+	if err != nil {
+		return fmt.Errorf("error cannot download the coderefs: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("cannot find diarkis version %s\n", version)
+		return errors.New("version not found")
+	}
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("error cannot read request body: %w", err)
+	}
+
+	err = sh.Rm(filepath.Join("coderefs", version))
+	if err != nil {
+		return err
+	}
+	err = extractDocRefs(data, "coderefs")
+	if err != nil {
+		return fmt.Errorf("error cannot extract coderefs: %w", err)
+	}
+
+	// update go mod
+	err = updateGoMod(version)
+	if err != nil {
+		return err
+	}
 	return nil
 }
