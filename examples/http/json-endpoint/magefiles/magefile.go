@@ -85,8 +85,6 @@ func Server(target string) error {
 	var exe string
 	var args []string
 
-	projectRoot := getProjectRoot()
-
 	if target == "mars" {
 		exe = filepath.Join("remote_bin", "mars"+binExt)
 		args = append(args, filepath.Join("configs", "mars", "main.json"))
@@ -96,7 +94,7 @@ func Server(target string) error {
 
 	fmt.Printf("Starting %s server...\n", target)
 
-	return runVInDir(projectRoot, exe, args...)
+	return sh.RunV(exe, args...)
 }
 
 // Coderefs Download the coderefs associated to the diarkis version in the go.mod.
@@ -242,22 +240,7 @@ func build(buildCfg string) error {
 
 	diarkisCli := filepath.Join(getProjectRoot(), getDiarkisCli())
 
-	if err = buildDependencies(buildCfg); err != nil {
-		return err
-	}
-
 	return runVInDir(currDir, diarkisCli, "build", "-c", buildCfg, "--host", diarkisCLIHost)
-}
-
-// buildDependencies build project root artifacts
-func buildDependencies(buildCfg string) error {
-	fmt.Printf("buildDependencies\n")
-	projectRoot := getProjectRoot()
-	diarkisCli := getDiarkisCli()
-
-	// build the dependencies with the same configuration file name.
-	// it should exist at the project root directory
-	return runVInDir(projectRoot, diarkisCli, "build", "-c", buildCfg, "--host", diarkisCLIHost)
 }
 
 func getDiarkisCli() string {
