@@ -10,7 +10,7 @@ buildSettings:
     http:
       output: remote_bin/http.exe
       target: http.go
-  root: .
+  root: ..
   version: "2"
 diarkis:
   project_id: "{{PROJECT_ID}}"
