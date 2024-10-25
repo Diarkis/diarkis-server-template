@@ -8,11 +8,11 @@ buildSettings:
   goVersion: 1.22.4
   projects:
     http:
-      output: remote_bin/http
+      output: remote_bin/http.exe
       target: servers/http/main.go
     mars:
       target: mars/main.go
-      output: remote_bin/mars
+      output: remote_bin/mars.exe
   root: ..
   version: "2"
 diarkis:
