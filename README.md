@@ -36,7 +36,9 @@ This is the recommended way on Windows.
 ```sh
 ./run-mage.sh {project ID} {build token} {path to install} {custom module name}
 ```
+
 or on Windows
+
 ```
 run-mage.bat {project ID} {build token} {path to install} {custom module name}
 ```
