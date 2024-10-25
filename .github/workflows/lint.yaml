@@ -22,12 +22,9 @@ jobs:
       - name: init test
         # check make init command does not fail
         run: make init project_id=PROJECT_ID builder_token=BUILDER_TOKEN output=/tmp/init-test
-        shell: bash
 
       - name: check format
         run: make fmt
-        shell: bash
 
       - name: check diff
         run: git diff --exit-code
-        shell: bash
