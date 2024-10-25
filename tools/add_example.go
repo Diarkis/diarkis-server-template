@@ -28,10 +28,6 @@ func main() {
 
 	flag.Parse()
 
-	fmt.Printf("destDir: %s\n", destDir)
-	fmt.Printf("addExample: %t\n", addExample)
-	fmt.Printf("listExample: %t\n", listExample)
-
 	if listExample {
 		l, err := getExampleList()
 		if err != nil {
@@ -51,8 +47,10 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
-			fmt.Printf("ok: %t\n", ok)
-
+			if !ok {
+				fmt.Printf("example %q not found\n", arg)
+				os.Exit(1)
+			}
 			err = copyExampleToTargetTemplate(destDir, "examples/"+arg, arg)
 			if err != nil {
 				panic(err)
@@ -121,6 +119,7 @@ func getExampleList() ([]string, error) {
 // getTargetTemplateDiarkisBuildInfo retrieve the diarkis.project_id
 // and builder_token from an existing template.
 func getTargetTemplateDiarkisBuildInfo(templateDir string) (string, string, error) {
+	fmt.Printf("templateDir: %s\n", templateDir)
 	linuxBuildFile := filepath.Join(templateDir, "build", "linux-build.yml")
 	fmt.Printf("linuxBuildFile: %q\n", linuxBuildFile)
 	linuxData, err := os.ReadFile(linuxBuildFile)
