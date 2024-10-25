@@ -6,7 +6,13 @@ using JSON as input/output.
 The following command will be building the servers for your local machine.
 
 ```sh
-make build-local
+./run-mage.sh build:local
+```
+
+or on Windows
+
+```bat
+.\run-mage.bat build:local
 ```
 
 ## Start the servers
@@ -14,13 +20,13 @@ make build-local
 First of all you need to start diarkis mars server.
 
 ```sh
-make server target=mars
+./run-mage.sh server target=mars
 ```
 
 Then you can start the http server.
 
 ```sh
-make server target=http
+./run-mage.sh server target=http
 ```
 
 ## Test the endpoint
