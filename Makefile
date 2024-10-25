@@ -21,5 +21,5 @@ add-license: $(shell find . -type f -name '*.go')
 	for f in $^; do \
 		head -n 1 "$$f" | grep -q '$(COPYRIGHT)' && tail -n +2 "$$f" > temp && mv temp "$$f"; \
 		head -n 1 "$$f" | grep -q '^$$' && tail -n +2 "$$f" > temp && mv temp "$$f"; \
-		echo -e "// © 2019-$(shell date +%Y) $(COPYRIGHT)\n" | cat - "$$f" > temp && mv temp "$$f"; \
+		printf "// © 2019-$(shell date +%Y) $(COPYRIGHT)\n\n" | cat - "$$f" > temp && mv temp "$$f"; \
 	done
