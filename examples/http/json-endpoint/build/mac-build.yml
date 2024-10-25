@@ -1,0 +1,17 @@
+buildSettings:
+  env:
+    CGO_CFLAGS: -I${PROJECT_DIR}
+    CGO_ENABLED: 0
+    CGO_LDFLAGS: -L${PROJECT_DIR} -Wl,-rpath,${PROJECT_DIR}
+    GOARCH: arm64
+    GOOS: darwin
+  goVersion: 1.22.4
+  projects:
+    http:
+      output: remote_bin/http
+      target: http.go
+  root: .
+  version: "2"
+diarkis:
+  project_id: "{{PROJECT_ID}}"
+  builder_token: "{{BUILD_TOKEN}}"
