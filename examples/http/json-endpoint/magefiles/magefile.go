@@ -20,6 +20,8 @@ import (
 var binExt string
 var currDir string
 
+const diarkisCLIHost = "v3.builder.diarkis.io"
+
 func init() {
 	if runtime.GOOS == "windows" {
 		binExt = ".exe"
@@ -100,7 +102,7 @@ func build(buildCfg string) error {
 		return err
 	}
 
-	return sh.RunV(diarkisCli, "build", "-c", buildCfg, "--host", "192.168.1.17", "--port", "8443", "--insecure") //"v3.builder.diarkis.io")
+	return runVInDir(currDir, diarkisCli, "build", "-c", buildCfg, "--host", diarkisCLIHost)
 }
 
 // buildDependencies build project root artifacts
@@ -111,7 +113,7 @@ func buildDependencies(buildCfg string) error {
 
 	// build the dependencies with the same configuration file name.
 	// it should exist at the project root directory
-	return runVInDir(projectRoot, diarkisCli, "build", "-c", buildCfg, "--host", "192.168.1.17", "--port", "8443", "--insecure") //"v3.builder.diarkis.io")
+	return runVInDir(projectRoot, diarkisCli, "build", "-c", buildCfg, "--host", diarkisCLIHost)
 }
 
 func getDiarkisCli() string {
