@@ -14,12 +14,7 @@ func main() {
 	logConfigPath := "/configs/shared/log.json"
 	meshConfigPath := "/configs/shared/mesh.json"
 
-	diarkisexec.SetupDiarkis(logConfigPath, meshConfigPath, &diarkisexec.Modules{
-		Dive:       &diarkisexec.Options{ConfigPath: "/configs/shared/dive.json", ExposeCommands: true},
-		Field:      &diarkisexec.Options{ConfigPath: "/configs/shared/field.json", ExposeCommands: true},
-		DM:         &diarkisexec.Options{ConfigPath: "/configs/shared/dm.json", ExposeCommands: true},
-		MatchMaker: &diarkisexec.Options{ConfigPath: "/configs/shared/matching.json", ExposeCommands: true},
-	})
+	diarkisexec.SetupDiarkis(logConfigPath, meshConfigPath, &diarkisexec.Modules{})
 
 	expose()
 
