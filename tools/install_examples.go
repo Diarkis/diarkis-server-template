@@ -29,6 +29,7 @@ func main() {
 		fmt.Printf("error: %v\n", err)
 		os.Exit(1)
 	}
+	fmt.Printf("Installation done\n")
 }
 
 func usage() {
@@ -47,6 +48,8 @@ Sample:
 
 func copyExampleToTargetTemplate(projectID, builderToken, destDir, templateDir string) error {
 	var yamlFiles []string
+
+	fmt.Printf("Install examples to %s\n", destDir)
 
 	examplesDir := filepath.Join(templateDir, "examples")
 
@@ -69,6 +72,7 @@ func copyExampleToTargetTemplate(projectID, builderToken, destDir, templateDir s
 		}
 
 		if !info.Mode().IsRegular() {
+			fmt.Printf("skip non regular file %s (%s)\n", rel, info.Mode())
 			return nil
 		}
 
