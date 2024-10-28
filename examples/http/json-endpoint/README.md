@@ -20,13 +20,13 @@ or on Windows
 First of all you need to start diarkis mars server.
 
 ```sh
-./run-mage.sh server target=mars
+./run-mage.sh server mars
 ```
 
 Then you can start the http server.
 
 ```sh
-./run-mage.sh server target=http
+./run-mage.sh server http
 ```
 
 ## Test the endpoint

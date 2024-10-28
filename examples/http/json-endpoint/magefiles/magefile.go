@@ -80,7 +80,9 @@ func (Build) Mac() error {
 	return build("./build/mac-build.yml")
 }
 
-// Server Start a server locally: [ target=mars ] [ target=http ]
+// Server Start a server locally.
+//
+// target can be either mars or http
 func Server(target string) error {
 	var exe string
 	var args []string
@@ -90,6 +92,8 @@ func Server(target string) error {
 		args = append(args, filepath.Join("configs", "mars", "main.json"))
 	} else {
 		exe = filepath.Join(currDir, "remote_bin", target+binExt)
+		// do not allow http to use all the cpu by default
+		args = []string{"-c", "1"}
 	}
 
 	fmt.Printf("Starting %s server...\n", target)
@@ -232,6 +236,7 @@ func getDiarkisVersion() (string, error) {
 	return "", errors.New("diarkis is not in the requirement of the go mod file")
 }
 
+// build invoke diarkis-cli with the proper configuration file.
 func build(buildCfg string) error {
 	err := cleanDir("remote_bin")
 	if err != nil {
