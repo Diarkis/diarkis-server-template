@@ -14,6 +14,8 @@ func main() {
 	logConfigPath := "/configs/shared/log.json"
 	meshConfigPath := "/configs/shared/mesh.json"
 
+	// For this example we do not need to configure any of the diarkis module.
+	// We solely rely on the http server.
 	diarkisexec.SetupDiarkis(logConfigPath, meshConfigPath, &diarkisexec.Modules{})
 
 	expose()
@@ -24,10 +26,13 @@ func main() {
 }
 
 func expose() {
+	// Expose a simple handler on POST /echo
 	http.Post("/echo", handleEcho)
 }
 
 func handleEcho(res *http.Response, req *http.Request, params *http.Params, next func(error)) {
+	// diarkis automatically parse JSON request body if the content-type
+	// is set to application/json.
 	if req.JSONBody == nil {
 		err := errors.New("expect JSON body")
 		res.Respond(err.Error(), http.Bad)
@@ -35,14 +40,17 @@ func handleEcho(res *http.Response, req *http.Request, params *http.Params, next
 		return
 	}
 
+	// If the message property is missing or if its type is not string
+	// return an error.
 	message, ok := req.JSONBody["message"].(string)
 	if !ok {
-		err := errors.New("missing parameter message")
+		err := errors.New("missing/invalid parameter message")
 		res.Respond(err.Error(), http.Bad)
 		next(err)
 		return
 	}
 
+	// Create JSON response
 	enc, err := json.Marshal(map[string]any{"echo": message})
 	if err != nil {
 		res.Respond(err.Error(), http.Bad)
