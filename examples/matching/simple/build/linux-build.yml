@@ -3,16 +3,26 @@ buildSettings:
     CGO_CFLAGS: -I${PROJECT_DIR}
     CGO_ENABLED: 0
     CGO_LDFLAGS: -L${PROJECT_DIR} -Wl,-rpath,${PROJECT_DIR}
-    GOARCH: arm64
-    GOOS: darwin
-  goVersion: 1.22.4
+    GOARCH: amd64
+    GOOS: linux
+  goVersion: 1.22.8
   projects:
+    cli:
+      output: remote_bin/cli
+      target: client/main.go
+      debug: true
     http:
       output: remote_bin/http
       target: servers/http/main.go
+      debug: true
     mars:
       output: remote_bin/mars
       target: mars/main.go
+      debug: true
+    udp:
+      output: remote_bin/udp
+      target: servers/udp/main.go
+      debug: true
   root: ..
   version: "2"
 diarkis:

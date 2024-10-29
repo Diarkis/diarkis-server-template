@@ -81,6 +81,13 @@ func (Build) Mac() error {
 	return build("./build/mac-build.yml")
 }
 
+// Windows Build server binary for windows use
+func (Build) Windows() error {
+	fmt.Println("Build server binaries")
+
+	return build("./build/windows-build.yml")
+}
+
 // Server Start a server locally.
 //
 // target can be either mars or http

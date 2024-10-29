@@ -11,10 +11,10 @@ buildSettings:
       output: remote_bin/http.exe
       target: servers/http/main.go
     mars:
-      target: mars/main.go
       output: remote_bin/mars.exe
+      target: mars/main.go
   root: ..
   version: "2"
 diarkis:
-  project_id: "{{PROJECT_ID}}"
   builder_token: "{{BUILD_TOKEN}}"
+  project_id: "{{PROJECT_ID}}"

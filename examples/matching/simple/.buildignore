@@ -1,0 +1,4 @@
+build/*
+remote_bin/*
+magefiles/mage
+magefiles/mage.exe
