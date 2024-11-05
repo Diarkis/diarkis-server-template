@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: diarkis-metrics
+  labels:
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      component: 'http'
+  namespaceSelector:
+    matchNames:
+      - dev0
+  endpoints:
+    - port: http
+      path: /metrics/prometheus/v/3
+  targetLabels:
+    - component
