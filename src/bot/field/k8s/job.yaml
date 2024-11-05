@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: run-bot-job
+spec:
+  template:
+    spec:
+      imagePullSecrets:
+      - name: secrets-dockerhub
+      containers:
+      - name: run-bot
+        image: __YOUR_REPOSITORY__/field-bot:latest
+        command: ["/go/bin/bot"]
+        args: ["$(DIARKIS_BOT_SERVER_ENDPOINT)", "$(DIARKIS_BOT_NUM)", "$(DIARKIS_BOT_PROTOCOL)", "$(DIARKIS_BOT_PAYLOAD_FORMAT)", "$(DIARKIS_BOT_INTERVAL)", "$(DIARKIS_BOT_MAP_SIZE)", "$(DIARKIS_BOT_RANGE)"]
+        env:
+        - name: DIARKIS_BOT_SERVER_ENDPOINT
+          value: "http.dev0.svc.cluster.local"
+        - name: DIARKIS_BOT_NUM
+          value: "100"
+        - name: DIARKIS_BOT_PROTOCOL
+          value: "udp"
+        - name: DIARKIS_BOT_PAYLOAD_FORMAT
+          value: "1"
+        - name: DIARKIS_BOT_INTERVAL
+          value: "2000"
+        - name: DIARKIS_BOT_MAP_SIZE
+          value: "4500"
+        - name: DIARKIS_BOT_RANGE
+          value: "500"
+      restartPolicy: Never
+  activeDeadlineSeconds: 180
+  backoffLimit: 0
