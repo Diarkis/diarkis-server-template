@@ -5,7 +5,6 @@ set -e
 usage() {
   echo "Usage: TF_VAR_token=<token> $0 [workspace] [ROOT_DIR]"
   echo "  workspace (optional): The Terraform workspace to use. (default: dev-diarkis-asia)"
-  echo "  ROOT_DIR (optional): The root directory of the project."
   echo "  TF_VAR_token: The Linode Personal Access Token."
   echo
 }
@@ -19,7 +18,7 @@ fi
 workspace_name=${1:-dev-diarkis-asia}
 
 # Set ROOT_DIR as the first argument or default to the root directory of the project
-ROOT_DIR=${2:-$(cd $(dirname $0)../../; pwd)}
+ROOT_DIR=$(cd $(dirname $0); cd ../../; pwd)
 
 # Check if TF_VAR_token is set.
 if [ -z "$TF_VAR_token" ]; then
@@ -53,13 +52,13 @@ echo "All required commands are installed."
 echo "Initializing and applying Terraform configuration..."
 
 # Create a new workspace if not already exists
+terraform -chdir=$ROOT_DIR/terraform/linode init
 terraform -chdir=$ROOT_DIR/terraform/linode workspace select "$workspace_name"
 if [ $? -ne 0 ]; then
   echo "Creating a new workspace: $workspace_name"
   terraform -chdir=$ROOT_DIR/terraform/linode workspace new "$workspace_name" 
   terraform -chdir=$ROOT_DIR/terraform/linode workspace select "$workspace_name"
 fi
-terraform -chdir=$ROOT_DIR/terraform/linode init
 terraform -chdir=$ROOT_DIR/terraform/linode apply -var-file="workspaces/$workspace_name/terraform.tfvars" -auto-approve
 
 # Get results from Terraform output
@@ -72,9 +71,9 @@ echo "KUBECONFIG is set to $KUBECONFIG"
 
 
 set +e
-until kubectl get nodes > /dev/null 2>&1; do
+until kubectl get nodes --no-headers 2>&1 | grep -qv "No resources found"; do
     echo "Waiting for nodes to be registered..."
-    sleep 1
+    sleep 10
 done
 set -e
 

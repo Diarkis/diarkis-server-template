@@ -2,6 +2,19 @@
 
 set -e  # Exit on error
 
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+fi
+case $ID in
+    ubuntu)
+        ;;
+    *)
+        echo "This script only works on Ubuntu"
+        exit 1
+        ;;
+esac
+
+
 # Install Terraform
 if ! command -v terraform &> /dev/null
 then
