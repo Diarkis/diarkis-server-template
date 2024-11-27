@@ -33,7 +33,14 @@ resource "linode_firewall" "diarkis-firewall" {
     protocol = "TCP"
     ports    = "10250"
     ipv4     = ["192.168.128.0/17"]
-    ipv6     = ["::/0"]
+  }
+
+  inbound {
+    label    = "allow-nodeport"
+    action   = "ACCEPT"
+    protocol = "TCP"
+    ports    = "30000-32767"
+    ipv4     = ["192.168.128.0/17"]
   }
 
   inbound_policy = "DROP"
