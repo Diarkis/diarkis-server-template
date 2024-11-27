@@ -26,7 +26,24 @@ resource "linode_firewall" "diarkis-firewall" {
     ipv4     = ["0.0.0.0/0"]
     ipv6     = ["::/0"]
   }
+  inbound {
+    label    = "allow-diarkis-mars"
+    action   = "ACCEPT"
+    protocol = "UDP"
+    ports    = "6779"
+    ipv4     = ["0.0.0.0/0"]
+    ipv6     = ["::/0"]
+  }
 
+  inbound {
+    label    = "allow-diarkis-mesh"
+    action   = "ACCEPT"
+    protocol = "UDP"
+    ports    = "8000-9000"
+    ipv4     = ["0.0.0.0/0"]
+    ipv6     = ["::/0"]
+  }
+  
   inbound {
     label    = "allow-kubelet"
     action   = "ACCEPT"
