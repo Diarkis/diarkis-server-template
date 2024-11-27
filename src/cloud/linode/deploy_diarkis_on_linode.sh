@@ -94,7 +94,7 @@ sed s/"<MY_FIREWALL_ID>"/$FIREWALL_ID/ $ROOT_DIR/k8s/linode/cluster-firewall.yam
 
 # Install Prometheus using Helm
 echo "Installing Prometheus using Helm..."
-helm install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring --create-namespace
+helm upgrade --install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring --create-namespace
 
 echo "Waiting for Prometheus pods to be ready..."
 kubectl wait --for=condition=Ready pods --all --namespace=monitoring --timeout=600s
