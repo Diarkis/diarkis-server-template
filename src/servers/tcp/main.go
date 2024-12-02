@@ -12,7 +12,7 @@ func main() {
 	meshConfigPath := "/configs/shared/mesh.json"
 
 	diarkisexec.SetupDiarkis(logConfigPath, meshConfigPath, &diarkisexec.Modules{
-		Room:       &diarkisexec.Options{ExposeCommands: true},
+		Room:       &diarkisexec.Options{ConfigPath: "/configs/shared/room.json", ExposeCommands: true},
 		Group:      &diarkisexec.Options{ConfigPath: "/configs/shared/group.json", ExposeCommands: true},
 		Dive:       &diarkisexec.Options{ConfigPath: "/configs/shared/dive.json", ExposeCommands: true},
 		Field:      &diarkisexec.Options{ConfigPath: "/configs/shared/field.json", ExposeCommands: true},
