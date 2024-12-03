@@ -28,9 +28,14 @@ type Build mg.Namespace
 type Puffer mg.Namespace
 
 // Init Initialize project
-func Init(version string) error {
-	// dirty alias to init
-	return diarkisChangeVersion(version)
+func Init() error {
+	version, err := getDiarkisVersion()
+	if err != nil {
+		return err
+	}
+
+	var d Diarkis
+	return d.ChangeVersion(version)
 }
 
 // Version Print the version of diarkis currently used.
