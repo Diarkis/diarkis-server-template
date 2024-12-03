@@ -43,6 +43,7 @@ configMapGenerator:
       - shared/conf/matching.json
       - shared/conf/mesh.json
       - shared/conf/dive.json
+      - shared/conf/room.json
     name: shared-conf
   - files:
       - http/conf/main.json

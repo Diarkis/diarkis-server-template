@@ -5,13 +5,14 @@ package loadtest
 import (
 	"encoding/hex"
 	"fmt"
+	"sync"
+	"time"
+
 	"github.com/Diarkis/diarkis-server-template/bot/utils"
 	"github.com/Diarkis/diarkis/client/go/modules/dm"
 	"github.com/Diarkis/diarkis/client/go/tcp"
 	"github.com/Diarkis/diarkis/client/go/udp"
 	"github.com/Diarkis/diarkis/util"
-	"sync"
-	"time"
 )
 
 type Bot struct {
@@ -128,10 +129,9 @@ func spam(bot *Bot, params *Params) {
 	fmt.Println("Bot load test started -> UID", bot.uid)
 	targetUID := getTargetUID(bot.uid)
 	message := make([]byte, params.Size)
-	reliable := true
 
 	for {
-		bot.dm.Send(targetUID, message, reliable)
+		bot.dm.Send(targetUID, message)
 		go countSend()
 		time.Sleep(time.Millisecond * time.Duration(params.Interval))
 	}
