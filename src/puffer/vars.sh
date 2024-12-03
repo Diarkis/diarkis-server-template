@@ -1,1 +1,0 @@
-PROJECT_NAME=github.com/Diarkis/diarkis-server-template/puffer/go

@@ -128,12 +128,7 @@ func runPostSetup(outputPath, moduleName string) error {
 	if err := cmd.Run(); err != nil {
 		return err
 	}
-
-	// TODO(Henry): once merged remove the use of "vars.sh" and replace it
-	// with a call to go mod edit -json | jq -r '.Module.Path'
-	varshFilename := filepath.Join(outputPath, "puffer", "vars.sh")
-	data := fmt.Sprintf("PROJECT_NAME=%s\n", moduleName)
-	return os.WriteFile(varshFilename, []byte(data), 0666)
+	return nil
 }
 
 func commandV(name string, arg ...string) *exec.Cmd {

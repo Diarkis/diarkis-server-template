@@ -16,7 +16,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strings"
 
 	// mg contains helpful utility functions, like Deps
 	"github.com/magefile/mage/mg"
@@ -115,18 +114,24 @@ func (Puffer) Gen() error {
 	if err != nil {
 		return fmt.Errorf("fail to retrieve current working directory: %w", err)
 	}
-	// read project name
-	data, err := os.ReadFile(filepath.Join("puffer", "vars.sh"))
-	if err != nil {
-		return err
-	}
-	lines := strings.SplitN(string(data), "\n", 1)
-	projectName, ok := strings.CutPrefix(lines[0], "PROJECT_NAME=")
 
-	if !ok {
-		err = errors.New("puffer/vars.sh not well formed")
-		fmt.Printf("%v\n", err)
-		return err
+	stdout := bytes.NewBuffer(nil)
+	cmd := exec.Command("go", "mod", "edit", "-json")
+	cmd.Stdout = stdout
+
+	err = cmd.Run()
+	if err != nil {
+		return fmt.Errorf("fail to retrieve current project go module name: %w", err)
+	}
+
+	var doc struct {
+		Module struct {
+			Path string
+		}
+	}
+	err = json.Unmarshal(stdout.Bytes(), &doc)
+	if err != nil {
+		return fmt.Errorf("fail to parse go mod edit output: %w", err)
 	}
 
 	var pufferBin string
@@ -141,7 +146,7 @@ func (Puffer) Gen() error {
 
 	pufferBin = filepath.Join(cwd, pufferBin)
 
-	cmd := exec.Command(pufferBin, ".", ".", projectName)
+	cmd = exec.Command(pufferBin, ".", ".", doc.Module.Path+"/puffer/go")
 	cmd.Dir = "puffer"
 	cmd.Stdout = os.Stdout
 
