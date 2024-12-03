@@ -86,7 +86,7 @@ func (Build) Mac() error {
 	return build("./build/mac-build.yml")
 }
 
-// Server Start a server locally: [ target=mars ] [ target=http ] [ target=udp ] [ target=tcp ]
+// Server Start a server locally: Required 1 following argument: mars http udp tcp
 func Server(target string) error {
 	var exe string
 	var args []string
@@ -164,7 +164,7 @@ func (Puffer) Clean() error {
 	return nil
 }
 
-// GoCli Starts Go test client host=<HTTP address> uid=<client user ID> clientKey=<client key> puffer=<true/false>
+// GoCli Starts Go test client. Required 4 arguments: <HTTP address> <client user ID> <client key> <puffer enabled: true/false>
 func GoCli(host, uid, clientKey, puffer string) error {
 	bin := filepath.Join("remote_bin", "testcli")
 	if runtime.GOOS == "windows" {
