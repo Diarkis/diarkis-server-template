@@ -141,7 +141,7 @@ func (Puffer) Gen() error {
 	case "darwin":
 		pufferBin = filepath.Join("puffer", "puffer-mac")
 	case "windows":
-		pufferBin = filepath.Join("puffer", "puffer-win.exe")
+		pufferBin = filepath.Join("puffer", "puffer-windows.exe")
 	}
 
 	pufferBin = filepath.Join(cwd, pufferBin)
