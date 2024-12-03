@@ -8,25 +8,25 @@ buildSettings:
     CGO_LDFLAGS: -L${PROJECT_DIR} -Wl,-rpath,${PROJECT_DIR}
   projects:
     http:
-      target: servers/http/main.go
+      target: ./servers/http
       output: remote_bin/http
     udp:
-      target: servers/udp/main.go
+      target: ./servers/udp
       output: remote_bin/udp
     tcp:
-      target: servers/tcp/main.go
+      target: ./servers/tcp
       output: remote_bin/tcp
     mars:
-      target: mars/main.go
+      target: ./mars
       output: remote_bin/mars
     health-check:
-      target: healthcheck/main.go
+      target: ./healthcheck
       output: remote_bin/health-check
     ms:
-      target: mars-stats/main.go
+      target: ./mars-stats
       output: remote_bin/ms
     testcli:
-      target: testcli/main.go
+      target: ./testcli
       output: remote_bin/testcli
 diarkis:
   project_id: "{{PROJECT_ID}}"
