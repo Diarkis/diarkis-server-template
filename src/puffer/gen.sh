@@ -2,7 +2,7 @@
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
-source ${SCRIPT_DIR}/vars.sh
+PROJECT_NAME=$(go mod edit -json | jq -r .Module.Path)/puffer/go
 
 PUFFER_BIN=
 if [ $(uname) == 'Darwin' ]; then

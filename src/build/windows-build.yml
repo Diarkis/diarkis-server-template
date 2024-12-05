@@ -1,0 +1,34 @@
+buildSettings:
+  root: .
+  goVersion: 1.22.4
+  env:
+    CGO_ENABLED: 0
+    CGO_CFLAGS: -I${PROJECT_DIR}
+    CGO_LDFLAGS: -L${PROJECT_DIR} -Wl,-rpath,${PROJECT_DIR}
+    GOOS: windows
+    GOARCH: amd64
+  projects:
+    http:
+      target: ./servers/http
+      output: remote_bin/http.exe
+    udp:
+      target: ./servers/udp
+      output: remote_bin/udp.exe
+    tcp:
+      target: ./servers/tcp
+      output: remote_bin/tcp.exe
+    mars:
+      target: ./mars
+      output: remote_bin/mars.exe
+    health-check:
+      target: ./healthcheck
+      output: remote_bin/health-check.exe
+    ms:
+      target: ./mars-stats
+      output: remote_bin/ms.exe
+    testcli:
+      target: ./testcli
+      output: remote_bin/testcli.exe
+diarkis:
+  project_id: "{{PROJECT_ID}}"
+  builder_token: "{{BUILD_TOKEN}}"

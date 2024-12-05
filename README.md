@@ -24,15 +24,24 @@ The repository itself is under the src directory.
 When you actually start using this repository, it is assumed that you will start your project using the src directory as a template.
 To generate it, use the following command.
 
-`make init project_id={project ID} builder_token={build token} output={absolute path to install}`
+`make init project_id={project ID} builder_token={build token} output={path to install}`
 
 or to use a custom module name
 
-`make init project_id={project ID} builder_token={build token} output={absolute path to install} module_name={custom module name}`
+`make init project_id={project ID} builder_token={build token} output={path to install} module_name={custom module name}`
 
-The repository itself is under the src directory.
-When you actually start using this repository, it is assumed that you will start your project using the src directory as a template.
-To generate it, use the following command.
+We also provide [magefile](https://magefile.org/) as a more portable way to start a project.
+This is the recommended way on Windows.
+
+```sh
+./run-mage.sh {project ID} {build token} {path to install} {custom module name}
+```
+
+or on Windows
+
+```
+run-mage.bat {project ID} {build token} {path to install} {custom module name}
+```
 
 To build, you will need the build token to build diarkis, which can be obtained by contacting us at https://diarkis.io .
 
