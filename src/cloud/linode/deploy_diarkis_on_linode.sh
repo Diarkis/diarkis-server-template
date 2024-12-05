@@ -18,26 +18,28 @@ fi
 workspace_name=${1:-dev-diarkis-asia}
 
 # Set ROOT_DIR as the first argument or default to the root directory of the project
-ROOT_DIR=$(cd $(dirname $0); cd ../../; pwd)
+ROOT_DIR=$(
+  cd $(dirname $0)
+  cd ../../
+  pwd
+)
 
 # Check if TF_VAR_token is set.
 if [ -z "$TF_VAR_token" ]; then
-  echo "Error: Token is required. Provide it as the first argument or set TF_VAR_token."
+  echo "Error: Token is required. Set TF_VAR_token before running."
   exit 1
 else
   echo "TF_VAR_token is already set, continuing with the existing token."
 fi
 
-
 export KUBECONFIG=$ROOT_DIR/terraform/linode/kubeconfig
 
 # Validate all required commands are installed
 check_command() {
-    if ! command -v "$1" &> /dev/null
-    then
-        echo "Error: $1 is not installed. Please run 'init.sh' to install the required dependencies." >&2
-        exit 1
-    fi
+  if ! command -v "$1" &>/dev/null; then
+    echo "Error: $1 is not installed. Please run 'init.sh' to install the required dependencies." >&2
+    exit 1
+  fi
 }
 
 echo "Validating required commands..."
@@ -53,12 +55,15 @@ echo "Initializing and applying Terraform configuration..."
 
 # Create a new workspace if not already exists
 terraform -chdir=$ROOT_DIR/terraform/linode init
-terraform -chdir=$ROOT_DIR/terraform/linode workspace select "$workspace_name"
-if [ $? -ne 0 ]; then
-  echo "Creating a new workspace: $workspace_name"
-  terraform -chdir=$ROOT_DIR/terraform/linode workspace new "$workspace_name" 
+(
+  set +e
   terraform -chdir=$ROOT_DIR/terraform/linode workspace select "$workspace_name"
-fi
+  if [ $? -ne 0 ]; then
+    echo "Creating a new workspace: $workspace_name"
+    terraform -chdir=$ROOT_DIR/terraform/linode workspace new "$workspace_name"
+    terraform -chdir=$ROOT_DIR/terraform/linode workspace select "$workspace_name"
+  fi
+)
 terraform -chdir=$ROOT_DIR/terraform/linode apply -var-file="workspaces/$workspace_name/terraform.tfvars" -auto-approve
 
 # Get results from Terraform output
@@ -66,16 +71,16 @@ FIREWALL_ID=$(terraform -chdir=$ROOT_DIR/terraform/linode output firewall_id | t
 echo "Firewall has been created with ID: $FIREWALL_ID"
 
 # Extract kubeconfig and set for kubectl
-terraform -chdir=$ROOT_DIR/terraform/linode output -raw kubeconfig | base64 -d > $KUBECONFIG
+terraform -chdir=$ROOT_DIR/terraform/linode output -raw kubeconfig | base64 -d >$KUBECONFIG
 echo "KUBECONFIG is set to $KUBECONFIG"
 
-
-set +e
-until kubectl get nodes --no-headers 2>&1 | grep -qv "No resources found"; do
+(
+  set +e
+  until kubectl get nodes --no-headers 2>&1 | grep -qv "No resources found"; do
     echo "Waiting for nodes to be registered..."
     sleep 10
-done
-set -e
+  done
+)
 
 echo "Waiting for cluster to be ready..."
 kubectl wait --for=condition=Ready node --all --timeout=600s
@@ -85,6 +90,13 @@ echo "Applying Kustomize manifests..."
 kustomize build $ROOT_DIR/k8s/linode/overlays/dev0 | kubectl apply -f -
 
 echo "Waiting for all pods to be ready in the dev0 namespace..."
+(
+  set +e
+  until kubectl get pods --no-headers -n dev0 2>&1 | grep -qv "No resources found"; do
+    echo "Waiting for pods to be registered..."
+    sleep 1
+  done
+)
 kubectl wait --for=condition=Ready pods --all --namespace=dev0 --timeout=600s
 
 # Apply Firewall configuration using Linode Firewall Operator
@@ -94,7 +106,7 @@ sed s/"<MY_FIREWALL_ID>"/$FIREWALL_ID/ $ROOT_DIR/k8s/linode/cluster-firewall.yam
 
 # Install Prometheus using Helm
 echo "Installing Prometheus using Helm..."
-helm upgrade --install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring --create-namespace
+helm install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring --create-namespace
 
 echo "Waiting for Prometheus pods to be ready..."
 kubectl wait --for=condition=Ready pods --all --namespace=monitoring --timeout=600s
