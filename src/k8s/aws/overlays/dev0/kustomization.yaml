@@ -8,6 +8,20 @@ patches:
   - path: udp/deploy.yaml
   - path: tcp/deploy.yaml
 
+images:
+  - name: udp
+    newName: __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/udp
+    newTag: latest
+  - name: tcp
+    newName: __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/tcp
+    newTag: latest
+  - name: mars
+    newName: __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/mars
+    newTag: latest
+  - name: http
+    newName: __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/http
+    newTag: latest
+
 configMapGenerator:
   - name: shared-conf
     behavior: replace

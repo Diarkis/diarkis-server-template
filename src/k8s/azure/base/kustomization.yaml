@@ -20,20 +20,6 @@ resources:
   - http/hpa.yaml
   - ns.yaml
 
-images:
-  - name: udp
-    newName: __ACR_DOMAIN__/udp
-    newTag: latest
-  - name: tcp
-    newName: __ACR_DOMAIN__/tcp
-    newTag: latest
-  - name: mars
-    newName: __ACR_DOMAIN__/mars
-    newTag: latest
-  - name: http
-    newName: __ACR_DOMAIN__/http
-    newTag: latest
-
 configMapGenerator:
   - files:
       - shared/conf/field.json
