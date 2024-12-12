@@ -1,5 +1,5 @@
 This is a readme describing puffer, a packet definition generation tool.
-Reference: https://docs.diarkis.io/docs/server/v1.0.0-rc1/diarkis/puffer/index.html
+Reference: https://docs.diarkis.io/docs/server/v1.0.0/diarkis/puffer/index.html
 
 ## Usage
 
