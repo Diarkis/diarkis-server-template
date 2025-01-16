@@ -8,6 +8,16 @@ patches:
   - path: udp/deploy.yaml
   - path: tcp/deploy.yaml
 
+images:
+  - name: __ACR_DOMAIN__/udp
+    newTag: dev0
+  - name: __ACR_DOMAIN__/tcp
+    newTag: dev0
+  - name: __ACR_DOMAIN__/mars
+    newTag: dev0
+  - name: __ACR_DOMAIN__/http
+    newTag: dev0
+
 configMapGenerator:
   - name: shared-conf
     behavior: replace
