@@ -22,6 +22,7 @@ configMapGenerator:
       - shared/conf/matching.json
       - shared/conf/mesh.json
       - shared/conf/dive.json
+      - shared/conf/room.json
 
   - name: http-conf
     behavior: replace

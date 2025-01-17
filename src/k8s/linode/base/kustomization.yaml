@@ -31,6 +31,7 @@ configMapGenerator:
       - shared/conf/mesh.json
       - shared/conf/metrics.json
       - shared/conf/dive.json
+      - shared/conf/room.json
     name: shared-conf
   - files:
       - http/conf/main.json
@@ -45,5 +46,7 @@ configMapGenerator:
       - mars/conf/default.conf.json
     name: mars-conf
   - files:
-      - hc/conf/health-check.json
+      - hc/conf/health-check-for-liveness-probe.json
+      - hc/conf/health-check-for-readiness-probe.json
+      - hc/conf/health-check-for-startup-probe.json
     name: hc-conf

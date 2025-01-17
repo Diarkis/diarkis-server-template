@@ -42,6 +42,7 @@ configMapGenerator:
       - shared/conf/mesh.json
       - shared/conf/dm.json
       - shared/conf/dive.json
+      - shared/conf/room.json
 
   - name: http-conf
     files:
@@ -61,4 +62,6 @@ configMapGenerator:
 
   - name: hc-conf
     files:
-      - hc/conf/health-check.json
+      - hc/conf/health-check-for-liveness-probe.json
+      - hc/conf/health-check-for-readiness-probe.json
+      - hc/conf/health-check-for-startup-probe.json

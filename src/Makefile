@@ -5,7 +5,7 @@ help:
 ## Set default command of make to help, so that running make will output help texts
 .DEFAULT_GOAL := help
 
-DIARKIS_VERSION = $(shell go list -m github.com/Diarkis/diarkis | cut -d " " -f 2)
+DIARKIS_VERSION = $(shell go mod edit -json | jq -r '.Require[] | select(.Path | contains("github.com/Diarkis/diarkis")).Version')
 DIARKIS_CLI = ./diarkis-cli/os/linux/bin/diarkis-cli
 BUILD_CONFIG = ./build/linux-build.yml
 AWS_ACCOUNT_NUM = __AWS_ACCOUNT_NUM__
@@ -64,6 +64,10 @@ gen: ## Generate go, cpp, and cs code files using puffer (Diarkis packet gen mod
 clean: ## Deletes all puffer generated code files
 	make -C puffer clean
 
+.PHONY: go-cli
+go-cli: ## Starts Go test client: host=<HTTP address> uid=<client user ID> clientKey=<client key> puffer=<true/false>
+	./remote_bin/testcli --host=$(host) --uid=$(uid) --clientKey=$(clientKey) --puffer=$(puffer)
+
 .PHONY: run-docker
 run-docker: build-linux ## Run Diarkis locally with docker compose
 	docker compose up -d
@@ -98,24 +102,27 @@ push-container-aws: auth-docker-aws ## Push container to AWS
 setup-gcp: ## Set up GCP
 	./script/setup_gcp.sh
 
+.PHONY: auth-docker-gcp
+auth-docker-gcp: ## Authenticate docker to push images to GCP
+	gcloud auth configure-docker asia-northeast1-docker.pkg.dev --quiet
+
 .PHONY: build-container-gcp
 build-container-gcp: build-linux ## Build container for GCP
-	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/http
-	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/udp
-	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/tcp
-	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/mars
+	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis/http
+	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis/udp
+	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis/tcp
+	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis/mars
 
 .PHONY: push-container-gcp
-push-container-gcp: ## Push container to GCP
-	docker push  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/http
-	docker push  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/udp
-	docker push  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/tcp
-	docker push  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/mars
+push-container-gcp: auth-docker-gcp ## Push container to GCP
+	docker push  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis/http
+	docker push  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis/udp
+	docker push  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis/tcp
+	docker push  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis/mars
 
 .PHONY: setup-azure
 setup-azure: ## Set up Azure
 	./script/setup_azure.sh
-
 
 .PHONY: build-container-azure
 build-container-azure: build-linux ## Build container for azure

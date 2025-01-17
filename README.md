@@ -6,9 +6,9 @@ Server: ![kubernetes](https://img.shields.io/badge/-kubernetes-black.svg?logo=ku
 
 Client: ![golang](https://img.shields.io/badge/-go-black.svg?logo=go&style=flat) ![c#](https://img.shields.io/badge/-csharp-black.svg?logo=csharp&style=flat) ![c++](https://img.shields.io/badge/-c++-black?logo=c%2B%2B&style=flat)
 
-This repository is the source code to use when starting a project with the network engine **diarkis**.
+This repository is a template for **Diarkis** engine's server-side code for a project.
 
-One thing to note about this project is that diarkis itself is proprietary software and will not pass the build process as is, but must be built using diarkis-cli.
+One thing to note about this project is that **Diarkis** itself is proprietary software and will not pass the build process as is, but must be built using diarkis-cli.
 
 A skeleton source code with function definitions and variable definitions is also provided for use with the IDE's completion functions, etc.
 
@@ -18,17 +18,30 @@ Each protocol servers run independently within the cluster, but you do not have 
 
 Only HTTP server is required in the cluster and the rest of the servers should be chosen according to your application's requirements.
 
-# Use
+# How To Use The Template
 
 The repository itself is under the src directory.
 When you actually start using this repository, it is assumed that you will start your project using the src directory as a template.
 To generate it, use the following command.
 
-`make init project_id={project ID} builder_token={build token} output={absolute path to install}`
+`make init project_id={project ID} builder_token={build token} output={path to install}`
 
-The repository itself is under the src directory.
-When you actually start using this repository, it is assumed that you will start your project using the src directory as a template.
-To generate it, use the following command.
+or to use a custom module name
+
+`make init project_id={project ID} builder_token={build token} output={path to install} module_name={custom module name}`
+
+We also provide [magefile](https://magefile.org/) as a more portable way to start a project.
+This is the recommended way on Windows.
+
+```sh
+./run-mage.sh {project ID} {build token} {path to install} {custom module name}
+```
+
+or on Windows
+
+```
+run-mage.bat {project ID} {build token} {path to install} {custom module name}
+```
 
 To build, you will need the build token to build diarkis, which can be obtained by contacting us at https://diarkis.io .
 

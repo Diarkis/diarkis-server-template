@@ -21,9 +21,9 @@ Only HTTP server is required in the cluster and the rest of the servers should b
    │
    ├─ mars/ ───────── main.go
    │
-   │
    ├─ healthcheck/ ── main.go
    │
+   ├─ testcli/ ── main.go [Go test client main]
    │
    ├─ configs/ ─┬──── shared/ [Shared configuration directory] ────────────────────┬─ field.json
    │            │                                                                  ├─ dm.json
@@ -102,6 +102,22 @@ make stop-docker
 ```
 
 **NOTE** You must have MARS and HTTP server running in order to create Diarkis server cluster properly.
+
+# Run Go Test Client
+
+The following command will run the Go test client.
+
+```
+make go-cli host=$(host) uid=$(uid)
+```
+
+After running the command, you can show the help message by running the following command:
+
+```
+help
+# to show each module's help message
+help $(module)
+```
 
 # Change Diarkis version
 

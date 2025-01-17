@@ -23,7 +23,7 @@ spec:
         ad.datadoghq.com/nginx.instances: '[{"nginx_status_url": "http://%%host%%:8080/nginx_status"}]'
         ad.datadoghq.com/nginx.logs: '[{"source": "nginx", "service": "nginx"}]'
     spec:
-      terminationGracePeriodSeconds: 10
+      terminationGracePeriodSeconds: 600
       initContainers:
         - image: alpine:latest
           name: tuner
@@ -42,14 +42,18 @@ spec:
             privileged: true
       containers:
         - name: http
-          readinessProbe:
+          # Configure Probes: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+          readinessProbe: &probe
             httpGet:
               path: /healthcheck
               port: 7000
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
           livenessProbe:
-            httpGet:
-              path: /healthcheck
-              port: 7000
+            <<: *probe
           securityContext:
             runAsUser: 1000
             readOnlyRootFilesystem: true
