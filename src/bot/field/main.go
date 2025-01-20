@@ -583,10 +583,18 @@ func randomSync(bot *botData) {
 			currentY = nextY
 			time.Sleep(time.Millisecond * time.Duration(frameInterval*(nbMoveFrame-1)))
 			timeStamp += int64(nbMoveFrame * frameInterval)
+			if isLast {
+				nextX := currentX
+				nextY := currentY
+				message := createMovementPayload(bot.angle, currentX, currentY, nextX, nextY, 1, timeStamp, frameInterval, useNewPayloadFormat, isLast)
+				bot.field.Sync(int64(nextX), int64(nextY), 0, 0, 0, message, false, bot.uid)
+				bot.field.Sync(int64(nextX), int64(nextY), 0, 0, 0, message, false, bot.uid)
+				bot.field.Sync(int64(nextX), int64(nextY), 0, 0, 0, message, false, bot.uid)
+			}
 		}
-
+		time.Sleep(time.Millisecond * time.Duration(100))
 		bot.state = STATUS_SYNC
-		syncCnt += nbSyncPerMovement + 1
+		syncCnt += nbSyncPerMovement + 3
 		bot.isMoving = false
 	}
 }
