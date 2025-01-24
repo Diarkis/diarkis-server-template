@@ -37,6 +37,7 @@ const (
 // Config represents the structure of the configuration file
 type Config struct {
 	HostURL                              string `json:"Host"`
+	ClientKey                            string `json:"ClientKey"`
 	BotCnt                               int    `json:"BotCnt"`
 	NewPayloadFormat                     bool   `json:"NewPayloadFormat"`
 	MovementIntervalMs                   int    `json:"MoveIntervalMs"`
@@ -52,6 +53,7 @@ type Config struct {
 // DefaultConfig holds the default values for the configuration
 var DefaultConfig = Config{
 	HostURL:                              "127.0.0.1:7000",
+	ClientKey:                            "",
 	BotCnt:                               250,
 	NewPayloadFormat:                     true,
 	MovementIntervalMs:                   2000,
@@ -74,6 +76,7 @@ const SERVER_COUNT = 1
 // parameters
 var proto = "udp" // udp or tcp
 var host string
+var clientKey string
 var bots = 10
 var packetSize = 10
 var interval int64
@@ -205,6 +208,7 @@ func runBot(bot *botData) {
 	case UDP_STRING:
 		udpSendInterval := int64(100)
 		bot.udp = udp.New(rcvByteSize, udpSendInterval)
+		bot.udp.SetClientKey(clientKey)
 		bot.udp.SetEncryptionKeys(sid, key, iv, mkey)
 		bot.field = fieldlib.NewFieldAsUDP(bot.udp)
 		bot.udp.OnConnect(func() {
@@ -650,6 +654,7 @@ func parseFieldArgs() {
 
 		fmt.Println("Config file loaded:", config)
 		host = config.HostURL
+		clientKey = config.ClientKey
 		bots = config.BotCnt
 		proto = config.ProtocolSource
 		if proto != "udp" && proto != "tcp" {

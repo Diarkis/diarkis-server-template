@@ -1,5 +1,6 @@
 {
   "Host": "127.0.0.1:7000",
+  "ClientKey": "",
   "BotCnt": 250,
   "NewPayloadFormat": true,
   "MoveIntervalMs": 2000,
