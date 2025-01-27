@@ -528,7 +528,7 @@ GET /onlinestatus/uids/111,222
 ```
 
 The above example will check if user `111` and `222` are online or not.
-f the returned array contains the user IDs, those users are currently online (connected to the Diarkis server).
+If the returned array contains the user IDs, those users are currently online (connected to the Diarkis server).
 
 # Custom Commands
 
