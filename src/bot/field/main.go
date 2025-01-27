@@ -189,7 +189,7 @@ func botWorker(workerID int, tasks <-chan BotTask, wg *sync.WaitGroup) {
 }
 
 func runBot(bot *botData) {
-	eResp, err := utils.Endpoint(host, bot.uid, proto)
+	eResp, err := utils.EndpointWithKey(host, bot.uid, proto, clientKey)
 	addr := eResp.ServerHost + ":" + fmt.Sprintf("%v", eResp.ServerPort)
 	sid, _ := hex.DecodeString(eResp.Sid)
 	key, _ := hex.DecodeString(eResp.EncryptionKey)
