@@ -1,6 +1,6 @@
 output "eks-connect-command" {
   description = "cli command which generates kubeconfig"
-  value       = "aws eks update-kubeconfig --name ${local.name} --region ${local.region}"
+  value       = "aws eks update-kubeconfig --name ${local.env.prefix}-${local.name} --region ${local.region}"
 }
 
 output "auth-docker-command" {
@@ -10,15 +10,15 @@ output "auth-docker-command" {
 
 output "http-docker-push-command" {
   description = "cli command which push http server image"
-  value       = "docker push ${data.aws_caller_identity.self.account_id}.dkr.ecr.ap-northeast-1.amazonaws.com/http"
+  value       = "docker push ${data.aws_caller_identity.self.account_id}.dkr.ecr.ap-northeast-1.amazonaws.com/diarkis-http"
 }
 
 output "udp-docker-push-command" {
   description = "cli command which push udp server image"
-  value       = "docker push ${data.aws_caller_identity.self.account_id}.dkr.ecr.ap-northeast-1.amazonaws.com/udp"
+  value       = "docker push ${data.aws_caller_identity.self.account_id}.dkr.ecr.ap-northeast-1.amazonaws.com/diarkis-udp"
 }
 
 output "mars-docker-push-command" {
   description = "cli command which push mars server image"
-  value       = "docker push ${data.aws_caller_identity.self.account_id}.dkr.ecr.ap-northeast-1.amazonaws.com/mars"
+  value       = "docker push ${data.aws_caller_identity.self.account_id}.dkr.ecr.ap-northeast-1.amazonaws.com/diarkis-mars"
 }

@@ -1,5 +1,5 @@
 resource "aws_ecr_repository" "http" {
-  name                 = "http"
+  name                 = "diarkis-http"
   image_tag_mutability = "MUTABLE"
   force_delete = true
 
@@ -9,7 +9,16 @@ resource "aws_ecr_repository" "http" {
 }
 
 resource "aws_ecr_repository" "udp" {
-  name                 = "udp"
+  name                 = "diarkis-udp"
+  image_tag_mutability = "MUTABLE"
+  force_delete = true
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
+resource "aws_ecr_repository" "tcp" {
+  name                 = "diarkis-tcp"
   image_tag_mutability = "MUTABLE"
   force_delete = true
   image_scanning_configuration {
@@ -18,7 +27,7 @@ resource "aws_ecr_repository" "udp" {
 }
 
 resource "aws_ecr_repository" "mars" {
-  name                 = "mars"
+  name                 = "diarkis-mars"
   image_tag_mutability = "MUTABLE"
   force_delete = true
   image_scanning_configuration {

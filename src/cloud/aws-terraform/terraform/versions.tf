@@ -7,4 +7,7 @@ terraform {
       version = ">= 5.61"
     }
   }
+  backend "s3" {
+    region = "ap-northeast-1"
+  }
 }
