@@ -470,7 +470,10 @@ func createNewMovementPayload(direction float32, prevX, prevY, x, y, nbMoveData 
 
 	newPayload.Engine = 0
 	payloadBytes := newPayload.Pack()
-	return payloadBytes
+	payloadSizeBytes := make([]byte, 2)
+	binary.BigEndian.PutUint16(payloadSizeBytes, uint16(len(payloadBytes)))
+
+	return append(payloadSizeBytes, payloadBytes...)
 }
 
 func eulerToQuaternion(angle float64) *custom.DiarkisQuaternion {
