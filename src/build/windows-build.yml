@@ -6,6 +6,7 @@ buildSettings:
     CGO_ENABLED: 0
     CGO_CFLAGS: -I${PROJECT_DIR}
     CGO_LDFLAGS: -L${PROJECT_DIR} -Wl,-rpath,${PROJECT_DIR}
+    GOFLAGS: -trimpath -ldflags=-w -ldflags=-s
     GOOS: windows
     GOARCH: amd64
   projects:
