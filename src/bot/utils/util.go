@@ -44,7 +44,36 @@ func Endpoint(host, uid, serverType string) (EndpointResponse, error) {
 	endpointResp := EndpointResponse{}
 	err = json.Unmarshal(body, &endpointResp)
 	if err != nil {
+		return EndpointResponse{}, err
+	}
 
+	return endpointResp, nil
+}
+
+func EndpointWithKey(host, uid, serverType, clientKey string) (EndpointResponse, error) {
+	url := fmt.Sprintf("http://%s/endpoint/type/%v/user/%v", host, strings.ToUpper(serverType), uid)
+
+	client := &http.Client{
+		Timeout: time.Second * 10,
+	}
+	req, err := http.NewRequest("GET", url, nil)
+	req.Header.Add("ClientKey", clientKey)
+	if err != nil {
+		return EndpointResponse{}, err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return EndpointResponse{}, err
+	}
+	body, err := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return EndpointResponse{}, err
+	}
+	endpointResp := EndpointResponse{}
+	err = json.Unmarshal(body, &endpointResp)
+	if err != nil {
 		return EndpointResponse{}, err
 	}
 

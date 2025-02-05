@@ -1,0 +1,14 @@
+{
+  "Host": "127.0.0.1:7000",
+  "ClientKey": "",
+  "BotCnt": 250,
+  "NewPayloadFormat": true,
+  "MoveIntervalMs": 2000,
+  "AreaWidth": 10000,
+  "MovementRange": 500,
+  "SyncCountPerMovement": 3,
+  "MoveDataCountPerSync": 5,
+  "MoveProbabilityPercenntagePerInterval": 50,
+  "Protocol": "udp",
+  "MoveDurationMs": 1000
+}
