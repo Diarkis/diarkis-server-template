@@ -1,2 +1,6 @@
+github.com/Diarkis/diarkis v1.1.0-alpha13 h1:zqbvGzM1QusL9jAEHbZqB06BnzV8WRImCwDHWfEVDgc=
+github.com/Diarkis/diarkis v1.1.0-alpha13/go.mod h1:H/7sK1Y7rpOefpPUGgR4ekOvOdv+48h9TZ8naOfgEYU=
 github.com/magefile/mage v1.15.0 h1:BvGheCMAsG3bWUDbZ8AyXXpCNwU9u5CB6sM+HNb9HYg=
 github.com/magefile/mage v1.15.0/go.mod h1:z5UZb/iS3GoOSn0JgWuiw7dxlurVYTu+/jHXqQg881A=
+golang.org/x/sys v0.25.0 h1:r+8e+loiHxRqhXVl6ML1nO3l1+oFoWbnlu2Ehimmi34=
+golang.org/x/sys v0.25.0/go.mod h1:/VUhepiaJMQUp4+oa/7Zr1D23ma6VTLIYjOOTFZPUcA=
