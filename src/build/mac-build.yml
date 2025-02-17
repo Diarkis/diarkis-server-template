@@ -1,7 +1,7 @@
 buildSettings:
   root: ..
   version: "2"
-  goVersion: 1.22.4
+  goVersion: 1.24.0
   env:
     GOOS: darwin
     GOARCH: arm64 # if you use intel mac, replace from arm64 to amd64
