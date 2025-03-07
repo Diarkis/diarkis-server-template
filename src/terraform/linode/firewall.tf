@@ -11,6 +11,24 @@ resource "linode_firewall" "diarkis-firewall" {
   }
 
   inbound {
+    label    = "allow-dns-tcp"
+    action   = "ACCEPT"
+    protocol = "TCP"
+    ports    = "53"
+    ipv4     = ["0.0.0.0/0"]
+    ipv6     = ["::/0"]
+  }
+  
+  inbound {
+    label    = "allow-dns-udp"
+    action   = "ACCEPT"
+    protocol = "UDP"
+    ports    = "53"
+    ipv4     = ["0.0.0.0/0"]
+    ipv6     = ["::/0"]
+  }
+
+  inbound {
     label    = "allow-diarkis-tcp"
     action   = "ACCEPT"
     protocol = "TCP"
@@ -43,7 +61,24 @@ resource "linode_firewall" "diarkis-firewall" {
     ipv4     = ["0.0.0.0/0"]
     ipv6     = ["::/0"]
   }
-  
+
+  inbound {
+    label    = "allow-healthcheck-tcp"
+    action   = "ACCEPT"
+    protocol = "TCP"
+    ports    = "9000-9002"
+    ipv4     = ["0.0.0.0/0"]
+    ipv6     = ["::/0"]
+  }
+  inbound {
+    label    = "allow-healthcheck-udp"
+    action   = "ACCEPT"
+    protocol = "UDP"
+    ports    = "9000-9002"
+    ipv4     = ["0.0.0.0/0"]
+    ipv6     = ["::/0"]
+  }
+
   inbound {
     label    = "allow-kubelet"
     action   = "ACCEPT"
