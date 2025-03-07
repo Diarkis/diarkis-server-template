@@ -6,7 +6,7 @@ spec:
   template:
     spec:
       imagePullSecrets:
-        - name: secrets-dockerhub
+        - name: secrets-docker
       containers:
         - name: run-bot
           image: __YOUR_REPOSITORY__/field-bot:latest
