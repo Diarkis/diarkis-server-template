@@ -29,3 +29,7 @@ variable "pools" {
     }
   ]
 }
+
+variable "firewall-name" {
+	default = "diarkis"
+}

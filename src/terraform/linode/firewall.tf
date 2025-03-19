@@ -1,5 +1,5 @@
 resource "linode_firewall" "diarkis-firewall" {
-  label = "diarkis"
+  label = var.firewall-name
 
   inbound {
     label    = "allow-http"
