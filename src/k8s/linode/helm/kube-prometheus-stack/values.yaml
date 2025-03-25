@@ -1,0 +1,11 @@
+grafana:
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      access: proxy
+      url: http://loki-gateway.logging.svc.cluster.local
+      jsonData:
+        derivedFields:
+          - name: pod
+            matcherRegex: 'pod_name="(?P<pod_name>[^"]+)"'
+            url: /explore?left=["now-1h","now","Loki",{"expr":"{pod_name=\"$pod_name\"}"}]

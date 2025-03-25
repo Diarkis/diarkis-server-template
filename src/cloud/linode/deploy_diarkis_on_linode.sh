@@ -28,8 +28,11 @@ ROOT_DIR=$(
 if [ -z "$TF_VAR_token" ]; then
   echo "Error: Token is required. Set TF_VAR_token before running."
   exit 1
-else
-  echo "TF_VAR_token is already set, continuing with the existing token."
+fi
+
+if [ -z "$LINODE_S3_ACCESS_KEY" ] || [ -z "$LINODE_S3_SECRET_KEY" ]; then
+  echo "Error: LINODE_S3_ACCESS_KEY and LINODE_S3_SECRET_KEY are required. Set them before running."
+  exit 1
 fi
 
 export KUBECONFIG=$ROOT_DIR/terraform/linode/kubeconfig
@@ -106,8 +109,9 @@ sed s/"<MY_FIREWALL_ID>"/$FIREWALL_ID/ $ROOT_DIR/k8s/linode/cluster-firewall.yam
 
 # Install Prometheus using Helm
 echo "Installing Prometheus using Helm..."
+kubectl get namespace monitoring || kubectl create namespace monitoring
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring --create-namespace
+helm upgrade --install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring --values=$ROOT_DIR/k8s/helm/kube-prometheus-stack/values.yaml --debug
 
 echo "Waiting for Prometheus pods to be ready..."
 kubectl wait --for=condition=Ready pods --all --namespace=monitoring --timeout=600s
@@ -119,5 +123,18 @@ kubectl apply -f $ROOT_DIR/k8s/servicemonitor.yaml -n monitoring
 echo "You can access Grafana by running:"
 echo "  kubectl port-forward svc/prometheus-grafana 3000:80 -n monitoring"
 echo "Use admin/prom-operator as credentials."
+
+# Install Loki using Helm
+echo "Installing Loki using Helm..."
+kubectl get namespace logging || kubectl create namespace logging
+# kubectl get secret linode-s3-creds -n logging || kubectl create secret generic linode-s3-creds --from-literal=AWS_ACCESS_KEY_ID="$LINODE_S3_ACCESS_KEY" --from-literal=AWS_ACCESS_KEY_SECRET="$LINODE_S3_SECRET_KEY" -n logging
+helm repo add grafana https://grafana.github.io/helm-charts
+helm upgrade --install loki grafana/loki -n logging --values=$ROOT_DIR/k8s/helm/loki/values.yaml --set loki.storage_config.aws.access_key_id="$LINODE_S3_ACCESS_KEY" --set loki.storage_config.aws.secret_access_key="$LINODE_S3_SECRET_KEY" --set loki.storage.s3.accessKeyId="$LINODE_S3_ACCESS_KEY" --set loki.storage.s3.secretAccessKey="$LINODE_S3_SECRET_KEY" --debug
+helm upgrade --install promtail grafana/promtail -n logging --set loki.serviceName=loki-gateway --set loki.servicePort=80 --debug
+
+sleep 1
+
+echo "Waiting for Loki pods to be ready..."
+kubectl wait --for=condition=Ready pods --all --namespace=logging --timeout=600s
 
 echo "Setup completed."
