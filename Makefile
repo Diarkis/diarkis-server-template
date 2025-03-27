@@ -13,6 +13,7 @@ init: ## make init project_id={project ID} builder_token={build token} output={a
 fmt: add-license
 	gofmt -w src/
 	npx prettier --write "**/*.{yml,yaml,json,md}"
+	terraform fmt -recursive src/terraform
 
 .PHONY: add-license ## add license header to all go files
 add-license: $(shell find . -type f -name '*.go')

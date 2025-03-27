@@ -18,7 +18,7 @@ resource "linode_firewall" "diarkis-firewall" {
     ipv4     = ["0.0.0.0/0"]
     ipv6     = ["::/0"]
   }
-  
+
   inbound {
     label    = "allow-dns-udp"
     action   = "ACCEPT"
