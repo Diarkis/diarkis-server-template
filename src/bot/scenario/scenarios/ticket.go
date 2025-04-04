@@ -228,9 +228,15 @@ func (s *TicketScenario) onCreateRoom(payload []byte) {
 
 func (s *TicketScenario) battle(payload []byte) {
 	// simulate battle...
-	for i := 0; i < s.params.BattleDuration; i++ {
+	broadcastMsg := []byte("some battle command")
+	broadcastBuffer := make([]byte, 1+52+len(broadcastMsg))
+	broadcastBuffer[0] = 1 // reliable
+	copy(broadcastBuffer[1:], []byte(s.roomID))
+	copy(broadcastBuffer[1+52:], broadcastMsg)
+
+	for range s.params.BattleDuration {
 		// use Send as battle command is normally unreliable
-		s.trnClient.Send(util.CmdBuiltInVer, util.CmdBroadcastRoom, []byte("some battle command"))
+		s.trnClient.Send(util.CmdBuiltInVer, util.CmdBroadcastRoom, broadcastBuffer)
 		time.Sleep(time.Second)
 	}
 
