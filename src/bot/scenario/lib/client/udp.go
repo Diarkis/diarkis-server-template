@@ -4,6 +4,7 @@ package bot_client
 
 import (
 	"slices"
+	"sync/atomic"
 
 	"github.com/Diarkis/diarkis-server-template/bot/scenario/lib/report"
 	"github.com/Diarkis/diarkis/client/go/udp"
@@ -16,11 +17,13 @@ import (
 type UDPClient struct {
 	*TransportClient
 	client       *udp.Client
-	lastActivity struct {
-		kind string
-		ver  uint8
-		cmd  uint16
-	}
+	lastActivity atomic.Pointer[clientLastActivity]
+}
+
+type clientLastActivity struct {
+	kind string
+	ver  uint8
+	cmd  uint16
 }
 
 type HandlerType int
@@ -170,12 +173,19 @@ func (c *UDPClient) GetLowLevelClient() *udp.Client {
 }
 
 func (c *UDPClient) setLastActivity(kind string, ver uint8, cmd uint16) {
-	c.lastActivity.ver = ver
-	c.lastActivity.cmd = cmd
-	c.lastActivity.kind = kind
+	activity := clientLastActivity{
+		ver:  ver,
+		cmd:  cmd,
+		kind: kind,
+	}
+	c.lastActivity.Store(&activity)
 }
 
 // GetLastActivity returns what command the client got/pushed last
 func (c *UDPClient) GetLastActivity() (string, uint8, uint16) {
-	return c.lastActivity.kind, c.lastActivity.ver, c.lastActivity.cmd
+	activity := c.lastActivity.Load()
+	if activity == nil {
+		return "", 0, 0
+	}
+	return activity.kind, activity.ver, activity.cmd
 }
