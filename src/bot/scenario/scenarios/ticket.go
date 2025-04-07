@@ -90,6 +90,14 @@ func (s *TicketScenario) Run(gp *GlobalParams) error {
 	// ver:1 cmd:224 Ticket Broadcast
 	udpClient.RegisterOnPush(util.CmdBuiltInVer, util.CmdMMTicketBroadcast, s.handleTicketBroadcast)
 
+	// If both MM and TRN are the same server, we need to register room create and battle callback.
+	if s.params.ServerTypeMM == s.params.ServerTypeTurn {
+		// ver:1 cmd: 100 create room
+		udpClient.RegisterOnResponse(util.CmdBuiltInVer, util.CmdCreateRoom, []uint8{bot_client.ResponseOk}, s.onCreateRoom)
+		// ver:1 cmd: 101 join room
+		udpClient.RegisterOnPush(util.CmdBuiltInVer, util.CmdJoinRoom, s.battle)
+	}
+
 	// start issuing ticket
 	s.issueTicket()
 
@@ -194,12 +202,14 @@ func (s *TicketScenario) connectTurnServer() {
 			logger.Erroru(s.GetUserID(), "Failed to get Turn server")
 			return
 		}
+
+		// ver:1 cmd: 100 create room
+		trnClient.RegisterOnResponse(util.CmdBuiltInVer, util.CmdCreateRoom, []uint8{bot_client.ResponseOk}, s.onCreateRoom)
+		// ver:1 cmd: 101 join room
+		trnClient.RegisterOnPush(util.CmdBuiltInVer, util.CmdJoinRoom, s.battle)
+
 		s.trnClient = trnClient
 	}
-	// ver:1 cmd: 100 create room
-	s.trnClient.RegisterOnResponse(util.CmdBuiltInVer, util.CmdCreateRoom, []uint8{bot_client.ResponseOk}, s.onCreateRoom)
-	// ver:1 cmd: 101 join room
-	s.trnClient.RegisterOnPush(util.CmdBuiltInVer, util.CmdJoinRoom, s.battle)
 
 	// connect to turn server
 	if s.params.ServerTypeMM != s.params.ServerTypeTurn {
