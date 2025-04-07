@@ -250,16 +250,15 @@ func (s *TicketScenario) battle(payload []byte) {
 		time.Sleep(time.Second)
 	}
 
+	// finish battle
+	s.leaveRoom()
+	s.leaveTicket()
+
 	// disconnect from turn server
 	if s.params.ServerTypeMM != s.params.ServerTypeTurn {
 		s.trnClient.Disconnect()
 		s.trnClient = nil
 	}
-
-	// finish battle
-	s.leaveRoom()
-	s.leaveTicket()
-
 }
 
 func (s *TicketScenario) regenerateParams() {
