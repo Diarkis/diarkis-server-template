@@ -111,7 +111,7 @@ sed s/"<MY_FIREWALL_ID>"/$FIREWALL_ID/ $ROOT_DIR/k8s/linode/cluster-firewall.yam
 echo "Installing Prometheus using Helm..."
 kubectl get namespace monitoring || kubectl create namespace monitoring
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm upgrade --install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring --values=$ROOT_DIR/k8s/helm/kube-prometheus-stack/values.yaml --debug
+helm upgrade --install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring --values=$ROOT_DIR/k8s/linode/helm/kube-prometheus-stack/values.yaml --debug
 
 echo "Waiting for Prometheus pods to be ready..."
 kubectl wait --for=condition=Ready pods --all --namespace=monitoring --timeout=600s
@@ -129,7 +129,7 @@ echo "Installing Loki using Helm..."
 kubectl get namespace logging || kubectl create namespace logging
 # kubectl get secret linode-s3-creds -n logging || kubectl create secret generic linode-s3-creds --from-literal=AWS_ACCESS_KEY_ID="$LINODE_S3_ACCESS_KEY" --from-literal=AWS_ACCESS_KEY_SECRET="$LINODE_S3_SECRET_KEY" -n logging
 helm repo add grafana https://grafana.github.io/helm-charts
-helm upgrade --install loki grafana/loki -n logging --values=$ROOT_DIR/k8s/helm/loki/values.yaml --set loki.storage_config.aws.access_key_id="$LINODE_S3_ACCESS_KEY" --set loki.storage_config.aws.secret_access_key="$LINODE_S3_SECRET_KEY" --set loki.storage.s3.accessKeyId="$LINODE_S3_ACCESS_KEY" --set loki.storage.s3.secretAccessKey="$LINODE_S3_SECRET_KEY" --debug
+helm upgrade --install loki grafana/loki -n logging --values=$ROOT_DIR/k8s/linode/helm/loki/values.yaml --set loki.storage_config.aws.access_key_id="$LINODE_S3_ACCESS_KEY" --set loki.storage_config.aws.secret_access_key="$LINODE_S3_SECRET_KEY" --set loki.storage.s3.accessKeyId="$LINODE_S3_ACCESS_KEY" --set loki.storage.s3.secretAccessKey="$LINODE_S3_SECRET_KEY" --debug
 helm upgrade --install promtail grafana/promtail -n logging --set loki.serviceName=loki-gateway --set loki.servicePort=80 --debug
 
 sleep 1
