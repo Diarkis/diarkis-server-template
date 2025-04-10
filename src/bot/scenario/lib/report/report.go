@@ -22,7 +22,7 @@ var logger = log.New("BOT/REPORT")
 type Report map[string]int
 type metrics struct {
 	name    string
-	running bool
+	running atomic.Bool
 	sync.RWMutex
 	// a number of metrics elements while scenario is being executed
 	counter atomic.Uint32
@@ -43,12 +43,12 @@ func NewMetrics(name string) *metrics {
 }
 
 func (m *metrics) start() {
-	m.running = true
+	m.running.Store(true)
 	var prevCount uint32
 	var prevTotal float64
 	for {
 		time.Sleep(time.Duration(Interval) * time.Second)
-		if !m.running {
+		if !m.running.Load() {
 			break
 		}
 		var total float64
@@ -79,7 +79,7 @@ func (m *metrics) Stop() {
 }
 
 func (m *metrics) stop() {
-	m.running = false
+	m.running.Store(false)
 
 	var total float64
 	m.RLock()
