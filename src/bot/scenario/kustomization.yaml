@@ -8,7 +8,8 @@ resources:
   - k8s/ns.yaml
   - k8s/deploy.yaml
   - k8s/svc.yaml
-  - k8s/podmonitoring.yaml
+  # for GCP
+  # - k8s/podmonitoring.yaml
 
 configMapGenerator:
   - name: bot-conf

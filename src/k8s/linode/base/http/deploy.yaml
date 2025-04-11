@@ -80,7 +80,7 @@ spec:
             - name: http
               containerPort: 7000
       imagePullSecrets:
-        - name: secrets-dockerhub
+        - name: secrets-docker
       volumes:
         - name: http-conf
           configMap:
