@@ -15,7 +15,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Diarkis/diarkis-server-template/examples/http/json-endpoint/common"
+	"github.com/Diarkis/diarkis-server-template/examples/matching/simple/common"
 	"github.com/Diarkis/diarkis/client/go/udp"
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/server"

@@ -1,4 +1,4 @@
-module github.com/Diarkis/diarkis-server-template/examples/http/json-endpoint
+module github.com/Diarkis/diarkis-server-template/examples/matching/simple
 
 go 1.24
 

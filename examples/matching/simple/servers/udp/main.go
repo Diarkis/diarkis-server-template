@@ -4,13 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/Diarkis/diarkis-server-template/examples/matching/simple/common"
 	"github.com/Diarkis/diarkis/diarkisexec"
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/matching"
-	"github.com/Diarkis/diarkis/user"
-
-	"github.com/Diarkis/diarkis-server-template/examples/http/json-endpoint/common"
 	"github.com/Diarkis/diarkis/server"
+	"github.com/Diarkis/diarkis/user"
 	"github.com/Diarkis/diarkis/util"
 )
 
