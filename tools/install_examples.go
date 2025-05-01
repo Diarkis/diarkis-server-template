@@ -57,8 +57,14 @@ func copyExampleToTargetTemplate(projectID, builderToken, destDir, templateDir s
 	fmt.Printf("Install examples to %s\n", destDir)
 
 	examplesDir := filepath.Join(templateDir, "examples")
+	magefilesDirectories := []string{}
 
 	err := copyDir(examplesDir, destDir, func(relPath string) {
+		// Keep track of each magefiles folder
+		parentDir := filepath.Dir(relPath)
+		if filepath.Base(relPath) == "magefile.go" && filepath.Base(parentDir) == "magefiles" {
+			magefilesDirectories = append(magefilesDirectories, filepath.Join(destDir, parentDir))
+		}
 		if strings.EqualFold(filepath.Ext(relPath), ".yml") {
 			yamlFiles = append(yamlFiles, filepath.Join(destDir, relPath))
 		}
@@ -73,6 +79,29 @@ func copyExampleToTargetTemplate(projectID, builderToken, destDir, templateDir s
 		err = updateBuildSettings(abspath, projectID, builderToken)
 		if err != nil {
 			return err
+		}
+	}
+
+	// copy magefiles/common.go to each sample.
+	magefilesDir := filepath.Join(templateDir, "magefiles")
+	files, err := os.ReadDir(magefilesDir)
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		if file.Type().IsRegular() {
+			stats, err := file.Info()
+			if err != nil {
+				return err
+			}
+			for _, dirname := range magefilesDirectories {
+				destPath := filepath.Join(dirname, file.Name())
+
+				err := copyFile(filepath.Join(magefilesDir, file.Name()), destPath, stats.Mode().Perm())
+				if err != nil {
+					return err
+				}
+			}
 		}
 	}
 
@@ -113,29 +142,29 @@ func copyDir(srcDir, destDir string, onCopy func(relPath string)) error {
 
 		onCopy(rel)
 
-		err = func() error {
-			srcFile, err := os.Open(path)
-			if err != nil {
-				return err
-			}
-			defer srcFile.Close()
-			dstFile, err := os.OpenFile(destPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, info.Mode().Perm())
-			if err != nil {
-				return err
-			}
-			_, err = io.Copy(dstFile, srcFile)
-			if err != nil {
-				// best effort
-				_ = dstFile.Close()
-				_ = os.Remove(destPath)
-				return err
-			}
-
-			return nil
-		}()
-
-		return err
+		return copyFile(path, destPath, info.Mode().Perm())
 	})
+}
+
+func copyFile(srcPath, destPath string, perm fs.FileMode) error {
+	srcFile, err := os.Open(srcPath)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+	dstFile, err := os.OpenFile(destPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, perm)
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		// best effort
+		_ = dstFile.Close()
+		_ = os.Remove(destPath)
+		return err
+	}
+
+	return nil
 }
 
 func updateBuildSettings(filename, projectID, builderToken string) error {
