@@ -14,6 +14,8 @@ import (
 	"github.com/Diarkis/diarkis/util"
 )
 
+const FilePrefix = "Bot_Report_"
+
 // 15 is default scraping interval for prometheus
 var Interval = 15
 
@@ -169,31 +171,27 @@ func IsActive(userID string) bool {
 	return duration < time.Second*time.Duration(Interval)
 }
 func TouchAsActiveUser(userID string) {
-	activeUsers.RLock()
-	now := time.Now()
-
-	if lastTouched, ok := activeUsers.list[userID]; !ok || lastTouched.Add(time.Second*time.Duration(Interval)).Before(now) {
-		activeUsers.gauge.Add(1)
-	}
-	activeUsers.RUnlock()
+	touchedAt := time.Now()
 
 	activeUsers.Lock()
-	activeUsers.list[userID] = now
+	activeUsers.list[userID] = touchedAt
+	activeUsers.gauge.Store(int32(len(activeUsers.list)))
 	activeUsers.Unlock()
 
 	decrement := func() {
 		time.Sleep(time.Second * time.Duration(Interval))
 		activeUsers.Lock()
-		if lastTouched := activeUsers.list[userID]; lastTouched.Equal(now) {
-			activeUsers.gauge.Add(-1)
+		defer activeUsers.Unlock()
+		if lastTouched := activeUsers.list[userID]; lastTouched.Equal(touchedAt) {
+			delete(activeUsers.list, userID)
+			activeUsers.gauge.Store(int32(len(activeUsers.list)))
 		}
-		activeUsers.Unlock()
 	}
 	go decrement()
 }
 
 func (au *ActiveUsers) GetMetrics() string {
-	label := fmt.Sprint("Bot_Active_Users", Interval)
+	label := "Bot_Active_Users"
 	var metrics string
 	metrics += fmt.Sprintf("# HELP %s number of users that issued a command in %d seconds\n", label, Interval)
 	metrics += fmt.Sprintf("# TYPE %s gauge\n", label)
@@ -306,7 +304,6 @@ func (cm *CustomMetrics) Add(name, key string, value float64) {
 // Print outputs metrics to the log
 func (cm *CustomMetrics) Print() {
 	for name, keys := range cm.m {
-		logger.Notice("metrics %s", name)
 		for key, m := range keys {
 			total := m.GetTotal()
 			average := m.GetAverage()
@@ -314,9 +311,9 @@ func (cm *CustomMetrics) Print() {
 				return f == float64(int(f))
 			}
 			if (average == 1.0 || average == 0.0) && hasZeroDecimal(total) {
-				logger.Notice(" key:%s total:%d", key, int(total))
+				logger.Notice("metrics:%s key:%s total:%d", name, key, int(total))
 			} else {
-				logger.Notice(" key:%s total:%v  average:%v", key, total, average)
+				logger.Notice("metrics:%s key:%s total:%v  average:%v", name, key, total, average)
 			}
 		}
 	}
@@ -410,7 +407,8 @@ func (cm *CustomMetrics) WriteCSV(name string) {
 	data := strings.Join(values, ",")
 	output := strings.Join([]string{header, data}, "\n")
 
-	filename := "Bot_Report_Custom_"
+	filename := FilePrefix
+	filename += "Custom_"
 	filename += name
 	filename += "_"
 	filename += time.Now().Format("20060102150405")
@@ -575,7 +573,7 @@ func WriteCSV(name string, inputs ...map[string]string) {
 	data := strings.Join(values, ",")
 	output := strings.Join([]string{header, data}, "\n")
 
-	filename := "Bot_Report_"
+	filename := FilePrefix
 	filename += name
 	filename += "_"
 	filename += time.Now().Format("20060102150405")
