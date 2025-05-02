@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"syscall"
@@ -29,9 +28,6 @@ const rcvByteSize = 8000
 const udpSendInterval int64 = 200
 
 func main() {
-	go func() {
-		fmt.Println(http.ListenAndServe("localhost:6060", nil))
-	}()
 	os.Exit(run())
 }
 
