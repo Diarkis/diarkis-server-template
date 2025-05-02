@@ -83,7 +83,7 @@ func copyExampleToTargetTemplate(projectID, builderToken, destDir, templateDir s
 	}
 
 	// copy magefiles/common.go to each sample.
-	magefilesDir := filepath.Join(templateDir, "magefiles")
+	magefilesDir := filepath.Join(templateDir, "examples", "magefiles")
 	files, err := os.ReadDir(magefilesDir)
 	if err != nil {
 		return err
