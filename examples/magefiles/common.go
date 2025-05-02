@@ -82,7 +82,7 @@ func (Build) Mac() error {
 	return build("./build/mac-build.yml")
 }
 
-// Windows Build server binary for mac use
+// Windows Build server binary for windows use
 func (Build) Windows() error {
 	fmt.Println("Build server binaries")
 
