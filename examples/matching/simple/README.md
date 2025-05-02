@@ -102,26 +102,27 @@ Example of output
 ```
 Connecting to HTTP server first: http://127.0.0.1:7000/endpoint/type/UDP/user/user-1 - clientKey = 
 UDP address = 127.0.0.1:7100
-UDP sid         = b459ca40ddf64a908f04ff24f8251279
-UDP key         = 642dcb9ad1b341a093cdfe679cb05537
-UDP iv          = f9ff7e15319246859dbf1827efe7273b
-UDP mac         = d633cdf78a50446caff175fa83e7a2e0
-[2024/10/31 06:35:39.698]<UDPCL>        INFO Local UDP Client started on [::]:53810
-[2024/10/31 06:35:39.699]<NET>          INFO Local IP Addresses. [REDACTED]
-[2024/10/31 06:35:39.699]<UDPCL>        INFO [user-1] UDP connection started 127.0.0.1:7100
-[2024/10/31 06:35:39.699]<UDPCL>        INFO sendLoop started 127.0.0.1:7100
-Connected UDP
-[2024/10/31 06:35:40.301]<CLI>         DEBUG UDP onResponse ver=2 cmd=1 status=1 payload=
-[2024/10/31 06:35:42.906]<CLI>         DEBUG UDP onPush ver=1 cmd=220 payload={"ownerID":"user-1","candidateIDs":[],"ticketType":1}
-[2024/10/31 06:35:42.906]<CLI>          INFO UDP onPush ver=1 cmd=220 payload={"ownerID":"user-1","candidateIDs":[],"ticketType":1}
-[2024/10/31 06:35:42.906]<CLI>          INFO matching complete: {OwnerID:user-1 CandidateIDs:[] TicketType:1}
-[2024/10/31 06:35:43.307]<CLI>         DEBUG UDP onResponse ver=1 cmd=224 status=1 payload=OK
-[2024/10/31 06:35:43.508]<CLI>         DEBUG UDP onPush ver=1 cmd=224 payload=hello world
-[2024/10/31 06:35:43.508]<CLI>          INFO received ticket broadcast ver=1 cmd=224 payload=hello world
-[2024/10/31 06:35:43.508]<CLI>          INFO received matching ticket broadcast hello world
-[2024/10/31 06:35:43.508]<CLI>          INFO test is finished, disconnect
-[2024/10/31 06:35:43.508]<UDPCL>      SYSTEM [user-1] Failed to receive a packet from <nil>: read udp [::]:53810: use of closed network connection
-[2024/10/31 06:35:43.508]<UDPCL>        INFO [user-1] Client disconnected from 127.0.0.1:7100
+UDP sid         = 49287b84766f4f53ae3abc4b1ef17835
+UDP key         = 6feb9e13b9fa442c9413c223fd746638
+UDP iv          = 3591d278db47463aa3204a416e01fef6
+UDP mac         = 721499f8bf06482ea727301eb5687927
+[2025/05/02 04:11:42.831]<UDPCL>        INFO    Local UDP Client started on [::]:56950
+[2025/05/02 04:11:42.833]<NET>          INFO    Local IP Addresses. [REDACTED]
+[2025/05/02 04:11:42.833]<UDPCL>        INFO    [user-1] UDP connection started 127.0.0.1:7100
+[2025/05/02 04:11:42.833]<UDPCL>        INFO    sendLoop started 127.0.0.1:7100
+[2025/05/02 04:11:43.034]<CLI>          INFO    Connected UDP
+[2025/05/02 04:11:43.034]<CLI>          INFO    start matching with profile:LevelMatch, level:1, rank:1
+[2025/05/02 04:11:43.435]<CLI>         DEBUG    UDP onResponse ver=2 cmd=1 status=1 payload=
+[2025/05/02 04:11:43.435]<CLI>          INFO    Matching successfully started
+[2025/05/02 04:11:43.836]<CLI>         DEBUG    UDP onPush ver=1 cmd=220 payload={"ownerID":"user-1","candidateIDs":["user-2"],"ticketType":1}
+[2025/05/02 04:11:43.836]<CLI>          INFO    UDP onPush ver=1 cmd=220 payload={"ownerID":"user-1","candidateIDs":["user-2"],"ticketType":1}
+[2025/05/02 04:11:43.836]<CLI>          INFO    matching complete: {OwnerID:user-1 CandidateIDs:[user-2] TicketType:1}
+[2025/05/02 04:11:44.037]<CLI>         DEBUG    UDP onResponse ver=1 cmd=224 status=1 payload=OK
+[2025/05/02 04:11:44.237]<CLI>         DEBUG    UDP onPush ver=1 cmd=224 payload=hello world
+[2025/05/02 04:11:44.237]<CLI>          INFO    received ticket broadcast ver=1 cmd=224 payload=hello world
+[2025/05/02 04:11:44.237]<CLI>          INFO    received matching ticket broadcast hello world
+[2025/05/02 04:11:44.237]<CLI>          INFO    test is finished, disconnect
+
 ```
 
 ### exact level
@@ -161,31 +162,24 @@ Example of output
 ```
 Connecting to HTTP server first: http://127.0.0.1:7000/endpoint/type/UDP/user/user-1 - clientKey = 
 UDP address = 127.0.0.1:7100
-UDP sid         = 084408fc79114e409c25fe3a58e95c3c
-UDP key         = ea964564e9e04fd8a4203df7b7cbf74d
-UDP iv          = 993b115118054260a21626c85faada1a
-UDP mac         = cb6b82e82ab3425983fe3dd0b4eda9e0
-[2024/11/01 04:46:12.383]<UDPCL>        INFO Local UDP Client started on [::]:60891
-[2024/11/01 04:46:12.384]<NET>          INFO Local IP Addresses. [REDACTED]
-[2024/11/01 04:46:12.384]<UDPCL>        INFO [user-1] UDP connection started 127.0.0.1:7100
-[2024/11/01 04:46:12.384]<UDPCL>        INFO sendLoop started 127.0.0.1:7100
-[2024/11/01 04:46:12.585]<CLI>          INFO Connected UDP
-[2024/11/01 04:46:12.585]<CLI>          INFO start matching with profile:LevelMatchExact, level:5, rank:3
-[2024/11/01 04:46:12.986]<CLI>         DEBUG UDP onResponse ver=2 cmd=1 status=1 payload=
-[2024/11/01 04:46:12.986]<CLI>          INFO Matching successfully started
-[2024/11/01 04:46:13.789]<CLI>         DEBUG UDP onPush ver=1 cmd=220 payload={"ownerID":"user-1","candidateIDs":[],"ticketType":1}
-[2024/11/01 04:46:13.789]<CLI>          INFO UDP onPush ver=1 cmd=220 payload={"ownerID":"user-1","candidateIDs":[],"ticketType":1}
-[2024/11/01 04:46:13.789]<CLI>          INFO matching complete: {OwnerID:user-1 CandidateIDs:[] TicketType:1}
-[2024/11/01 04:46:14.190]<CLI>         DEBUG UDP onResponse ver=1 cmd=224 status=1 payload=OK
-[2024/11/01 04:46:14.391]<CLI>         DEBUG UDP onPush ver=1 cmd=224 payload=hello world
-[2024/11/01 04:46:14.391]<CLI>          INFO received ticket broadcast ver=1 cmd=224 payload=hello world
-[2024/11/01 04:46:14.391]<CLI>          INFO received matching ticket broadcast hello world
-[2024/11/01 04:46:14.391]<CLI>          INFO test is finished, disconnect
-[2024/11/01 04:46:14.391]<UDPCL>        INFO [user-1] Client disconnected from 127.0.0.1:7100
+UDP sid         = 58cb098792f24f8092e1c1437d78ad2d
+UDP key         = a2b4ad6aa4c64b638d46f4409902ab3e
+UDP iv          = 67c9fe69398447d28f7bbda13a6c6396
+UDP mac         = b998b8b1e4a343279d6dabfb3330536c
+[2025/05/02 04:12:46.431]<UDPCL>        INFO    Local UDP Client started on [::]:59955
+[2025/05/02 04:12:46.433]<NET>          INFO    Local IP Addresses. [REDACTED]
+[2025/05/02 04:12:46.434]<UDPCL>        INFO    [user-1] UDP connection started 127.0.0.1:7100
+[2025/05/02 04:12:46.434]<UDPCL>        INFO    sendLoop started 127.0.0.1:7100
+[2025/05/02 04:12:46.635]<CLI>          INFO    Connected UDP
+[2025/05/02 04:12:46.636]<CLI>          INFO    start matching with profile:LevelMatchExact, level:5, rank:3
+[2025/05/02 04:12:47.034]<CLI>         DEBUG    UDP onResponse ver=2 cmd=1 status=1 payload=
+[2025/05/02 04:12:47.034]<CLI>          INFO    Matching successfully started
+[2025/05/02 04:12:47.235]<CLI>         DEBUG    UDP onPush ver=1 cmd=220 payload={"ownerID":"user-2","candidateIDs":["user-1"],"ticketType":1}
+[2025/05/02 04:12:47.235]<CLI>          INFO    UDP onPush ver=1 cmd=220 payload={"ownerID":"user-2","candidateIDs":["user-1"],"ticketType":1}
+[2025/05/02 04:12:47.235]<CLI>          INFO    matching complete: {OwnerID:user-2 CandidateIDs:[user-1] TicketType:1}
+[2025/05/02 04:12:47.636]<CLI>         DEBUG    UDP onPush ver=1 cmd=224 payload=hello world
+[2025/05/02 04:12:47.636]<CLI>          INFO    received ticket broadcast ver=1 cmd=224 payload=hello world
+[2025/05/02 04:12:47.636]<CLI>          INFO    received matching ticket broadcast hello world
+[2025/05/02 04:12:47.636]<CLI>          INFO    test is finished, disconnect
 ```
 
-
-## Tag ???
-
-
-FIXME(Henry) fix the log to have non empty candidateIDs
