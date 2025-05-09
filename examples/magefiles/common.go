@@ -252,7 +252,10 @@ func build(buildCfg string) error {
 		return err
 	}
 
-	diarkisCli := filepath.Join(getProjectRoot(), getDiarkisCli())
+	diarkisCli := getDiarkisCli()
+	if !filepath.IsAbs(diarkisCli) {
+		diarkisCli = filepath.Join(getProjectRoot(), diarkisCli)
+	}
 
 	return runVInDir(currDir, diarkisCli, "build", "-c", buildCfg, "--host", diarkisCLIHost)
 }
