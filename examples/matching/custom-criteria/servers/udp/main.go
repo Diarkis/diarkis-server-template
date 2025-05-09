@@ -24,7 +24,6 @@ const maxAllowedDistance = 100
 func main() {
 	logConfigPath := "configs/shared/log.json"
 	meshConfigPath := ""
-	log.EnableUnsafeLogging()
 
 	diarkisexec.SetupDiarkis(logConfigPath, meshConfigPath, &diarkisexec.Modules{
 		MatchMaker: &diarkisexec.Options{ConfigPath: "configs/shared/matching.json", ExposeCommands: true},
