@@ -46,7 +46,10 @@ configMapGenerator:
 
   - name: mesh-conf-public
     files:
+      # Assuming use of Nitro based instances
       - shared/conf/public/mesh.json
+      # If you are using a non Nitro based instance, use eth0
+      # - shared/conf/mesh.json
 
   - name: http-conf
     files:
