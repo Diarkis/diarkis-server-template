@@ -120,11 +120,13 @@ kubectl apply -f cluster-autoscaler-autodiscover.yaml # cluster 名 diarkis と�
 ## 10. setup log collector
 
 cloud watch logs 等で container のログを集約することが可能です。(cf. https://docs.aws.amazon.com/ja_jp/AmazonCloudWatch/latest/monitoring/Container-Insights-setup-logs-FluentBit.html)
+
 1. amazon-cloudwatch namespace の作成
-`kubectl create ns amazon-cloudwatch` を実行
+   `kubectl create ns amazon-cloudwatch` を実行
 2. config map の作成
-下記の ClusterName と RegionName は、構成に合わせて修正していただき shell を実行してください。
-``` sh
+   下記の ClusterName と RegionName は、構成に合わせて修正していただき shell を実行してください。
+
+```sh
 ClusterName=diarkis
 RegionName=ap-northeast-1
 FluentBitHttpPort='2020'
@@ -139,12 +141,13 @@ kubectl create configmap fluent-bit-cluster-info \
 --from-literal=read.tail=${FluentBitReadFromTail} \
 --from-literal=logs.region=${RegionName} -n amazon-cloudwatch
 ```
+
 3. fluent-bit の deploy
 
-``` sh
+```sh
 kubectl apply -f https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch-container-insights/latest/k8s-deployment-manifest-templates/deployment-mode/daemonset/container-insights-monitoring/fluent-bit/fluent-bit.yaml
 ```
 
 4. NodeRole の付与
-参考画像![NodeInstanceRole](img/NodeInstanceRole.png)のように、diarkis-public と diarkis-private Node に対して`CloudWatchAgentServerPolicy`をつけてあげることによって、log が集約されます。
-対象のログは、`/aws/containerinsights/Cluster_Name/application`というロググループに入りますので、filterling 等も行うことができます。
+   参考画像![NodeInstanceRole](img/NodeInstanceRole.png)のように、diarkis-public と diarkis-private Node に対して`CloudWatchAgentServerPolicy`をつけてあげることによって、log が集約されます。
+   対象のログは、`/aws/containerinsights/Cluster_Name/application`というロググループに入りますので、filterling 等も行うことができます。
