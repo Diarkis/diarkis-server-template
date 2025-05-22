@@ -104,9 +104,6 @@ spec:
               value: "600"
           command:
             - /go/bin/tcp
-          args:
-            - -c
-            - "1"
           volumeMounts:
             - mountPath: /configs/tcp
               name: tcp-conf
