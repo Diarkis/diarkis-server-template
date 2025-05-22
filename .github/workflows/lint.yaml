@@ -28,6 +28,16 @@ jobs:
         with:
           terraform_version: "1.11.3"
 
+      - name: Install kustomize
+        run: go install sigs.k8s.io/kustomize/kustomize/v5@latest
+
+      - name: Build kustomize overlays
+        run: |
+          cd src
+          for provider in aws azure gcp linode; do
+            kustomize build k8s/${provider}/overlays/dev0 >/dev/null
+          done
+
       - name: check format
         run: make fmt
 
