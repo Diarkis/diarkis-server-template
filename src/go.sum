@@ -1,6 +1,6 @@
-github.com/Diarkis/diarkis v1.1.0-beta3.2 h1:Q9bA0TrHbjVzmWBTX3PPBTShibpCZLVg3tuC9ft9utI=
-github.com/Diarkis/diarkis v1.1.0-beta3.2/go.mod h1:ioTl7Oa/JQkHg0hAfyQDSG2cyBs/u+sqKHWq2MpuFfI=
+github.com/Diarkis/diarkis v1.1.0-beta3.3 h1:r/Zv2Wm4Gw5q1qDtacuT8uSVkaZ20cos5jCyqPbdJas=
+github.com/Diarkis/diarkis v1.1.0-beta3.3/go.mod h1:2rS8hb7oP0GwUrld7SBPKP+4LFsTl8UN8ExdoJYMJak=
 github.com/magefile/mage v1.15.0 h1:BvGheCMAsG3bWUDbZ8AyXXpCNwU9u5CB6sM+HNb9HYg=
 github.com/magefile/mage v1.15.0/go.mod h1:z5UZb/iS3GoOSn0JgWuiw7dxlurVYTu+/jHXqQg881A=
-golang.org/x/sys v0.25.0 h1:r+8e+loiHxRqhXVl6ML1nO3l1+oFoWbnlu2Ehimmi34=
-golang.org/x/sys v0.25.0/go.mod h1:/VUhepiaJMQUp4+oa/7Zr1D23ma6VTLIYjOOTFZPUcA=
+golang.org/x/sys v0.33.0 h1:q3i8TbbEz+JRD9ywIRlyRAQbM0qF7hu24q3teo2hbuw=
+golang.org/x/sys v0.33.0/go.mod h1:BJP2sWEmIv4KK5OTEluFJCKSidICx8ciO85XgH3Ak8k=
