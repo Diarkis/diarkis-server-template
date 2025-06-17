@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 PROJECT_NAME=$(go mod edit -json | jq -r .Module.Path)/puffer/go
