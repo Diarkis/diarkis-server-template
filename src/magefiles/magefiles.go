@@ -151,6 +151,7 @@ func (Puffer) Gen() error {
 	cmd = exec.Command(pufferBin, ".", ".", doc.Module.Path+"/puffer/go")
 	cmd.Dir = "puffer"
 	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 
 	return cmd.Run()
 }
