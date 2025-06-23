@@ -17,11 +17,10 @@ import (
 
 var logger = log.New("UDP")
 
-// userDataMatchingGeoCoordKey Key used to store matching related data in the user.User.
-const userDataMatchingGeoCoordKey = "_matching_params_geocoord"
 const ticketDuration = 15 // 15 seconds
 // maxAllowedDistance Maximum distance allowed for two users to match together.
 const maxAllowedDistance = 100
+const ticketType = uint8(1)
 
 func main() {
 	logConfigPath := "configs/shared/log.json"
@@ -41,40 +40,6 @@ func main() {
 }
 
 func setupMaching() {
-	const ticketType = uint8(1)
-
-	matching.SetOnIssueTicket(ticketType, func(userData *user.User) *matching.TicketParams {
-		coords, _ := userData.GetAsFloat64Array(userDataMatchingGeoCoordKey)
-
-		// Pack the user coordinates as an application data.
-		// This is a lazy way to pack the user coordinates in a byte array.
-		// We recommend to use something else in production.
-		buf := new(bytes.Buffer)
-		binary.Write(buf, binary.BigEndian, coords)
-
-		// Randomize searchTries and emptySearches to not move to the wait mode at the same time considering all clients issue tickets at the same time.
-		searchTries := rand.Intn(10-1) + 1
-		emptySearches := rand.Intn(searchTries) + 1
-		return &matching.TicketParams{
-			ProfileIDs:     []string{"All"},
-			MaxMembers:     2,
-			SearchInterval: 100, // 100ms
-			SearchTries:    uint8(searchTries),
-			EmptySearches:  uint8(emptySearches),
-			TicketDuration: ticketDuration,
-			HowMany:        20,
-			// Change here as you see fit according to your application needs
-			Tags: nil,
-			// The profile we use has no criteria because we focus on implementing
-			// a custom check.
-			AddProperties:    map[string]int{"level": 1},
-			SearchProperties: map[string][]int{"level": {1}},
-			// Associated some metadata related to the client to the ticket.
-			// We will retrieve them in `matching.SetOnTicketAllowMatchIf` to check
-			// if two candidates can match together.
-			ApplicationData: buf.Bytes(),
-		}
-	})
 
 	matching.SetOnTicketAllowMatchIf(ticketType, func(ticketProps *matching.TicketProperties, owner, candidate *user.User) bool {
 		ownerCoords := []float64{}
@@ -141,12 +106,36 @@ func handleStartMatching(ver uint8, cmd uint16, payload []byte, userData *user.U
 		longitude = params.Longitude
 	}
 
-	// Attach the matching params to the user data
-	// so we can retrieve them when creating the ticket.
-	userData.SetAsFloat64Array(userDataMatchingGeoCoordKey, []float64{latitude, longitude})
-	defer userData.Delete(userDataMatchingGeoCoordKey)
+	// Pack the user coordinates as an application data.
+	// This is a lazy way to pack the user coordinates in a byte array.
+	// We recommend to use something else in production.
+	buf := new(bytes.Buffer)
+	binary.Write(buf, binary.BigEndian, []float64{latitude, longitude})
 
-	err = matching.StartTicket(1, userData)
+	// Randomize searchTries and emptySearches to not move to the wait mode at the same time considering all clients issue tickets at the same time.
+	searchTries := randomInt(1, 10)
+	emptySearches := randomInt(1, max(2, searchTries))
+	ticketParams := &matching.TicketParams{
+		ProfileIDs:     []string{"All"},
+		MaxMembers:     2,
+		SearchInterval: 100, // 100ms
+		SearchTries:    uint8(searchTries),
+		EmptySearches:  uint8(emptySearches),
+		TicketDuration: ticketDuration,
+		HowMany:        20,
+		// Change here as you see fit according to your application needs
+		Tags: nil,
+		// The profile we use has no criteria because we focus on implementing
+		// a custom check.
+		AddProperties:    map[string]int{"level": 1},
+		SearchProperties: map[string][]int{"level": {1}},
+		// Associated some metadata related to the client to the ticket.
+		// We will retrieve them in `matching.SetOnTicketAllowMatchIf` to check
+		// if two candidates can match together.
+		ApplicationData: buf.Bytes(),
+	}
+
+	err = matching.StartTicketWithTicketParams(1, userData, ticketParams)
 	if err != nil {
 		err = fmt.Errorf("fail to start matching ticket. %w", err)
 		b, _ := json.Marshal(common.CommandResponse{
@@ -172,4 +161,8 @@ func geolocalizeAddress(address string) (latitude float64, longitude float64, er
 
 func computeDistance(coords1, coord2 []float64) float64 {
 	return maxAllowedDistance
+}
+
+func randomInt(minValue, maxValue int) int {
+	return rand.Intn(maxValue-minValue) + minValue
 }
