@@ -11,7 +11,6 @@ import (
 	"github.com/Diarkis/diarkis/diarkisexec"
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/matching"
-	"github.com/Diarkis/diarkis/mesh"
 	"github.com/Diarkis/diarkis/server"
 	"github.com/Diarkis/diarkis/user"
 )
@@ -149,9 +148,6 @@ func setupMaching() {
 			// a custom check.
 			AddProperties:    map[string]int{"level": 1},
 			SearchProperties: map[string][]int{"level": {1}},
-			// As there is no way to retrieve the candidate mesh address from a matching.TicketProperties,
-			// we need to store ourself the current mesh endpoint the user is connected to.
-			ApplicationData: []byte(mesh.GetMyEndPoint()),
 		}
 	})
 
@@ -178,8 +174,7 @@ func setupMaching() {
 
 		// candidate team
 		for uid, ticketHolder := range ticketProps.GetAllCandidates() {
-			// Retrieve the candidate mesh address from the application data.
-			meshAddr := string(ticketHolder.ApplicationData)
+			meshAddr := ticketHolder.MeshEndPoint
 			req := getTicketMembersReq{
 				TicketType: common.TeamTicketType,
 				OwnerID:    uid,
@@ -205,23 +200,7 @@ func setupMaching() {
 		})
 
 		// Notify owner's team ticket members a team has been found.
-		matching.TicketBroadcast(common.TeamTicketType, owner, common.AppVersion, common.MatchingTicketBattleBroadcastCmd, b)
-
-		// Notify the candidates's team ticket members a team has been found.
-		for candidate, ticketHolder := range ticketProps.GetAllCandidates() {
-			// Retrieve the candidate mesh address from the application data.
-			meshAddr := string(ticketHolder.ApplicationData)
-
-			remotePushData, _ := json.Marshal(ticketBroadcastReq{
-				OwnerID:    candidate,
-				TicketType: common.TeamTicketType,
-				Data:       b,
-				Version:    common.AppVersion,
-				Command:    common.MatchingTicketBattleBroadcastCmd,
-			})
-
-			_, _ = diarkisexec.SendMeshRPC(meshRemoteTicketBroadcast, meshAddr, remotePushData)
-		}
+		matching.TicketMultibroadcast([]uint8{common.BattleTicketType, common.TeamTicketType}, owner, common.AppVersion, common.MatchingTicketBattleBroadcastCmd, b)
 
 		return b
 	})
