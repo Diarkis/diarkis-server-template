@@ -17,8 +17,10 @@ import (
 
 var logger = log.New("UDP")
 
+// userDataMatchingGeoCoordKey Key used to store matching related data in the user.User.
 const userDataMatchingGeoCoordKey = "_matching_params_geocoord"
 const ticketDuration = 15 // 15 seconds
+// maxAllowedDistance Maximum distance allowed for two users to match together.
 const maxAllowedDistance = 100
 
 func main() {
@@ -40,6 +42,7 @@ func main() {
 
 func setupMaching() {
 	const ticketType = uint8(1)
+
 	matching.SetOnIssueTicket(ticketType, func(userData *user.User) *matching.TicketParams {
 		coords, _ := userData.GetAsFloat64Array(userDataMatchingGeoCoordKey)
 
