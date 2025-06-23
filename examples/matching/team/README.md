@@ -2,8 +2,14 @@ This project is composed of three servers and one client.
 MARS and http server are standard process with only the HTTP server
 defining a simple matching profile.
 The third server is the udp one that handle the matching command of the client.
-The goal of this sample is to explain how implement team matching using two types
+The goal of this sample is to explain how to implement team matching using two types
 of matching ticket.
+First the clients match using the ticket type `common.TeamTicketType`, once the matching
+is completed, each matching owner starts another matching using the ticket type `common.BattleTicketType`.
+This matching will only match the owner. When the matching is completed, the owner of the matching
+calls the api `matching.TicketMultibroadcast` with ticketTypes=[common.BattleTicketType, common.TeamTicketType].
+The matching package will take care of broadcasting the message to all the members of the ticket `common.BattleTicketType`,
+then to all the members of the ticket `common.TeamTicketType` for which the owner is in the ticket `common.BattleTicketType`.
 
 # How to build
 
