@@ -3,3 +3,5 @@ and executed locally.
 
 - [http json endpoint](./http/json-endpoint/README.md)
 - [simple matching](./matching/simple/README.md)
+- [matching with custom criteria](./matching/custom-criteria/README.md)
+- [matching team](./matching/team/README.md)
