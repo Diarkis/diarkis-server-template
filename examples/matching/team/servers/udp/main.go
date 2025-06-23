@@ -47,27 +47,6 @@ func main() {
 
 func setupMaching() {
 	// Team matching
-	matching.SetOnIssueTicket(common.TeamTicketType, func(userData *user.User) *matching.TicketParams {
-		// Randomize searchTries and emptySearches to not move to the wait mode at the same time considering all clients issue tickets at the same time.
-		searchTries := rand.Intn(10-1) + 1
-		emptySearches := rand.Intn(searchTries) + 1
-		return &matching.TicketParams{
-			ProfileIDs:     []string{"team"},
-			MaxMembers:     teamMaxMembers,
-			SearchInterval: 100, // 100ms
-			SearchTries:    uint8(searchTries),
-			EmptySearches:  uint8(emptySearches),
-			TicketDuration: ticketDuration,
-			HowMany:        20,
-			// Change here as you see fit according to your application needs
-			Tags: nil,
-			// The profile we use has no criteria because we focus on implementing
-			// a custom check.
-			AddProperties:    map[string]int{"level": 1},
-			SearchProperties: map[string][]int{"level": {1}},
-		}
-	})
-
 	matching.SetOnTicketAllowMatchIf(common.TeamTicketType, func(ticketProps *matching.TicketProperties, owner, candidate *user.User) bool {
 		return true
 	})
@@ -116,41 +95,41 @@ func setupMaching() {
 			TicketType:   common.TeamTicketType,
 		})
 
-		// In case you want to match another team based on some criteria.
-		// For example the average level of the team, you could store that information
-		// in the owner and use them to adjust the battle criteria.
+		{
+			// In case you want to match another team based on some criteria.
+			// For example the average level of the team, you could store that information
+			// in the owner and use them to adjust the battle criteria.
 
-		// Once the team has been created, the owner starts a new ticket to match
-		// against another team.
-		if err := matching.StartTicket(common.BattleTicketType, owner); err != nil {
-			logger.Error("failed to start battle ticket. %v", err)
+			// Once the team has been created, the owner starts a new ticket to match
+			// against another team.
+
+			searchTries := rand.Intn(10-1) + 1
+			emptySearches := rand.Intn(searchTries) + 1
+			ticketParams := &matching.TicketParams{
+				ProfileIDs:     []string{"battle"},
+				MaxMembers:     teamVsTeamSize,
+				SearchInterval: 100, // 100ms
+				SearchTries:    uint8(searchTries),
+				EmptySearches:  uint8(emptySearches),
+				TicketDuration: ticketDuration,
+				HowMany:        20,
+				// Change here as you see fit according to your application needs
+				Tags: nil,
+				// The profile we use has no criteria because we focus on implementing
+				// a custom check.
+				AddProperties:    map[string]int{"level": 1},
+				SearchProperties: map[string][]int{"level": {1}},
+			}
+
+			if err := matching.StartTicketWithTicketParams(common.BattleTicketType, owner, ticketParams); err != nil {
+				logger.Error("failed to start battle ticket. %v", err)
+			}
 		}
 
 		return b
 	})
 
 	// Battle matching
-	matching.SetOnIssueTicket(common.BattleTicketType, func(userData *user.User) *matching.TicketParams {
-		// Randomize searchTries and emptySearches to not move to the wait mode at the same time considering all clients issue tickets at the same time.
-		searchTries := rand.Intn(10-1) + 1
-		emptySearches := rand.Intn(searchTries) + 1
-		return &matching.TicketParams{
-			ProfileIDs:     []string{"battle"},
-			MaxMembers:     teamVsTeamSize,
-			SearchInterval: 100, // 100ms
-			SearchTries:    uint8(searchTries),
-			EmptySearches:  uint8(emptySearches),
-			TicketDuration: ticketDuration,
-			HowMany:        20,
-			// Change here as you see fit according to your application needs
-			Tags: nil,
-			// The profile we use has no criteria because we focus on implementing
-			// a custom check.
-			AddProperties:    map[string]int{"level": 1},
-			SearchProperties: map[string][]int{"level": {1}},
-		}
-	})
-
 	matching.SetOnTicketAllowMatchIf(common.BattleTicketType, func(ticketProps *matching.TicketProperties, owner, candidate *user.User) bool {
 		return true
 	})
@@ -222,7 +201,26 @@ func handleStartMatching(ver uint8, cmd uint16, payload []byte, userData *user.U
 		return
 	}
 
-	err = matching.StartTicket(common.TeamTicketType, userData)
+	// Randomize searchTries and emptySearches to not move to the wait mode at the same time considering all clients issue tickets at the same time.
+	searchTries := rand.Intn(10-1) + 1
+	emptySearches := rand.Intn(searchTries) + 1
+	ticketParams := &matching.TicketParams{
+		ProfileIDs:     []string{"team"},
+		MaxMembers:     teamMaxMembers,
+		SearchInterval: 100, // 100ms
+		SearchTries:    uint8(searchTries),
+		EmptySearches:  uint8(emptySearches),
+		TicketDuration: ticketDuration,
+		HowMany:        20,
+		// Change here as you see fit according to your application needs
+		Tags: nil,
+		// The profile we use has no criteria because we focus on implementing
+		// a two steps matching.
+		AddProperties:    map[string]int{"level": 1},
+		SearchProperties: map[string][]int{"level": {1}},
+	}
+
+	err = matching.StartTicketWithTicketParams(common.TeamTicketType, userData, ticketParams)
 	if err != nil {
 		err = fmt.Errorf("fail to start matching ticket. %w", err)
 		b, _ := json.Marshal(common.CommandResponse{
