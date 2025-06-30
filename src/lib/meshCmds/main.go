@@ -44,7 +44,7 @@ func CreateRemoteRoom(serverType string, maxMembers int, ttl, interval int64, cb
 		}
 	}
 	if targetNode == "" {
-		cb(errors.New("No available target node found"), "")
+		cb(errors.New("no available target node found"), "")
 		return
 	}
 	mesh.SendRequest(createRemoteRoomCmd, targetNode, data, func(err error, res map[string]interface{}) {
@@ -69,7 +69,7 @@ func handleCreateRemoteRoom(req map[string]interface{}) ([]byte, error) {
 	}
 	dummy := user.CreateBlankUser(val.String, val.String)
 	if dummy == nil {
-		return nil, errors.New("Failed to create a dummy user")
+		return nil, errors.New("failed to create a dummy user")
 	}
 	roomID, err := room.NewRoom(dummy, maxMembers, allowEmpty, join, ttl, interval)
 	if err != nil {
