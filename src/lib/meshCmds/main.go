@@ -67,16 +67,7 @@ func handleCreateRemoteRoom(req map[string]interface{}) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	data := make(map[string]interface{})
-	data["sid"] = val.Bytes
-	data["uid"] = val.String
-	data["key"] = ""
-	data["macKey"] = ""
-	_, err = user.New(data, ttl)
-	if err != nil {
-		return nil, err
-	}
-	dummy := user.GetUserByID(val.String)
+	dummy := user.CreateBlankUser(val.String, val.String)
 	if dummy == nil {
 		return nil, errors.New("Failed to create a dummy user")
 	}
