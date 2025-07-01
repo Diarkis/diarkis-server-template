@@ -8,5 +8,3 @@ require (
 )
 
 require golang.org/x/sys v0.33.0 // indirect
-
-replace github.com/Diarkis/diarkis => /Users/Shared/Diarkis/diarkis

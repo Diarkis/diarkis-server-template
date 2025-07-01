@@ -1,3 +1,5 @@
+// © 2019-2025 Diarkis Inc. All rights reserved.
+
 package common
 
 type MatchingComplete struct {

@@ -1,4 +1,4 @@
-// © 2019-2024 Diarkis Inc. All rights reserved.
+// © 2019-2025 Diarkis Inc. All rights reserved.
 
 //go:build mage
 // +build mage
@@ -26,7 +26,6 @@ import (
 
 type Diarkis mg.Namespace
 type Build mg.Namespace
-type Puffer mg.Namespace
 
 // Init Initialize project
 func Init() error {
@@ -74,7 +73,6 @@ func (Build) Local() error {
 
 // Linux Build server binary for linux or container environment
 func (Build) Linux() error {
-	mg.Deps(Puffer.Gen)
 	fmt.Println("Build server binaries")
 
 	return build("./build/linux-build.yml")
@@ -82,13 +80,12 @@ func (Build) Linux() error {
 
 // Mac Build server binary for mac use
 func (Build) Mac() error {
-	mg.Deps(Puffer.Gen)
 	fmt.Println("Build server binaries")
 
 	return build("./build/mac-build.yml")
 }
 
-// Server Start a server locally: Required 1 following argument: mars http udp tcp
+// Server Start a server locally: Required 1 following argument: mars http udp api
 func Server(target string) error {
 	var exe string
 	var args []string
@@ -110,64 +107,8 @@ func Server(target string) error {
 	return sh.RunV(exe, args...)
 }
 
-// Gen Generate go, cpp, and cs code files using puffer (Diarkis packet gen module) from packet definition written in json.
-func (Puffer) Gen() error {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("fail to retrieve current working directory: %w", err)
-	}
-
-	stdout := bytes.NewBuffer(nil)
-	cmd := exec.Command("go", "mod", "edit", "-json")
-	cmd.Stdout = stdout
-
-	err = cmd.Run()
-	if err != nil {
-		return fmt.Errorf("fail to retrieve current project go module name: %w", err)
-	}
-
-	var doc struct {
-		Module struct {
-			Path string
-		}
-	}
-	err = json.Unmarshal(stdout.Bytes(), &doc)
-	if err != nil {
-		return fmt.Errorf("fail to parse go mod edit output: %w", err)
-	}
-
-	var pufferBin string
-	switch runtime.GOOS {
-	case "linux":
-		pufferBin = filepath.Join("puffer", "puffer-linux")
-	case "darwin":
-		pufferBin = filepath.Join("puffer", "puffer-mac")
-	case "windows":
-		pufferBin = filepath.Join("puffer", "puffer-windows.exe")
-	}
-
-	pufferBin = filepath.Join(cwd, pufferBin)
-
-	cmd = exec.Command(pufferBin, ".", ".", doc.Module.Path+"/puffer/go")
-	cmd.Dir = "puffer"
-	cmd.Stdout = os.Stdout
-
-	return cmd.Run()
-}
-
-// Clean Delete all generated protocol code files.
-func (Puffer) Clean() error {
-	for _, dir := range []string{"go", "cs", "cpp"} {
-		err := sh.Rm(filepath.Join("puffer", dir))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// GoCli Starts Go test client. Required 4 arguments: <HTTP address> <client user ID> <client key> <puffer enabled: true/false>
-func GoCli(host, uid, clientKey, puffer string) error {
+// GoCli Starts Go test client. Required 3 arguments: <HTTP address> <client user ID> <client key>
+func GoCli(host, uid, clientKey string) error {
 	bin := filepath.Join("remote_bin", "testcli")
 	if runtime.GOOS == "windows" {
 		bin += ".exe"
@@ -176,7 +117,7 @@ func GoCli(host, uid, clientKey, puffer string) error {
 		fmt.Sprintf("--host=%s", host),
 		fmt.Sprintf("--uid=%s", uid),
 		fmt.Sprintf("--clientKey=%s", clientKey),
-		fmt.Sprintf("--puffer=%s", puffer),
+		fmt.Sprintf("--puffer=false"),
 	)
 }
 

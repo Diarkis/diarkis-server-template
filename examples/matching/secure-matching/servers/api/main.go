@@ -1,3 +1,5 @@
+// © 2019-2025 Diarkis Inc. All rights reserved.
+
 package main
 
 import (
@@ -7,6 +9,8 @@ import (
 	"log"
 	"math/rand/v2"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -143,7 +147,13 @@ func userRankHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate random rank between 1-200
-	rank := rand.N(200) + 1
+	rank := 0
+	// DEBUG: If you want to get a specific rank, you can set rank as user-<rank>
+	if strings.HasPrefix(uid, "user-") {
+		rank, _ = strconv.Atoi(strings.TrimPrefix(uid, "user-"))
+	} else {
+		rank = rand.N(200) + 1
+	}
 
 	userRank := UserRankResponse{
 		UID:  uid,

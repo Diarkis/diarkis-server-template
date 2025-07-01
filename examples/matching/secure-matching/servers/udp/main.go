@@ -1,8 +1,11 @@
+// © 2019-2025 Diarkis Inc. All rights reserved.
+
 package main
 
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/rand/v2"
 	"net/http"
 	"time"
@@ -46,7 +49,7 @@ func main() {
 func setupMatching() {
 	matching.SetOnIssueTicket(ticketType, func(userData *user.User) *matching.TicketParams {
 
-		// TODO: Get rank from API
+		// Get rank from API
 		rank, err := getRankFromAPI(userData.ID)
 		if err != nil {
 			logger.Errorf("Failed to get rank from API for user %s: %v, using fallback random rank", userData.ID, err)
@@ -60,7 +63,7 @@ func setupMatching() {
 		// Randomize searchTries and emptySearches to not move to the wait mode at the same time considering all clients issue tickets at the same time.
 		maxSearchTries := 50
 		searchTries := randomInt(1, maxSearchTries) // max 50 tries for 5 seconds (searchInterval * searchTries)
-		emptySearches := randomInt(1, searchTries)
+		emptySearches := randomInt(1, max(2, searchTries))
 
 		return &matching.TicketParams{
 			ProfileIDs:       []string{"RankMatch"},
@@ -95,6 +98,8 @@ func setupMatching() {
 }
 
 // getRankFromAPI fetches user rank from localhost:8080/users/{uid}
+// This is intended to simulate an API server provided by the service side.
+// In a real-world application, this would be replaced with an actual API server.
 func getRankFromAPI(uid string) (int, error) {
 	client := &http.Client{
 		Timeout: 5 * time.Second,
@@ -124,21 +129,26 @@ func randomInt(minValue, maxValue int) int {
 	return rand.N(maxValue-minValue) + minValue
 }
 
-// generateSearchProperties generates search range properties within ±20 of own rank,
-// in multiples of 10
+// generateSearchProperties generates search range properties.
+// The result is as follows:
+//
+//	rank 0: [0, 10, 20]: It means that the user can match with users in rank from 0 to 20.
+//	rank 1-10: [0, 10, 20, 30]: It means that the user can match with users in rank from 0 to 30.
+//	rank 11-20: [0, 10, 20, 30, 40]: It means that the user can match with users in rank from 0 to 40.
+//	rank 21-30: [10, 20, 30, 40, 50]: It means that the user can match with users in rank from 1 to 50.
+//	rank 31-40: [20, 30, 40, 50, 60]: It means that the user can match with users in rank from 11 to 60.
 func generateSearchProperties(rank int) []int {
-	searchRange := 20
-	searchStep := 10
+	searchStep := 10 // This should be the same as 'rank' in the matching profile
+	currentBucket := int(math.Ceil(float64(rank) / float64(searchStep)))
+	searchBucketRange := 2 // Search ±2 buckets from the current bucket
 	var searchRankProperties []int
-	minRank := rank - searchRange
-	maxRank := rank + searchRange
-	if minRank < 10 {
-		minRank = 10
+	minBucket := currentBucket - searchBucketRange
+	if minBucket < 0 {
+		minBucket = 0
 	}
-	minRank = (minRank + searchStep - 1) / searchStep * searchStep
-	maxRank = maxRank / searchStep * searchStep
-	for i := minRank; i <= maxRank; i += searchStep {
-		searchRankProperties = append(searchRankProperties, i)
+	maxBucket := currentBucket + searchBucketRange
+	for bucket := minBucket; bucket <= maxBucket; bucket++ {
+		searchRankProperties = append(searchRankProperties, bucket*searchStep)
 	}
 	return searchRankProperties
 }
