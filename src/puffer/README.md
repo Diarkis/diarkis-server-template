@@ -1,5 +1,4 @@
-This is a readme describing puffer, a packet definition generation tool.
-Reference: https://docs.diarkis.io/docs/server/v1.0.0-rc1/diarkis/puffer/index.html
+Puffer allows you to define and generate data protocols for easy byte-serialization.
 
 ## Usage
 
@@ -37,6 +36,61 @@ func echoPufferCmd(ver uint8, cmd uint16, payload []byte, userData *user.User, n
 	next(nil)
 }
 
+```
+
+## Data Types Used in JSON definition files
+
+Table of property data types.
+
+                                  Corresponding Data Type
+
+| JSON Data Type Dictation |        Go |       C# |                                             C++ |
+| -----------------------: | --------: | -------: | ----------------------------------------------: |
+|                       u8 |     uint8 |     byte |                                         uint8_t |
+|                      u16 |    uint16 |   ushort |                                        uint16_t |
+|                      u32 |    uint32 |     uint |                                        uint32_t |
+|                      u64 |    uint64 |    ulong |                                        uint64_t |
+|                       i8 |      int8 |    sbyte |                                          int8_t |
+|                      i16 |     int16 |    short |                                         int16_t |
+|                      i32 |     int32 |      int |                                         int32_t |
+|                      i64 |     int64 |     long |                                         int64_t |
+|                      f32 |   float32 |    float |                                           float |
+|                      f64 |   float64 |   double |                                          double |
+|                     bool |   boolean |     bool |                                            bool |
+|                   string |    string |   string |                              Diarkis::StdString |
+|                      b[] |    []byte |   byte[] |                     Diarkis::StdVector<uint8_t> |
+|                     u8[] |   []uint8 |   byte[] |                     Diarkis::StdVector<uint8_t> |
+|                    u16[] |  []uint16 | ushort[] |                    Diarkis::StdVector<uint16_t> |
+|                    u32[] |  []uint32 |   uint[] |                    Diarkis::StdVector<uint32_t> |
+|                    u64[] |  []uint64 |  ulong[] |                    Diarkis::StdVector<uint64_t> |
+|                     i8[] |    []int8 |  sbyte[] |                      Diarkis::StdVector<int8_t> |
+|                    i16[] |   []int16 |  short[] |                     Diarkis::StdVector<int16_t> |
+|                    i32[] |   []int32 |    int[] |                     Diarkis::StdVector<int32_t> |
+|                    i64[] |   []int64 |   long[] |                     Diarkis::StdVector<int64_t> |
+|                    f32[] | []float32 |  float[] |                       Diarkis::StdVector<float> |
+|                    f64[] | []float64 | double[] |                      Diarkis::StdVector<double> |
+|                   bool[] |    []bool |   bool[] |                        Diarkis::StdVector<bool> |
+|                 string[] |  []string | string[] |          Diarkis::StdVector<Diarkis::StdString> |
+|                    b[][] |  [][]byte | byte[][] | Diarkis::StdVector<Diarkis::StdVector<uint8_t>> |
+
+## Custom Data Types
+
+You may use protocols that you define in JSON files as custom data types.
+
+Example:
+
+```
+{
+  "States": {
+    "Flag":      "bool",
+    "mode":      "u8",
+    "timestamp": "i64"
+  },
+  "UserData": {
+    "ID": "string",
+    "States": "States"
+  }
+}
 ```
 
 ## directory architecture
