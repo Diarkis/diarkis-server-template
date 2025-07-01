@@ -37,13 +37,9 @@ func main() {
 	})
 	diarkisexec.SetupDiarkisUDPServer("configs/udp/main.json")
 
-	// diarkisexec.SetServerCommandHandler(common.AppVersion, common.MatchingStartCmd, handleStartMatching)
-	// diarkisexec.SetServerCommandHandler(common.AppVersion, common.MatchingTicketBroadcastCmd, handleMatchingTicketBroadcast)
-
 	setupMatching()
 
 	diarkisexec.StartDiarkis()
-
 }
 
 func setupMatching() {

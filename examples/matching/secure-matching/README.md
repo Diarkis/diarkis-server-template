@@ -3,9 +3,9 @@
 This project demonstrates secure authentication and matchmaking using Diarkis.
 The project consists of four servers and one client:
 
-- **mars**: Mars server (mesh coordination)
+- **mars**: Mars server
 - **http**: Authentication and matching storage server (port: 7000)
-- **udp**: Server that handles matching commands (port: 7100)
+- **udp**: UDP server that handles matching commands
 - **api**: Dummy API server that provides authentication and user rank retrieval APIs (port: 8080)
   - This simulates an external API server that would be provided by your service
 - **cli**: Go client for testing
