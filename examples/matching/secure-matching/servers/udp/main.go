@@ -48,8 +48,9 @@ func setupMatching() {
 		// Get rank from API
 		rank, err := getRankFromAPI(userData.ID)
 		if err != nil {
-			logger.Errorf("Failed to get rank from API for user %s: %v, using fallback random rank", userData.ID, err)
-			rank = randomInt(1, 200) // fallback to random if API fails
+			logger.Errorf("onIssueTicket: Failed to get rank from API for user %s: %v, using fallback random rank", userData.ID, err)
+			// Returning nil prevents ticket creation
+			return nil
 		}
 		logger.Sysf("onIssueTicket: You got rank via API:", "rank", rank)
 
