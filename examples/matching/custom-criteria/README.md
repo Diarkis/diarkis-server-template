@@ -2,19 +2,25 @@
 
 This project is comprised of **(3)** servers and **(1)** client.
 
-- **MARS** server is standard (out-of-the-box) Diarkis template. It serves to orchestrates the
+- **MARS** server is a standard (out-of-the-box) Diarkis template. It serves to orchestrates the
   node mesh.
-- **HTTP** servers is standard (out-of-the-box) Diarkis template, with only a simple matching
-  profile for our custom matching criteria. Our matching information is stored on this server type.
+- **HTTP** server is a standard (out-of-the-box) Diarkis template; excepting a simple Matchmaker
+  profile definition for our custom matchmaking criteria. Our Matchmaker candidate information is
+  stored here.
 
 - **UDP** server hosts the client connection and handles all incoming Matchmaker commands.
-  It queries the matchmaking storage server (**HTTP**) for valid candidates, and if a valid
-  pairing exists, it completes said matching for the selected candidates.
+  It queries the Matchmaker storage server (**HTTP**) for valid candidates. If a valid
+  matching is found via the provided pooling constraints *(**see**: `matching.AddProperty`,
+  `matching.SearchProperty`)*, it attempts match the selected candidates by the (optional) custom
+  matchmaking criteria.
 
-The goal of this sample is to demonstrate how to add custom criteria to Diarkis Matchmaker.
-These are criteria that may not be represented as an `int` constraint within the map of defined `AddProperty` nor `SearchProperty`.
+The goal of this sample is to demonstrate how to add custom matchmaking criteria to Diarkis
+Matchmaker. Custom matchmaking criteria are constraints that may not be represented as an `int`
+within the map of defined `matching.AddProperty` or `matching.SearchProperty` utilized for candidate
+pooling.
 
-In this example, we use geolocation-based candidate matchmaking to demonstrate one such implementation.
+In this example, we use geolocation-based candidate matchmaking to demonstrate one such
+implementation.
 
 ## How to Build
 
@@ -32,11 +38,13 @@ You can build all **(3)** servers and the client binary using the provided Mage 
 .\run-mage.bat build:local
 ```
 
-This will create the **MARS**, **HTTP**, and **UDP** server binaries, along with the client binary, placing them inside the `remote_bin` directory.
+This will create the **MARS**, **HTTP**, and **UDP** server binaries, and client binary,
+placing them inside the `remote_bin` directory.
 
 ## How to Run
 
-This project requires all **(3)** servers to be running before clients can test matchmaking behavior.
+This project requires all **(3)** servers to be running before clients can test matchmaking
+behavior.
 
 ### 1. First, start the MARS server to orchestrate the node mesh
 
@@ -44,7 +52,7 @@ This project requires all **(3)** servers to be running before clients can test 
 ./run-mage.sh server mars
 ```
 
-### 2. Next, start the HTTP server, which holds the custom matching criteria
+### 2. Next, start the HTTP server, which holds the custom matchmaking criteria
 
 ```sh
 ./run-mage.sh server http
@@ -56,13 +64,15 @@ This project requires all **(3)** servers to be running before clients can test 
 ./run-mage.sh server udp
 ```
 
-Once all servers are running, you may start two client instances to test and observe the matchmaking behavior using the custom criteria flow.
+Once all servers are running, you may start two client instances to test and observe the matchmaking
+behavior using the custom criteria constraint.
 
 ## Testing the Custom Matchmaking Criteria
 
-**Scenario**: The **UDP** server will prevent candidate to matchmaking if the distance between them is calculated to be >5000 km.
+**Scenario**: The **UDP** server will prevent matchmaking if the distance between any (2) candidates
+is calculated to be **>5000 km**.
 
-The test client has the following usage.
+The test client has the following usage:
 
 ```output
 Usage of ./remote_bin/cli:
@@ -78,12 +88,13 @@ Usage of ./remote_bin/cli:
         the unique identifier of the client like user ID
 ```
 
-**NOTE**: This sample does not implment any geolocalization database nor service. If desired, it is up to you to plug such an external service into the example code.
+**NOTE**: This sample does not implment a geolocalization database nor service. If desired, it is
+up to you to plug-in such an external service into the code example.
 
 ## Examples
 
-The custom criteria outlined in this example uses client-provided decimal degrees (DD) coordinates as the
-matching conditions.
+The custom matchmaking criteria outlined in this example uses client-provided decimal degree (DD)
+coordinates as the matchmaking conditions.
 
 ### Valid Matching
 
@@ -99,8 +110,15 @@ Our second user, `user-b`, is connecting from **Los Angeles, USA** (34.052235, -
  ./remote_bin/cli -uid user-b -latitude 34.052235 -longitude -118.243683
  ```
 
-The distance between NYC and LA is **~3987 km**, and therefore is less than our **<5000 km** distance
-matchmaking constraint. This means that our two clients will be able to match together successfully.
+The distance between NYC and LA is **~3987 km**, and therefore is less than our **<5000 km**
+distance matchmaking constraint. This means that our two clients are able to match together
+successfully.
+
+**Log Output (UDP):**
+```output
+Candidates matched successfully Owner=user-a Candidate=user-b Distance=3986.9854666330843 MaxAllowedDistance=5000
+```
+
 
 ### Invalid Matching
 
@@ -116,5 +134,14 @@ Our second user, `user-b`, is connecting from **Tokyo, JP** (35.652832, 139.8394
  ./remote_bin/cli -uid user-b -latitude 35.652832 -longitude 139.839478
  ```
 
-The distance between NYC and Tokyo is **~18744 km**, and therefore is less than our **<5000 km** distance
-matchmaking constraint. This means that our two clients will fail to match together.
+The distance between NYC and Tokyo is **~18744 km**, and therefore is less than our **<5000 km**
+distance matchmaking constraint. This means that our two clients will fail to match together.
+
+**Log Output (UDP):**
+```output
+Cannot match candidates Owner=user-a Candidate=user-b Distance=18744.26784351792 MaxAllowedDistance=5000
+```
+
+---
+
+*First created on 2025-04-03. Updated on 2025-04-04.*
