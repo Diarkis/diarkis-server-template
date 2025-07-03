@@ -19,7 +19,7 @@ var logger = log.New("UDP")
 
 const ticketDuration = 15 // 15 seconds
 // maxAllowedDistance Maximum distance allowed for two users to match together.
-const maxAllowedDistance = 100
+const maxAllowedDistance = 5000
 const ticketType = uint8(1)
 
 func main() {
@@ -53,10 +53,12 @@ func setupMaching() {
 		// Here compute the distance between the owner and candidate.
 		distance := common.ComputeDistanceHubeny(ownerCoords, candidateCoords)
 		if distance > maxAllowedDistance {
-			logger.Debugf("Cannot match candidate", "Distance", distance)
+			logger.Debugf("Cannot match candidates", "Owner", owner.ID, "Candidate", candidate.ID,
+				"Distance", distance, "MaxAllowedDistance", maxAllowedDistance)
 			return false
 		}
-
+		logger.Debugf("Candidates matched successfully", "Owner", owner.ID, "Candidate", candidate.ID,
+			"Distance", distance, "MaxAllowedDistance", maxAllowedDistance)
 		return true
 	})
 
