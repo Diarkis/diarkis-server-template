@@ -114,9 +114,9 @@ The distance between NYC and LA is **~3987 km**, and therefore is less than our 
 distance matchmaking constraint. This means that our two clients are able to match together
 successfully.
 
-**Log Output (UDP):**
+**Output:**
 ```output
-Candidates matched successfully Owner=user-a Candidate=user-b Distance=3986.9854666330843 MaxAllowedDistance=5000
+[2025/07/03 06:39:11.996]<SERVER>      DEBUG    UDP|127.0.0.1:8101      Candidates matched successfully Owner=user-a Candidate=user-b Distance=3986.9854666330843 MaxAllowedDistance=5000
 ```
 
 
@@ -137,9 +137,9 @@ Our second user, `user-b`, is connecting from **Tokyo, JP** (35.652832, 139.8394
 The distance between NYC and Tokyo is **~18744 km**, and therefore is less than our **<5000 km**
 distance matchmaking constraint. This means that our two clients will fail to match together.
 
-**Log Output (UDP):**
+**Output:**
 ```output
-Cannot match candidates Owner=user-a Candidate=user-b Distance=18744.26784351792 MaxAllowedDistance=5000
+[2025/07/03 06:39:11.996]<SERVER>      DEBUG    UDP|127.0.0.1:8101      Cannot match candidates Owner=user-a Candidate=user-b Distance=18744.26784351792 MaxAllowedDistance=5000
 ```
 
 ---
