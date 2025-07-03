@@ -110,7 +110,7 @@ spec:
             - name: tmp
               mountPath: /tmp
       imagePullSecrets:
-        - name: secrets-dockerhub
+        - name: secrets-docker
       volumes:
         - name: shared-conf
           configMap:

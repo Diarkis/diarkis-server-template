@@ -3,3 +3,5 @@ puffer/go
 puffer/cs
 puffer/cpp
 coderefs/
+.terraform*
+terraform.tfstate*

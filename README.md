@@ -34,13 +34,25 @@ We also provide [magefile](https://magefile.org/) as a more portable way to star
 This is the recommended way on Windows.
 
 ```sh
-./run-mage.sh {project ID} {build token} {path to install} {custom module name}
+./run-mage.sh init {project ID} {build token} {path to install}
 ```
 
 or on Windows
 
 ```
-run-mage.bat {project ID} {build token} {path to install} {custom module name}
+run-mage.bat init {project ID} {build token} {path to install}
+```
+
+Or if you prefer using a custom module name
+
+```sh
+./run-mage.sh initWithModuleName {project ID} {build token} {path to install} {custom module name}
+```
+
+or on Windows
+
+```
+run-mage.bat initWithModuleName {project ID} {build token} {path to install} {custom module name}
 ```
 
 To build, you will need the build token to build diarkis, which can be obtained by contacting us at https://diarkis.io .

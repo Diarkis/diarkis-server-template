@@ -22,7 +22,7 @@ var logger = log.New("BOT/REPORT")
 type Report map[string]int
 type metrics struct {
 	name    string
-	running bool
+	running atomic.Bool
 	sync.RWMutex
 	// a number of metrics elements while scenario is being executed
 	counter atomic.Uint32
@@ -43,12 +43,12 @@ func NewMetrics(name string) *metrics {
 }
 
 func (m *metrics) start() {
-	m.running = true
+	m.running.Store(true)
 	var prevCount uint32
 	var prevTotal float64
 	for {
 		time.Sleep(time.Duration(Interval) * time.Second)
-		if !m.running {
+		if !m.running.Load() {
 			break
 		}
 		var total float64
@@ -79,7 +79,7 @@ func (m *metrics) Stop() {
 }
 
 func (m *metrics) stop() {
-	m.running = false
+	m.running.Store(false)
 
 	var total float64
 	m.RLock()
@@ -193,7 +193,7 @@ func TouchAsActiveUser(userID string) {
 }
 
 func (au *ActiveUsers) GetMetrics() string {
-	label := fmt.Sprintf("Bot_Active_Users", Interval)
+	label := fmt.Sprint("Bot_Active_Users", Interval)
 	var metrics string
 	metrics += fmt.Sprintf("# HELP %s number of users that issued a command in %d seconds\n", label, Interval)
 	metrics += fmt.Sprintf("# TYPE %s gauge\n", label)
@@ -358,7 +358,7 @@ func (cm *CustomMetrics) GetMetrics() string {
 	if cm != nil && len(cm.m) > 0 {
 		for name, keys := range cm.m {
 			counterLabel := fmt.Sprintf("Bot_Custom_Metrics_%s_total", name)
-			gaugeLabel := fmt.Sprintf("Bot_Custom_Metrics_%s", name, Interval)
+			gaugeLabel := fmt.Sprintf("Bot_Custom_Metrics_%s", name)
 			averageLabel := fmt.Sprintf("Bot_Custom_Metrics_%s_average", name)
 			fmt.Fprintf(&c, "# HELP %s total value for custom metrics\n", counterLabel)
 			fmt.Fprintf(&c, "# TYPE %s counter\n", counterLabel)
@@ -483,7 +483,7 @@ func (cm *CommandMetrics) GetMetrics() string {
 	var g strings.Builder
 	var c strings.Builder
 	if cm != nil && len(cm.m) > 0 {
-		gaugeLabel := fmt.Sprintf("Bot_Command_%s", cm.cType, Interval)
+		gaugeLabel := fmt.Sprintf("Bot_Command_%s", cm.cType)
 		counterLabel := fmt.Sprintf("Bot_Command_%s_total", cm.cType)
 		fmt.Fprintf(&g, "# HELP %s sub total %s count for each commands in %d seconds\n", gaugeLabel, cm.cType, Interval)
 		fmt.Fprintf(&g, "# TYPE %s gauge\n", gaugeLabel)

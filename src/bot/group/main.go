@@ -5,15 +5,16 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
+	"os"
+	"strconv"
+	"time"
+
 	"github.com/Diarkis/diarkis-server-template/bot/utils"
 	"github.com/Diarkis/diarkis/client/go/modules/group"
 	"github.com/Diarkis/diarkis/client/go/tcp"
 	"github.com/Diarkis/diarkis/client/go/udp"
 	"github.com/Diarkis/diarkis/util"
 	"github.com/Diarkis/diarkis/uuid/v4"
-	"os"
-	"strconv"
-	"time"
 )
 
 const UDP_STRING string = "udp"
@@ -213,15 +214,14 @@ func startBot(bot *botData) {
 		case STATUS_BROADCAST:
 			broadcast(bot)
 		default:
-			fmt.Println("This is unexpected status!!! status is %v", bot.state)
-			break
+			fmt.Printf("This is unexpected status!!! status is %v\n", bot.state)
 		}
 		time.Sleep(time.Millisecond * time.Duration(interval))
 	}
 }
 
 func broadcast(bot *botData) {
-	message := make([]byte, packetSize, packetSize)
+	message := make([]byte, packetSize)
 	bot.group.BroadcastTo(bot.group.ID, message, false)
 	broadcastCnt++
 }
