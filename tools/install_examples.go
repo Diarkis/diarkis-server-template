@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -105,7 +106,23 @@ func copyExampleToTargetTemplate(projectID, builderToken, destDir, templateDir s
 		}
 	}
 
+	// download code refs
+	for _, dirname := range magefilesDirectories {
+		parentDir := filepath.Dir(dirname)
+		fmt.Printf("Download coderefs for %s\n", dirname)
+		if err := runDiarkisCoderefs(parentDir); err != nil {
+			return err
+		}
+	}
+
 	return nil
+}
+
+func runDiarkisCoderefs(dirname string) error {
+	cmd := exec.Command("go", "run", "./magefiles/mage.go", "diarkis:coderefs")
+	cmd.Dir = dirname
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
 func copyDiarkisCLIToTargetExample(destDir, templateDir string) error {
