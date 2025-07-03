@@ -203,7 +203,7 @@ func (c *client) handleResponse(ver uint8, cmd uint16, status uint8, payload []b
 			logger.Info("Matching successfully started")
 		} else {
 			logger.Warnf("Matching start error", "status", status, "payload", payload)
-			// We cannot call Disconnect from handleResponse
+			// We cannot call Disconnect from handleResponse.
 			go func() {
 				time.Sleep(time.Second)
 				logger.Info("test is finished, disconnect")
@@ -224,7 +224,7 @@ func (c *client) handleTicketComplete(payload []byte) {
 
 	logger.Info("matching complete: %+v", e)
 	if e.OwnerID == c.uid {
-		// broadcast some data and wait for the data to be pushed.
+		// Broadcast some data and wait for the data to be pushed.
 		// The protocol requires the ticket type to be the first byte.
 		b := append([]byte{e.TicketType}, "hello world"...)
 		c.uc.RSend(util.CmdBuiltInVer, util.CmdMMTicketBroadcast, b)
