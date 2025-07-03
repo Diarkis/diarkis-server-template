@@ -4,8 +4,9 @@ This project is comprised of **(3)** servers and **(1)** client.
 
 - **MARS** server is a standard (out-of-the-box) Diarkis template. It serves to orchestrates the
   node mesh.
-- **HTTP** server is a standard (out-of-the-box) Diarkis template; excepting a simple Matchmaker
-  profile definition for our custom matchmaking criteria. Our Matchmaker candidate information is
+
+- **HTTP** server is a standard (out-of-the-box) Diarkis template; excepting (2) simple Matchmaker
+  profile definitions for our custom matchmaking criteria. Our Matchmaker candidate information is
   stored here.
 
 - **UDP** server hosts the client connection and handles all incoming Matchmaker commands.
@@ -115,7 +116,7 @@ With this profile, each level bucket will pool users by the value of their **lev
 
 ### Use Example
 
-To test our `LevelMatch` pooling constraint, execute the following **(2)** separate instances of
+To test our `LevelMatch` pooling constraint, execute the following on **(2)** separate instances of
 the provided client:
 
 ```sh
@@ -180,7 +181,7 @@ that only candidates of an exactly equivalent `level` property may be matched to
 
 ### Use Example
 
-To test our `LevelMatchExact` pooling constraint, execute the following **(2)** separate instances of
+To test our `LevelMatchExact` pooling constraint, execute the following on **(2)** separate instances of
 the provided client:
 
 

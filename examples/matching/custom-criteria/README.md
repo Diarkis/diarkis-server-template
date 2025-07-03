@@ -4,6 +4,7 @@ This project is comprised of **(3)** servers and **(1)** client.
 
 - **MARS** server is a standard (out-of-the-box) Diarkis template. It serves to orchestrates the
   node mesh.
+
 - **HTTP** server is a standard (out-of-the-box) Diarkis template; excepting a simple Matchmaker
   profile definition for our custom matchmaking criteria. Our Matchmaker candidate information is
   stored here.
