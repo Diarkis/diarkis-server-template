@@ -4,7 +4,7 @@ buildSettings:
     CGO_LDFLAGS: -L${PROJECT_DIR} -Wl,-rpath,${PROJECT_DIR}
     GOARCH: amd64
     GOOS: windows
-  goVersion: 1.24.0
+  goVersion: 1.24.4
   projects:
     cli:
       output: remote_bin/cli.exe

@@ -9,10 +9,16 @@ import (
 	"log"
 	"math/rand/v2"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Diarkis/diarkis-server-template/examples/matching/secure-matching/common"
+	"github.com/Diarkis/diarkis/config"
 )
+
+var diarkisHTTPURL string
 
 // Response represents a generic API response
 type Response struct {
@@ -30,14 +36,19 @@ type UserRankResponse struct {
 
 // Main function to run the server if this file is executed directly
 func main() {
-	StartServer("8080")
+	StartServer()
 }
 
 // StartServer starts the dummy HTTP server
-func StartServer(port string) {
+func StartServer() {
+	configs := config.Load("API", common.GetConfigPath("configs/api/main.json"))
+
+	port := configs["port"].(string)
 	if port == "" {
 		port = "8080"
 	}
+
+	diarkisHTTPURL = configs["diarkisHTTPURL"].(string)
 
 	mux := http.NewServeMux()
 
@@ -62,8 +73,8 @@ func StartServer(port string) {
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	endpoints := map[string]string{
-		"/endpoint/type/UDP/user/{userID}": "Proxy to localhost:7000 UDP user endpoint",
-		"/users/{uid}":                     "Get user rank (random 1-200)",
+		"/endpoint/type/UDP/user/{userID}": "Proxy to the Diarkis HTTP server to get authentication information",
+		"/users/{uid}":                     "Get user rank (If you set user-<rank> as uid, you can get specific rank)",
 	}
 
 	response := Response{
@@ -93,7 +104,8 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: Pre-processing (authentication, authorization, etc.)
 
 	// Get authentication information from Diarkis UDP endpoint via API
-	diarkisAuthURL := fmt.Sprintf("http://localhost:7000/endpoint/type/UDP/user/%s", uid)
+	diarkisAuthURL, _ := url.JoinPath(diarkisHTTPURL, "endpoint/type/UDP/user", uid)
+
 	proxyReq, err := http.NewRequest(r.Method, diarkisAuthURL, r.Body)
 	if err != nil {
 		log.Printf("Error creating proxy request: %v", err)
@@ -130,7 +142,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Error copying response body: %v", err)
 	}
-	log.Printf("User %s rank retrieval was successful: %v", uid, resp.StatusCode)
+	log.Printf("Successfully authentication for user %s: status code=%v", uid, resp.StatusCode)
 }
 
 // userRankHandler is used to get user rank

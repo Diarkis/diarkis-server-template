@@ -8,9 +8,11 @@ import (
 	"math"
 	"math/rand/v2"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/Diarkis/diarkis-server-template/examples/matching/secure-matching/common"
+	"github.com/Diarkis/diarkis/config"
 	"github.com/Diarkis/diarkis/diarkisexec"
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/matching"
@@ -21,6 +23,8 @@ var logger = log.New("UDP")
 
 const ticketType = uint8(1)
 
+var apiURL string
+
 // UserResponse represents the response from the user API
 type UserResponse struct {
 	Data struct {
@@ -30,19 +34,23 @@ type UserResponse struct {
 
 func main() {
 	logConfigPath := "configs/shared/log.json"
-	meshConfigPath := ""
+	meshConfigPath := "configs/shared/mesh.json"
+	configPath := "configs/udp/main.json"
 
 	diarkisexec.SetupDiarkis(logConfigPath, meshConfigPath, &diarkisexec.Modules{
 		MatchMaker: &diarkisexec.Options{ConfigPath: "configs/shared/matching.json", ExposeCommands: true},
 	})
-	diarkisexec.SetupDiarkisUDPServer("configs/udp/main.json")
+	diarkisexec.SetupDiarkisUDPServer(configPath)
 
-	setupMatching()
+	setupMatching(configPath)
 
 	diarkisexec.StartDiarkis()
 }
 
-func setupMatching() {
+func setupMatching(configPath string) {
+	configs := config.Load("UDP", common.GetConfigPath(configPath))
+	apiURL = configs["apiURL"].(string)
+
 	matching.SetOnIssueTicket(ticketType, func(userData *user.User) *matching.TicketParams {
 
 		// Get rank from API
@@ -102,10 +110,12 @@ func getRankFromAPI(uid string) (int, error) {
 		Timeout: 5 * time.Second,
 	}
 
-	url := fmt.Sprintf("http://localhost:8080/users/%s", uid)
-	resp, err := client.Get(url)
+	// Construct the API URL for fetching user rank, e.g., http://localhost:8080/users/{uid}
+	apiUserURL, _ := url.JoinPath(apiURL, "users", uid)
+
+	resp, err := client.Get(apiUserURL)
 	if err != nil {
-		return 0, fmt.Errorf("failed to make request to %s: %w", url, err)
+		return 0, fmt.Errorf("failed to make request to %s: %w", apiUserURL, err)
 	}
 	defer resp.Body.Close()
 
