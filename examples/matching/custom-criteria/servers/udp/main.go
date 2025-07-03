@@ -42,8 +42,8 @@ func main() {
 func setupMaching() {
 
 	matching.SetOnTicketAllowMatchIf(ticketType, func(ticketProps *matching.TicketProperties, owner, candidate *user.User) bool {
-		ownerCoords := []float64{}
-		candidateCoords := []float64{}
+		ownerCoords := make([]float64, 2)
+		candidateCoords := make([]float64, 2)
 
 		candidateProps, _ := ticketProps.GetCandidateByUID(candidate.ID)
 
