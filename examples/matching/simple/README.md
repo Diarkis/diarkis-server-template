@@ -1,50 +1,76 @@
-This project is composed of three servers and one client.
-MARS and http server are standard process with only the HTTP server
-defining a simple matching profile.
-The third server is the udp one that handle the matching command of the client.
+# Overview
 
+This project is comprised of **(3)** servers and **(1)** client.
 
+- **MARS** server is a standard (out-of-the-box) Diarkis template. It serves to orchestrates the
+  node mesh.
+- **HTTP** server is a standard (out-of-the-box) Diarkis template; excepting a simple Matchmaker
+  profile definition for our custom matchmaking criteria. Our Matchmaker candidate information is
+  stored here.
 
-# How to build
+- **UDP** server hosts the client connection and handles all incoming Matchmaker commands.
+  It queries the Matchmaker storage server (**HTTP**) for valid candidates. If a valid
+  matching is found via the provided pooling constraints it attempts match the selected candidates.
+
+The goal of this sample is to demostrate how to set-up a simple matchmaking scenario using Diarkis
+Matchmaker. We will demonstrate how to use custom pooling constraints to match candidates together.
+
+**NOTE**: For illustration purposes we introduce **(2)** properties `level` and `rank` to illustrate
+how to perform basic matchmaking via a pooling constratint. However, for the sake of simplicity,
+pooling for this example is only performed via `level`. We encourage you, as an exercise, to
+implement a separate pooling-constraint upon on our templated `rank` constraint to master this
+topic.
+
+## How to Build
+
+You can build all **(3)** servers and the client binary using the provided Mage build scripts.
+
+### To build on Linux or macOS
 
 ```sh
 ./run-mage.sh build:local
 ```
 
-or
+### To build on Windows
 
-```batch
+```sh
 .\run-mage.bat build:local
 ```
 
-This will build the three servers and the client binary.
-See remote_bin folder.
+This will create the **MARS**, **HTTP**, and **UDP** server binaries, and client binary,
+placing them inside the `remote_bin` directory.
 
-# How to run
+## How to Run
 
-You must first start the MARS server.
+This project requires all **(3)** servers to be running before clients can test matchmaking
+behavior.
+
+### 1. First, start the MARS server to orchestrate the node mesh
+
 ```sh
 ./run-mage.sh server mars
 ```
 
-Next you can start the HTTP server.
+### 2. Next, start the HTTP server, which holds the custom matchmaking criteria
+
 ```sh
 ./run-mage.sh server http
 ```
 
-Then you can start the UDP server.
+### 3. Then, start the UDP server, to manage incoming client connections
+
 ```sh
 ./run-mage.sh server udp
 ```
 
-Once all the servers are running, you can start two clients to test the matching code.
+Once all servers are running, you may start two client instances to test and observe the matchmaking
+behavior using the custom pooling constraints.
 
-## Test matching
+## Testing Matchmaker
 
+The test client has the following parameters:
 
-The test client has the following parameters.
-
-```
+```output
 Usage of ./remote_bin/cli:
   -clientKey string
         the client key to authenticate with the server
@@ -62,10 +88,11 @@ Usage of ./remote_bin/cli:
         The user rank (greater or equal to zero) (default 1)
 ```
 
+## Buckets and Pooling
 
-### level bucket
+### LevelMatch
 
-The HTTP server defines a matching profile named `LevelMatch` associated to the property `level`.
+On the **HTTP** server, we define a matching profile called `LevelMatch` associated to the property `level`.
 
 ```go
 	levelMatchProfile := make(map[string]int)
@@ -73,33 +100,38 @@ The HTTP server defines a matching profile named `LevelMatch` associated to the 
 	matching.Define("LevelMatch", levelMatchProfile)
 ```
 
-With this profile, each level bucket will pool users with level 1 to 10, 11 to 20, 21 to 30 and so forth...
+With this profile, each level bucket will pool users by the value of their **level** property in static intervals of `10`. E.g:
 
-| user 1<br>level | user 1<br>rank | user 2<br>level | user 2<br>rank | result                |
-| --------------- | -------------- | --------------- | -------------- | --------------------- |
-| 1               | 1              | 2               | 3              | can match together    |
-| 4               | 1              | 10              | 3              | can match together    |
-| 4               | 1              | 11              | 3              | cannot match together |
-| 16              | 1              | 10              | 3              | can match together    |
+```example
+[1–10], [11–20], [21–30], ..., [n–(n+9)] // and so on...
+```
 
+| User 1 (`level`) | User 2 (`level`) | Match Outcome |
+|:-----------------|:-----------------|:--------------|
+| `1`              | `2`              | OK            |
+| `4`              | `10`             | OK            |
+| `4`              | `11`             | FAIL          |
+| `16`             | `11`             | OK            |
 
-The server defines also a second profile named `LevelMatchExact` where only exact matching level
-will be matched together.
+### Use Example
 
-#### Matching complete
-
-The current matching uses the user level as the unique criteria to match users together.
+To test our `LevelMatch` pooling constraint, execute the following **(2)** separate instances of
+the provided client:
 
 ```sh
-./remote_bin/cli -uid user-1 -userLevel 1 -userRank 1
+./remote_bin/cli -uid user-1 -userLevel 1 -userRank 1 -profile LevelMatch
 ```
 
 ```sh
-./remote_bin/cli -uid user-2 -userLevel 4 -userRank 1
+./remote_bin/cli -uid user-2 -userLevel 4 -userRank 1 -profile LevelMatch
 ```
 
-Example of output
-```
+As our candidates are within the level range for our pooling constraint `LevelMatch` they will
+successfully match them together.
+
+**Output:**
+
+```output
 Connecting to HTTP server first: http://127.0.0.1:7000/endpoint/type/UDP/user/user-1 - clientKey = 
 UDP address = 127.0.0.1:7100
 UDP sid         = 49287b84766f4f53ae3abc4b1ef17835
@@ -125,29 +157,32 @@ UDP mac         = 721499f8bf06482ea727301eb5687927
 
 ```
 
-### exact level
 
-The HTTP server defines a matching profile named `LevelMatchExact` associated to the property `level`.
+
+### LevelMatchExact
+
+On the **HTTP** server, we also define a second profile called `LevelMatchExact` which only requires
+that only candidates of an exactly equivalent `level` property may be matched together.
 
 ```go
 	levelMatchProfile := make(map[string]int)
 	levelMatchProfile["level"] = 1
 	matching.Define("LevelMatch", levelMatchProfile)
 ```
+| User 1 (`level`) | User 2 (`level`) | Match Outcome |
+|:-----------------|:-----------------|:--------------|
+| `1`              | `2`              | FAIL          |
+| `4`              | `10`             | FAIL          |
+| `4`              | `11`             | FAIL          |
+| `16`             | `11`             | FAIL          |
+| `5`              | `5`              | OK            |
+| `30`             | `30`             | OK            |
 
-When using this profile only user with the exact same level will be matched together.
+### Use Example
 
-| user 1<br>level | user 1<br>rank | user 2<br>level | user 2<br>rank | result                |
-| --------------- | -------------- | --------------- | -------------- | --------------------- |
-| 1               | 1              | 2               | 3              | cannot match together |
-| 4               | 1              | 10              | 3              | cannot match together |
-| 4               | 1              | 11              | 3              | cannot match together |
-| 16              | 1              | 10              | 3              | cannot match together |
-| 5               | 1              | 5               | 3              | can match together    |
+To test our `LevelMatchExact` pooling constraint, execute the following **(2)** separate instances of
+the provided client:
 
-#### Matching complete
-
-The current matching uses the user level as the unique criteria to match users together.
 
 ```sh
 ./remote_bin/cli -uid user-1 -userLevel 5 -userRank 3 -profile LevelMatchExact
@@ -157,7 +192,10 @@ The current matching uses the user level as the unique criteria to match users t
 ./remote_bin/cli -uid user-2 -userLevel 5 -userRank 7 -profile LevelMatchExact
 ```
 
-Example of output
+As our candidates are both the same level, our pooling constraint `LevelMatchExact` will allow them
+to successfully match them together.
+
+**Output:**
 
 ```
 Connecting to HTTP server first: http://127.0.0.1:7000/endpoint/type/UDP/user/user-1 - clientKey = 
@@ -183,3 +221,6 @@ UDP mac         = b998b8b1e4a343279d6dabfb3330536c
 [2025/05/02 04:12:47.636]<CLI>          INFO    test is finished, disconnect
 ```
 
+---
+
+*First created on 2025-04-03. Updated on 2025-04-04.*
