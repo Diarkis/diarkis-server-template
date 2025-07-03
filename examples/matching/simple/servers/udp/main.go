@@ -15,8 +15,10 @@ import (
 
 var logger = log.New("UDP")
 
-const ticketDuration = 15 // 15 seconds
-const ticketType = uint8(1)
+const (
+	ticketDuration = 15 // 15 seconds
+	ticketType     = uint8(1)
+)
 
 func main() {
 	logConfigPath := "configs/shared/log.json"
@@ -26,17 +28,15 @@ func main() {
 		MatchMaker: &diarkisexec.Options{ConfigPath: "configs/shared/matching.json", ExposeCommands: true},
 	})
 	diarkisexec.SetupDiarkisUDPServer("configs/udp/main.json")
-
 	diarkisexec.SetServerCommandHandler(common.AppVersion, common.MatchingStartCmd, handleStartMatching)
-	// diarkisexec.SetServerCommandHandler(common.AppVersion, common.MatchingTicketBroadcastCmd, handleMatchingTicketBroadcast)
 
-	setupMaching()
+	setupMatching()
 
 	diarkisexec.StartDiarkis()
 
 }
 
-func setupMaching() {
+func setupMatching() {
 	matching.SetOnTicketAllowMatchIf(ticketType, func(ticketProps *matching.TicketProperties, owner, candidate *user.User) bool {
 		return true
 	})
@@ -76,7 +76,8 @@ func handleStartMatching(ver uint8, cmd uint16, payload []byte, userData *user.U
 		return
 	}
 
-	// Randomize searchTries and emptySearches to not move to the wait mode at the same time considering all clients issue tickets at the same time.
+	// Randomize searchTries and emptySearches to not move to the wait mode at the same time
+	// considering all clients issue tickets at the same time.
 	searchTries := randomInt(1, 10)
 	emptySearches := randomInt(1, max(2, searchTries))
 	ticketParams := &matching.TicketParams{
@@ -87,9 +88,9 @@ func handleStartMatching(ver uint8, cmd uint16, payload []byte, userData *user.U
 		EmptySearches:  uint8(emptySearches),
 		TicketDuration: ticketDuration,
 		HowMany:        20,
-		// Change here as you see fit according to your application needs
+		// Change here as you see fit according to your application needs.
 		Tags: params.Tags,
-		// Change here as you see fit according to your application needs
+		// Change here as you see fit according to your application needs.
 		AddProperties:    map[string]int{"level": params.Level},
 		SearchProperties: map[string][]int{"level": {params.Level}},
 	}

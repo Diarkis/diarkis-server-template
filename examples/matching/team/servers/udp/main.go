@@ -17,14 +17,16 @@ import (
 
 var logger = log.New("UDP")
 
-const ticketDuration = 15 // 15 seconds
-const meshGetTicketMembers uint16 = 10001
-const meshRemoteTicketBroadcast uint16 = 10002
-const teamMaxMembers = 2
-
 // 2 for $teamMaxMembers vs $teamMaxMembers
 // 3 for $teamMaxMembers vs $teamMaxMembers vs $teamMaxMembers
-const teamVsTeamSize = 2
+
+const (
+	teamVsTeamSize                   = 2
+	teamMaxMembers                   = 2
+	ticketDuration                   = 15 // 15 seconds
+	meshGetTicketMembers      uint16 = 10001
+	meshRemoteTicketBroadcast uint16 = 10002
+)
 
 func main() {
 	logConfigPath := "configs/shared/log.json"
@@ -39,14 +41,14 @@ func main() {
 	diarkisexec.SetMeshRPCHandler(meshGetTicketMembers, handleGetTicketMembers)
 	diarkisexec.SetMeshRPCHandler(meshRemoteTicketBroadcast, handleRemoteTicketBroadcast)
 
-	setupMaching()
+	setupMatching()
 
 	diarkisexec.StartDiarkis()
 
 }
 
-func setupMaching() {
-	// Team matching
+func setupMatching() {
+	// Team matching:
 	matching.SetOnTicketAllowMatchIf(common.TeamTicketType, func(ticketProps *matching.TicketProperties, owner, candidate *user.User) bool {
 		return true
 	})
@@ -113,7 +115,7 @@ func setupMaching() {
 				EmptySearches:  uint8(emptySearches),
 				TicketDuration: ticketDuration,
 				HowMany:        20,
-				// Change here as you see fit according to your application needs
+				// Change here as you see fit according to your application needs.
 				Tags: nil,
 				// The profile we use has no criteria because we focus on implementing
 				// a custom check.
@@ -129,7 +131,7 @@ func setupMaching() {
 		return b
 	})
 
-	// Battle matching
+	// Battle matching:
 	matching.SetOnTicketAllowMatchIf(common.BattleTicketType, func(ticketProps *matching.TicketProperties, owner, candidate *user.User) bool {
 		return true
 	})
@@ -146,12 +148,12 @@ func setupMaching() {
 
 	matching.SetOnTicketCompleteWithProfileID(common.BattleTicketType, func(ticketProps *matching.TicketProperties, owner *user.User, tag []string, profileID string) []byte {
 		teams := [][]string{}
-		// owner team
+		// Owner team:
 		ownerTeam, _ := matching.GetTicketMemberIDs(common.TeamTicketType, owner)
 		slices.Sort(ownerTeam)
 		teams = append(teams, ownerTeam)
 
-		// candidate team
+		// Candidate team:
 		for uid, ticketHolder := range ticketProps.GetAllCandidates() {
 			meshAddr := ticketHolder.MeshEndPoint
 			req := getTicketMembersReq{
@@ -201,7 +203,8 @@ func handleStartMatching(ver uint8, cmd uint16, payload []byte, userData *user.U
 		return
 	}
 
-	// Randomize searchTries and emptySearches to not move to the wait mode at the same time considering all clients issue tickets at the same time.
+	// Randomize searchTries and emptySearches to not move to the wait mode at the same time
+	// considering all clients issue tickets at the same time.
 	searchTries := rand.Intn(10-1) + 1
 	emptySearches := rand.Intn(searchTries) + 1
 	ticketParams := &matching.TicketParams{
@@ -212,7 +215,7 @@ func handleStartMatching(ver uint8, cmd uint16, payload []byte, userData *user.U
 		EmptySearches:  uint8(emptySearches),
 		TicketDuration: ticketDuration,
 		HowMany:        20,
-		// Change here as you see fit according to your application needs
+		// Change here as you see fit according to your application needs.
 		Tags: nil,
 		// The profile we use has no criteria because we focus on implementing
 		// a two steps matching.

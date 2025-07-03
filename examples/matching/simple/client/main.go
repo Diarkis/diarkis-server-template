@@ -237,7 +237,7 @@ func (c *client) handleTicketComplete(payload []byte) {
 
 	logger.Info("matching complete: %+v", e)
 	if e.OwnerID == c.uid {
-		// broadcast some data and wait for the data to be pushed.
+		// Broadcast some data and wait for the data to be pushed.
 		// The protocol requires the ticket type to be the first byte.
 		b := append([]byte{e.TicketType}, "hello world"...)
 		c.uc.RSend(util.CmdBuiltInVer, util.CmdMMTicketBroadcast, b)

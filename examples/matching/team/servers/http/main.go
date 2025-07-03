@@ -11,8 +11,8 @@ func main() {
 	logConfigPath := "configs/shared/log.json"
 	meshConfigPath := "configs/shared/mesh.json"
 
-	// For this example we do not need to configure any of the diarkis module.
-	// We solely rely on the http server.
+	// For this example we do not need to configure any of the Diarkis modules.
+	// We solely rely on the base-HTTP server itself.
 	diarkisexec.SetupDiarkis(logConfigPath, meshConfigPath, &diarkisexec.Modules{
 		MatchMaker: &diarkisexec.Options{ConfigPath: "configs/shared/matching.json"},
 	})
@@ -20,16 +20,11 @@ func main() {
 	exposeMatching()
 
 	diarkisexec.SetupDiarkisHTTPServer("configs/http/main.json")
-
 	diarkisexec.StartDiarkis()
 }
 
 func exposeMatching() {
-	// Test matching profile that does not have any criteria.
-	matching.Define("team", map[string]int{
-		"level": 1,
-	})
-	matching.Define("battle", map[string]int{
-		"level": 1,
-	})
+	// Test-use matching profiles that do not have any criteria:
+	matching.Define("team", map[string]int{"level": 1})
+	matching.Define("battle", map[string]int{"level": 1})
 }
