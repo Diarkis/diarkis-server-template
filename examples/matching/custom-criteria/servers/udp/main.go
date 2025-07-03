@@ -42,8 +42,7 @@ func main() {
 func setupMaching() {
 
 	matching.SetOnTicketAllowMatchIf(ticketType, func(ticketProps *matching.TicketProperties, owner, candidate *user.User) bool {
-		ownerCoords := make([]float64, 2)
-		candidateCoords := make([]float64, 2)
+		var ownerCoords, candidateCoords common.Coordinates
 
 		candidateProps, _ := ticketProps.GetCandidateByUID(candidate.ID)
 
@@ -52,7 +51,7 @@ func setupMaching() {
 		binary.Read(bytes.NewReader(candidateProps.ApplicationData), binary.BigEndian, &candidateCoords)
 
 		// Here compute the distance between the owner and candidate.
-		distance := computeDistance(ownerCoords, candidateCoords)
+		distance := common.ComputeDistanceHubeny(ownerCoords, candidateCoords)
 		if distance > maxAllowedDistance {
 			logger.Debugf("Cannot match candidate", "Distance", distance)
 			return false
@@ -154,13 +153,10 @@ func handleStartMatching(ver uint8, cmd uint16, payload []byte, userData *user.U
 
 func geolocalizeAddress(address string) (latitude float64, longitude float64, err error) {
 	// Here you are supposed to lookup the address in a geo DB.
+	_ = address
 	latitude = 35.65877910898138
 	longitude = 139.70128360250285
 	return
-}
-
-func computeDistance(coords1, coord2 []float64) float64 {
-	return maxAllowedDistance
 }
 
 func randomInt(minValue, maxValue int) int {
