@@ -42,6 +42,7 @@ And the udp server.
 ```
 
 Let the user-2 create a room on connection.
+
 ```
 ./remote_bin/cli -uid user-2 -create-room
 ```
@@ -56,7 +57,7 @@ to the server using the `remote_bin/cli` binary.
 [http://localhost:7000/onlinestatus/uids/user-1,user-2](http://localhost:7000/onlinestatus/uids/user-1,user-2)
 
 ```json
-{"user-1":{"InRoom":false,"SessionData":{}},"user-2":{"InRoom":true,"SessionData":{}}}
+{ "user-1": { "InRoom": false, "SessionData": {} }, "user-2": { "InRoom": true, "SessionData": {} } }
 ```
 
 ## How does this work
@@ -67,6 +68,7 @@ to the server.
 See the call to `user.OnNew`.
 The setup function also registers a callback on keep alive in
 order to refresh the client's online status while the client is connected.
+
 ```go
 	diarkis.OnReady(func(next func(error)) {
 		server.OnKeepAlive(updateUserStatus)
