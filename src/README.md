@@ -490,44 +490,6 @@ POST /mm/search/:mmIDs/:limit
 
 - `props` is the JSON data representation of search conditions.
 
-# User Online Status With HTTP Server
-
-The API will return an array of user IDs that are online.
-
-```
-GET /onlinestatus/uids/:uids
-```
-
-- The `$(uids)` parameters can be a comma separated list of UIDs.
-
-#### Response
-
-The response is a JSON encoded data. The structure of the response is as follows:
-
-The response will **NOT** include the users that are offline.
-
-If a user is a member of any session, `"SessionData"` will be populated.
-
-```
-{
-  "$(userID)": {
-    "InRoom":$(bool),
-    "SessionData":{
-      "$(sessionType)":"$(sessionID)"
-    }
-  }
-}
-```
-
-## Example
-
-```
-GET /onlinestatus/uids/111,222
-```
-
-The above example will check if user `111` and `222` are online or not.
-If the returned array contains the user IDs, those users are currently online (connected to the Diarkis server).
-
 # Custom Commands
 
 This is where you implement your own custom commands for TCP, UDP/RUDP.
@@ -535,16 +497,6 @@ This is where you implement your own custom commands for TCP, UDP/RUDP.
 ```
 /cmds/custom/main.go
 ```
-
-# User Online Status With UDP/TCP Server
-
-This custom command allows the client to retrieve a list of user online status.
-
-## Command Version and Command ID
-
-- ver 2
-
-- cmd 500
 
 ## Data Protocol
 

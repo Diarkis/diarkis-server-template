@@ -11,8 +11,6 @@ func Expose() {
 	exposeMatchMaker()
 	// custom room operations
 	exposeRoom()
-	// custom user online status
-	exposeOnlineStatus()
 }
 
 func handleHello(res *http.Response, req *http.Request, params *http.Params, next func(error)) {
