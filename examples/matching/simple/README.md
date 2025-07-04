@@ -13,11 +13,11 @@ This project is comprised of **(3)** servers and **(1)** client.
   It queries the Matchmaker storage server (**HTTP**) for valid candidates. If a valid
   matching is found via the provided pooling constraints it attempts match the selected candidates.
 
-The goal of this sample is to demostrate how to set-up a simple matchmaking scenario using Diarkis
+The goal of this sample is to demonstrate how to set-up a simple matchmaking scenario using Diarkis
 Matchmaker. We will demonstrate how to use custom pooling constraints to match candidates together.
 
 **NOTE**: For illustration purposes we introduce **(2)** properties `level` and `rank` to illustrate
-how to perform basic matchmaking via a pooling constratint. However, for the sake of simplicity,
+how to perform basic matchmaking via a pooling constraint. However, for the sake of simplicity,
 pooling for this example is only performed via `level`. We encourage you, as an exercise, to
 implement a separate pooling-constraint upon on our templated `rank` constraint to master this
 topic.
@@ -222,4 +222,4 @@ UDP mac         = b998b8b1e4a343279d6dabfb3330536c
 
 ---
 
-_First created on 2025-04-03. Updated on 2025-04-04._
+_First created on 2025-07-03. Updated on 2025-07-04._

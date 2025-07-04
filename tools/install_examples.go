@@ -27,20 +27,20 @@ func main() {
 
 	err := copyExampleToTargetTemplate(projectID, buildToken, dest, ".")
 	if err != nil {
-		fmt.Printf("error: %v\n", err)
+		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)
 	}
 	err = copyDiarkisCLIToTargetExample(dest, ".")
 	if err != nil {
-		fmt.Printf("error: %v\n", err)
+		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("Installation done\n")
+	fmt.Printf("Installation complete.\n")
 }
 
 func usage() {
 	basename := filepath.Base(os.Args[0])
-	fmt.Printf(`%[1]s is a tools to install diarkis example project.
+	fmt.Printf(`%[1]s is a tool used to install Diarkis example projects.
 
 Usage:
         %[1]s projectID builderToken outputPath
@@ -55,7 +55,7 @@ Sample:
 func copyExampleToTargetTemplate(projectID, builderToken, destDir, templateDir string) error {
 	var yamlFiles []string
 
-	fmt.Printf("Install examples to %s\n", destDir)
+	fmt.Printf("Installing examples to: %s\n", destDir)
 
 	examplesDir := filepath.Join(templateDir, "examples")
 	magefilesDirectories := []string{}
@@ -136,7 +136,7 @@ func copyDiarkisCLIToTargetExample(destDir, templateDir string) error {
 func copyDir(srcDir, destDir string, onCopy func(relPath string)) error {
 	return filepath.Walk(srcDir, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
-			fmt.Printf("prevent panic by handling failure accessing a path %q: %v\n", path, err)
+			fmt.Printf("Prevented panic by handling failure on accessing a bad path %q: %v\n", path, err)
 			return err
 		}
 
@@ -153,7 +153,7 @@ func copyDir(srcDir, destDir string, onCopy func(relPath string)) error {
 		}
 
 		if !info.Mode().IsRegular() {
-			fmt.Printf("skip non regular file %s (%s)\n", rel, info.Mode())
+			fmt.Printf("Skip non-regular file %s (%s)\n", rel, info.Mode())
 			return nil
 		}
 
