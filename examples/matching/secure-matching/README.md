@@ -1,122 +1,85 @@
-# Diarkis Secure Matching Example
+# Overview
 
-This project demonstrates secure authentication and matchmaking using Diarkis.
-The project consists of four servers and one client:
+This project is comprised of **(4)** servers and **(1)** client.
 
-- **mars**: Mars server
-- **http**: Authentication and matching storage server (port: 7000)
-- **udp**: UDP server that handles matching commands
-- **api**: Dummy API server that provides authentication and user rank retrieval APIs (port: 8080)
-  - This simulates an external API server that would be provided by your service
-- **cli**: Go client for testing
+- **MARS** server is a standard (out-of-the-box) Diarkis template. It serves to orchestrates the
+  node mesh.
 
-## Security Features
+- **HTTP** server is a standard (out-of-the-box) Diarkis template; excepting a simple Matchmaker
+  profile definition for our custom matchmaking criteria. Our Matchmaker candidate information is
+  stored here. It additionally handles Diarkis user authentication.
 
-In this example, secure authentication and matching is achieved by:
+- **UDP** server hosts the client connection and handles all incoming Matchmaker commands.
+  It queries the Matchmaker storage server (**HTTP**) for valid candidates. If a valid
+  matching is found via the provided pooling constraints it attempts match the selected candidates.
 
-- Authentication is performed via the external API server
-- User ranks are retrieved from the API server during ticket issuance
-- Client-side tampering of authentication and user rank data is prevented
+- **API** server is a dummy API server which provides authentication and user rank retrieval APIs.
+  For this example, we hard-code it to `port:8080`. This is meant to simulate an external API
+  server which would be provided from an external service.
 
-## Process Flow
+The goal of this sample is to demonstrate how to implement secure authentication and matchmaking for
+Diarkis. We will demonstrate the following security features:
 
-The following sequence diagram shows the authentication and matching process:
+- Authentication performed via an external API server.
+- Safe retrieval of user rank data from the API server during ticket issuance.
+- Prevention of client-side tampering of authentication data and user rank data.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor C as Client
-    participant GS as API Server
-    participant D as Diarkis Server
+## How to Build
 
-    alt Authentication process
-        C->>GS: Authentication request (uid)
-        GS->>GS: Pre-processing (authentication, authorization, etc.)
-        note left of D: Call authentication process<br />via API Server
-        GS->>D: GET|POST: /endpoint/type/UDP/user/:uid
-        D-->>GS: OK [Return connection information]
-        GS->>GS: Post-processing (creating response, etc.)
-        GS-->>C: OK [Connection information, etc.]
-    end
+You can build all **(4)** servers and the client binary using the provided Mage build scripts.
 
-    alt Ticket issue processing
-      C->>D: Matching start request (ver=1, cmd=218, ticketType)
-      D->>+D: Callback processing (onIssueTicket)
-      D->>GS: User information retrieval (rank, etc.)
-        note left of D: Mechanism to access API<br />needs to be implemented separately
-      GS-->>D: OK [User information returned]
-      D->>-D: Return TicketParams
-      D->>D: Issue ticket, start matching process
-      D-->>C: response: OK (ver=1, cmd=218)
-    end
-
-    note left of D: Matching process
-    alt Matching complete (when MaxMembers is reached)
-      D-->>C: push: Matching completion notification (ver=1, cmd=220)
-    end
-```
-
-# How to Build
-
-First, set the `builder_token` and `project_id` in the `build/*-build.yml` files:
-
-```yaml
-builder_token: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-project_id: "1234567890"
-```
-
-Then build all components:
+### To build on Linux or macOS
 
 ```sh
 ./run-mage.sh build:local
 ```
 
-Or on Windows:
+### To build on Windows
 
-```batch
+```sh
 .\run-mage.bat build:local
 ```
 
-This will build all four servers and the client binary.
-Check the `remote_bin` folder for the generated executables.
+This will create the **MARS**, **HTTP**, **UDP**, and **API** server binaries, and client binary,
+placing them inside the `remote_bin` directory.
 
-# How to Run
+## How to Run
 
-## Starting the Servers
+This project requires all **(4)** servers to be running before clients can test matchmaking
+behavior.
 
-1. **Start the MARS server**:
+### 1. First, start the MARS server to orchestrate the node mesh
 
 ```sh
 ./run-mage.sh server mars
 ```
 
-2. **Start the HTTP server**:
+### 2. Next, start the HTTP server, which holds the custom matchmaking criteria
 
 ```sh
 ./run-mage.sh server http
 ```
 
-3. **Start the UDP server**:
+### 3. Then, start the UDP server, to manage incoming client connections
 
 ```sh
 ./run-mage.sh server udp
 ```
 
-4. **Start the API server**:
+### 4. Then, start the API server, mock our external service
 
 ```sh
 ./run-mage.sh server api
 ```
 
-Once all servers are running, you can start clients to test the matching functionality.
+Once all servers are running, you may start two client instances to test and observe the matchmaking
+behavior using the team-based matchmaking example.
 
 ## Testing Matching
 
-### Client Usage
-
 The test client accepts the following parameters:
 
-```
+```output
 Usage: ./remote_bin/cli [options]
   -host string
         the address of the HTTP server (default "127.0.0.1:7000")
@@ -124,21 +87,36 @@ Usage: ./remote_bin/cli [options]
         the unique identifier of the client like user ID
 ```
 
+## Process Flow
+
+The following sequence diagram shows the authentication and matching process:
+
+![Helpful diagram of the secure matchmaking API flow](assets/process-flow.svg)
+
 ### Authentication Methods
 
-**Option 1: Via API Server (Recommended for testing secure flow)**
+#### Option 1: Via API Server (Recommended for testing secure flow)
 
 ```sh
 ./remote_bin/cli -host 127.0.0.1:8080 -uid user
 ```
 
-**Option 2: Direct to Diarkis HTTP Server**
+#### Option 2: Direct to Diarkis HTTP Server
 
 ```sh
 ./remote_bin/cli -host 127.0.0.1:7000 -uid user
 ```
 
-When using the API server, authentication flows through the external API, demonstrating the secure authentication pattern.
+In using the API server, authentication flows through the external API. This is part of a
+zero-trust security pattern where we require the information to be fetched from the API-server,
+which is authoritative, rather than from the user, who could spoof their request.
+
+We could imagine a user attempting to make a request that they are actually inelligible for, for
+example, attempting to initiate matchmaking using a rank—higher or lower—than their actual rank.
+
+An actual production implementation would need to provide some mechanism to indicate the validity
+of the auth request to the **HTTP** server, but we have abstracted this complexity away for the
+sake of simplicity in this example.
 
 ### User Ranks for Testing
 
@@ -178,18 +156,19 @@ With this configuration:
 
 ### Matching Examples
 
-| User 1 Rank | User 2 Rank | User 1 Bucket | User 2 Bucket | Can Match?               |
-| ----------- | ----------- | ------------- | ------------- | ------------------------ |
-| 1           | 10          | 1-10          | 1-10          | ✅ Yes (same bucket)     |
-| 4           | 11          | 1-10          | 11-20         | ✅ Yes (adjacent bucket) |
-| 1           | 20          | 1-10          | 11-20         | ✅ Yes (within ±2 range) |
-| 0           | 20          | 0             | 11-20         | ✅ Yes (within ±2 range) |
-| 0           | 21          | 0             | 21-30         | ❌ No (beyond ±2 range)  |
-| 60          | 31          | 51-60         | 31-40         | ❌ No (beyond ±2 range)  |
+| User 1 Rank | User 2 Rank | User 1 Bucket | User 2 Bucket | Can Match?             |
+|:----------- |:----------- |:------------- |:------------- |:-----------------------|
+| 1           | 10          | 1-10          | 1-10          | OK (same bucket)       |
+| 4           | 11          | 1-10          | 11-20         | OK (adjacent bucket)   |
+| 1           | 20          | 1-10          | 11-20         | OK (within ±2 range)   |
+| 0           | 20          | 0             | 11-20         | OK (within ±2 range)   |
+| 0           | 21          | 0             | 21-30         | FAIL (beyond ±2 range) |
+| 60          | 31          | 51-60         | 31-40         | FAIL (beyond ±2 range) |
 
-## Example Output
+### Use Example
 
-Here's what you'll see when running the matching test:
+To test the secure matchmaking scenario, execute the following on **(2)** separate instances of
+the provided client:
 
 **Terminal 1 (user-1, rank=1):**
 
@@ -203,9 +182,9 @@ Here's what you'll see when running the matching test:
 ./remote_bin/cli -host 127.0.0.1:8080 -uid user-2
 ```
 
-### Sample Output
+**Output:**
 
-```
+```output
 % ./remote_bin/cli -host 127.0.0.1:8080 -uid user-1
 Connecting to HTTP server first: http://127.0.0.1:8080/endpoint/type/UDP/user/user-1 - clientKey =
 Connecting to HTTP server first: http://127.0.0.1:8080/endpoint/type/TCP/user/user-1 - clientKey =
@@ -227,7 +206,7 @@ MatchMaker ticket issue response success. payload: OK
  > MatchMaker ticket complete push success: true backfill: false payload: {"ownerID":"user-1","candidateIDs":["user-2"],"ticketType":1}
 ```
 
-```
+```output
 % ./remote_bin/cli -host 127.0.0.1:8080 -uid user-2
 Connecting to HTTP server first: http://127.0.0.1:8080/endpoint/type/UDP/user/user-2 - clientKey =
 Connecting to HTTP server first: http://127.0.0.1:8080/endpoint/type/TCP/user/user-2 - clientKey =
@@ -248,3 +227,7 @@ MatchMaker ticket issue response success. payload: OK
 MatchMaker ticket complete push success: true backfill: false payload: {"ownerID":"user-1","candidateIDs":["user-2"],"ticketType":1}
 [UID: user-2][SID(UDP): 2b67632349454875bb5eeba902f49192]
 ```
+
+---
+
+*First created on 2025-04-03. Updated on 2025-04-04.*

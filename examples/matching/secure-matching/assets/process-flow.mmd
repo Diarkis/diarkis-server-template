@@ -1,0 +1,37 @@
+---
+config:
+  layout: dagre
+  theme: default
+  look: neo
+---
+sequenceDiagram
+    autonumber
+    actor C as Client
+    participant GS as API Server
+    participant D as Diarkis Server
+
+    alt Authentication process
+        C->>GS: Authentication request (uid)
+        GS->>GS: Pre-processing (authentication, authorization, etc.)
+        note left of D: Call authentication process<br />via API Server
+        GS->>D: GET|POST: /endpoint/type/UDP/user/:uid
+        D-->>GS: OK [Return connection information]
+        GS->>GS: Post-processing (creating response, etc.)
+        GS-->>C: OK [Connection information, etc.]
+    end
+
+    alt Ticket issue processing
+      C->>D: Matching start request (ver=1, cmd=218, ticketType)
+      D->>+D: Callback processing (onIssueTicket)
+      D->>GS: User information retrieval (rank, etc.)
+        note left of D: Mechanism to access API<br />needs to be implemented separately
+      GS-->>D: OK [User information returned]
+      D->>-D: Return TicketParams
+      D->>D: Issue ticket, start matching process
+      D-->>C: response: OK (ver=1, cmd=218)
+    end
+
+    note left of D: Matching process
+    alt Matching complete (when MaxMembers is reached)
+      D-->>C: push: Matching completion notification (ver=1, cmd=220)
+    end
