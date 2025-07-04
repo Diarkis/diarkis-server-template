@@ -9,9 +9,9 @@ help:
 init: ## make init project_id={project ID} builder_token={build token} output={absolute path to install} module_name={go module name}
 	go run ./tools/init.go $(project_id) $(builder_token) $(output) $(module_name)
 
-.PHONY: examplesInstall
-examplesInstall: ## make examplesInstall project_id={project ID} builder_token={build token} output={absolute path to install}
-	go run ./tools/install_examples.go $(project_id) $(builder_token) $(output)
+.PHONY: examples
+examples: ## make examples project_id={project ID} build_token={build token} output_dir={absolute path to install}
+	go run ./tools/install_examples.go $(project_id) $(build_token) $(output_dir)
 
 .PHONY: fmt
 fmt: add-license
