@@ -109,10 +109,10 @@ With this profile, each level bucket will pool users by the value of their **lev
 
 | User 1 (`level`) | User 2 (`level`) | Match Outcome |
 |:-----------------|:-----------------|:--------------|
-| `1`              | `2`              | OK            |
-| `4`              | `10`             | OK            |
-| `4`              | `11`             | FAIL          |
-| `16`             | `11`             | OK            |
+| 1                | 2                | OK            |
+| 4                | 10               | OK            |
+| 4                | 11               | FAIL          |
+| 16               | 11               | OK            |
 
 ### Use Example
 
@@ -172,12 +172,12 @@ that only candidates of an exactly equivalent `level` property may be matched to
 ```
 | User 1 (`level`) | User 2 (`level`) | Match Outcome |
 |:-----------------|:-----------------|:--------------|
-| `1`              | `2`              | FAIL          |
-| `4`              | `10`             | FAIL          |
-| `4`              | `11`             | FAIL          |
-| `16`             | `11`             | FAIL          |
-| `5`              | `5`              | OK            |
-| `30`             | `30`             | OK            |
+| 1                | 2                | FAIL          |
+| 4                | 10               | FAIL          |
+| 4                | 11               | FAIL          |
+| 16               | 11               | FAIL          |
+| 5                | 5                | OK            |
+| 30               | 30               | OK            |
 
 ### Use Example
 
