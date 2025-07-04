@@ -157,7 +157,7 @@ With this configuration:
 ### Matching Examples
 
 | User 1 Rank | User 2 Rank | User 1 Bucket | User 2 Bucket | Can Match?             |
-|:----------- |:----------- |:------------- |:------------- |:-----------------------|
+| :---------- | :---------- | :------------ | :------------ | :--------------------- |
 | 1           | 10          | 1-10          | 1-10          | OK (same bucket)       |
 | 4           | 11          | 1-10          | 11-20         | OK (adjacent bucket)   |
 | 1           | 20          | 1-10          | 11-20         | OK (within ±2 range)   |
@@ -230,4 +230,4 @@ MatchMaker ticket complete push success: true backfill: false payload: {"ownerID
 
 ---
 
-*First created on 2025-04-03. Updated on 2025-04-04.*
+_First created on 2025-04-03. Updated on 2025-04-04._
