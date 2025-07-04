@@ -196,4 +196,4 @@ MatchMaker ticket issue response success. payload: OK
 
 ---
 
-*First created on 2025-04-03. Updated on 2025-04-04.*
+_First created on 2025-04-03. Updated on 2025-04-04._
