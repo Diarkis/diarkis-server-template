@@ -108,7 +108,7 @@ With this profile, each level bucket will pool users by the value of their **lev
 ```
 
 | User 1 (`level`) | User 2 (`level`) | Match Outcome |
-|:-----------------|:-----------------|:--------------|
+| :--------------- | :--------------- | :------------ |
 | 1                | 2                | OK            |
 | 4                | 10               | OK            |
 | 4                | 11               | FAIL          |
@@ -133,7 +133,7 @@ successfully match them together.
 **Output:**
 
 ```output
-Connecting to HTTP server first: http://127.0.0.1:7000/endpoint/type/UDP/user/user-1 - clientKey = 
+Connecting to HTTP server first: http://127.0.0.1:7000/endpoint/type/UDP/user/user-1 - clientKey =
 UDP address = 127.0.0.1:7100
 UDP sid         = 49287b84766f4f53ae3abc4b1ef17835
 UDP key         = 6feb9e13b9fa442c9413c223fd746638
@@ -170,7 +170,7 @@ matching.Define("LevelMatch", levelMatchProfile)
 ```
 
 | User 1 (`level`) | User 2 (`level`) | Match Outcome |
-|:-----------------|:-----------------|:--------------|
+| :--------------- | :--------------- | :------------ |
 | 1                | 2                | FAIL          |
 | 4                | 10               | FAIL          |
 | 4                | 11               | FAIL          |
@@ -197,7 +197,7 @@ to successfully match them together.
 **Output:**
 
 ```output
-Connecting to HTTP server first: http://127.0.0.1:7000/endpoint/type/UDP/user/user-1 - clientKey = 
+Connecting to HTTP server first: http://127.0.0.1:7000/endpoint/type/UDP/user/user-1 - clientKey =
 UDP address = 127.0.0.1:7100
 UDP sid         = 58cb098792f24f8092e1c1437d78ad2d
 UDP key         = a2b4ad6aa4c64b638d46f4409902ab3e
@@ -222,4 +222,4 @@ UDP mac         = b998b8b1e4a343279d6dabfb3330536c
 
 ---
 
-*First created on 2025-04-03. Updated on 2025-04-04.*
+_First created on 2025-04-03. Updated on 2025-04-04._

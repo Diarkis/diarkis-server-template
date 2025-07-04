@@ -130,7 +130,7 @@ the provided client:
 **Output (Team A):**
 
 ```output
-Connecting to HTTP server first: http://127.0.0.1:7000/endpoint/type/UDP/user/user-1 - clientKey = 
+Connecting to HTTP server first: http://127.0.0.1:7000/endpoint/type/UDP/user/user-1 - clientKey =
 UDP address = 127.0.0.1:7100
 UDP sid         = 2c55fad0047c4979b418a0b36279a964
 UDP key         = 3caf704cab1843c98b94b2bdc1667890
@@ -163,7 +163,7 @@ UDP mac         = 027e54e102e547809eba6169228f49c9
 **Output (Team B):**
 
 ```output
-Connecting to HTTP server first: http://127.0.0.1:7000/endpoint/type/UDP/user/user-2 - clientKey = 
+Connecting to HTTP server first: http://127.0.0.1:7000/endpoint/type/UDP/user/user-2 - clientKey =
 UDP address = 127.0.0.1:7100
 UDP sid         = 84348f1fe06b4132aa5d8b3c114dc68a
 UDP key         = df39ed6292384c44b55dd5c8df4ed0cb
@@ -195,4 +195,4 @@ UDP mac         = e8f6968e7e5f4aa8bfa7908b393640a5
 
 ---
 
-*First created on 2025-04-03. Updated on 2025-04-04.*
+_First created on 2025-04-03. Updated on 2025-04-04._

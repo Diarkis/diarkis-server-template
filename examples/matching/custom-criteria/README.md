@@ -11,8 +11,8 @@ This project is comprised of **(3)** servers and **(1)** client.
 
 - **UDP** server hosts the client connection and handles all incoming Matchmaker commands.
   It queries the Matchmaker storage server (**HTTP**) for valid candidates. If a valid
-  matching is found via the provided pooling constraints *(**see**: `matching.AddProperty`,
-  `matching.SearchProperty`)*, it attempts match the selected candidates by the (optional) custom
+  matching is found via the provided pooling constraints _(**see**: `matching.AddProperty`,
+  `matching.SearchProperty`)_, it attempts match the selected candidates by the (optional) custom
   matchmaking criteria.
 
 The goal of this sample is to demonstrate how to add custom matchmaking criteria to Diarkis
@@ -109,7 +109,7 @@ Our second user, `user-b`, is connecting from **Los Angeles, USA** (34.052235, -
 
 ```sh
  ./remote_bin/cli -uid user-b -latitude 34.052235 -longitude -118.243683
- ```
+```
 
 The distance between NYC and LA is **~3987 km**, and therefore is less than our **<5000 km**
 distance matchmaking constraint. This means that our two clients are able to match together
@@ -133,7 +133,7 @@ Our second user, `user-b`, is connecting from **Tokyo, JP** (35.652832, 139.8394
 
 ```sh
  ./remote_bin/cli -uid user-b -latitude 35.652832 -longitude 139.839478
- ```
+```
 
 The distance between NYC and Tokyo is **~18744 km**, and therefore is less than our **<5000 km**
 distance matchmaking constraint. This means that our two clients will fail to match together.
@@ -146,4 +146,4 @@ distance matchmaking constraint. This means that our two clients will fail to ma
 
 ---
 
-*First created on 2025-04-03. Updated on 2025-04-04.*
+_First created on 2025-04-03. Updated on 2025-04-04._
