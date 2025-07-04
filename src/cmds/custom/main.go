@@ -33,9 +33,6 @@ const MatchedMemberLeaveCmdID = 1011 // sent when matched ticket member leaves
 const p2pReportAddr = 110
 const p2pInit = 111
 
-// Online Status command ID
-const getUserStatusListCmdID = 500
-
 const mmAddInterval = 40 // 40 seconds
 
 var logger = log.New("CUSTOM")
@@ -54,8 +51,6 @@ func Expose() {
 	diarkisexec.SetServerCommandHandler(CustomVer, p2pInit, initP2P)
 	// defined in field.go
 	diarkisexec.SetServerCommandHandler(custom.GetFieldInfoVer, custom.GetFieldInfoCmd, getFieldInfo)
-	// defined in onlinestatus.go
-	diarkisexec.SetServerCommandHandler(CustomVer, getUserStatusListCmdID, getUserStatusList)
 	// defined in resonance.go
 	diarkisexec.SetServerCommandHandler(CustomVer, resonanceCmdID, resonanceCmd)
 
