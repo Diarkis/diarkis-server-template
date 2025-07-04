@@ -111,7 +111,7 @@ In using the API server, authentication flows through the external API. This is 
 zero-trust security pattern where we require the information to be fetched from the API-server,
 which is authoritative, rather than from the user, who could spoof their request.
 
-We could imagine a user attempting to make a request that they are actually inelligible for, for
+We could imagine a user attempting to make a request that they are actually ineligible for, for
 example, attempting to initiate matchmaking using a rank—higher or lower—than their actual rank.
 
 An actual production implementation would need to provide some mechanism to indicate the validity

@@ -89,7 +89,7 @@ Usage of ./remote_bin/cli:
         the unique identifier of the client like user ID
 ```
 
-**NOTE**: This sample does not implment a geolocalization database nor service. If desired, it is
+**NOTE**: This sample does not implement a geolocation database nor service. If desired, it is
 up to you to plug-in such an external service into the code example.
 
 ## Examples
