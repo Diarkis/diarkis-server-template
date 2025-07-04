@@ -170,64 +170,30 @@ With this configuration:
 To test the secure matchmaking scenario, execute the following on **(2)** separate instances of
 the provided client:
 
-**Terminal 1 (user-1, rank=1):**
+#### 1. Connect User-1
 
 ```sh
 ./remote_bin/cli -host 127.0.0.1:8080 -uid user-1
 ```
 
-**Terminal 2 (user-2, rank=2):**
+#### 2. Connect User-2
 
 ```sh
 ./remote_bin/cli -host 127.0.0.1:8080 -uid user-2
 ```
 
-**Output:**
+#### 3. Input on Both Clients and Validate Matchmaker Success
 
-```output
-% ./remote_bin/cli -host 127.0.0.1:8080 -uid user-1
-Connecting to HTTP server first: http://127.0.0.1:8080/endpoint/type/UDP/user/user-1 - clientKey =
-Connecting to HTTP server first: http://127.0.0.1:8080/endpoint/type/TCP/user/user-1 - clientKey =
-==== Auth Info ====
-TCP address =
-UDP address = 127.0.0.1:7100
-UDP sid         = 4004d5bc6fce4ecb858d5df4ec240d8a
-UDP key         = f6a0c46d4c3e497a8c3a7c7fd3821794
-UDP iv          = b038df08b4d74906bc32da5f8de103b0
-UDP mac         = 112e9bec0f6d44c186546ccb06f05329
-===================
-[UID: user-1][SID(UDP): 4004d5bc6fce4ecb858d5df4ec240d8a]
- > Connected UDP
-ticket
-Enter for which protocol to issue a new matchmaking ticket (TCP/UDP): (Default: UDP)
-Enter ticket type (uint8): 1
-MatchMaker ticket issue response success. payload: OK
-[UID: user-1][SID(UDP): 4004d5bc6fce4ecb858d5df4ec240d8a][MM Ticketing]
- > MatchMaker ticket complete push success: true backfill: false payload: {"ownerID":"user-1","candidateIDs":["user-2"],"ticketType":1}
-```
+```input
+$ ticket
+$ Enter for which protocol to issue a new matchmaking ticket (TCP/UDP): (Default: UDP)
+$ Enter ticket type (uint8): 1
 
-```output
-% ./remote_bin/cli -host 127.0.0.1:8080 -uid user-2
-Connecting to HTTP server first: http://127.0.0.1:8080/endpoint/type/UDP/user/user-2 - clientKey =
-Connecting to HTTP server first: http://127.0.0.1:8080/endpoint/type/TCP/user/user-2 - clientKey =
-==== Auth Info ====
-TCP address =
-UDP address = 127.0.0.1:7100
-UDP sid         = 2b67632349454875bb5eeba902f49192
-UDP key         = 7f672ceda7d34f178ca690e3c8df9d6c
-UDP iv          = d96238b1850a429b99bcfd0c33c8048e
-UDP mac         = d4d8658ae410425ca60f7f23e775c496
-===================
-[UID: user-2][SID(UDP): 2b67632349454875bb5eeba902f49192]
- > Connected UDP
-ticket
-Enter for which protocol to issue a new matchmaking ticket (TCP/UDP): (Default: UDP)
-Enter ticket type (uint8): 1
 MatchMaker ticket issue response success. payload: OK
-MatchMaker ticket complete push success: true backfill: false payload: {"ownerID":"user-1","candidateIDs":["user-2"],"ticketType":1}
-[UID: user-2][SID(UDP): 2b67632349454875bb5eeba902f49192]
+[UID: user-X][SID(UDP): 4004d5bc6fce4ecb858d5df4ec240d8a][MM Ticketing]
+ > MatchMaker ticket complete push success: true backfill: false payload: {"ownerID":"user-X","candidateIDs":["user-Y"],"ticketType":1}
 ```
 
 ---
 
-_First created on 2025-04-03. Updated on 2025-04-04._
+*First created on 2025-04-03. Updated on 2025-04-04.*
