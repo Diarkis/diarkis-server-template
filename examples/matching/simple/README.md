@@ -96,9 +96,9 @@ Usage of ./remote_bin/cli:
 On the **HTTP** server, we define a matching profile called `LevelMatch` associated to the property `level`.
 
 ```go
-	levelMatchProfile := make(map[string]int)
-	levelMatchProfile["level"] = 10
-	matching.Define("LevelMatch", levelMatchProfile)
+levelMatchProfile := make(map[string]int)
+levelMatchProfile["level"] = 10
+matching.Define("LevelMatch", levelMatchProfile)
 ```
 
 With this profile, each level bucket will pool users by the value of their **level** property in static intervals of `10`. E.g:
@@ -114,7 +114,7 @@ With this profile, each level bucket will pool users by the value of their **lev
 | 4                | 11               | FAIL          |
 | 16               | 11               | OK            |
 
-### Use Example
+### Use Example (`LevelMatch`)
 
 To test our `LevelMatch` pooling constraint, execute the following on **(2)** separate instances of
 the provided client:
@@ -158,18 +158,17 @@ UDP mac         = 721499f8bf06482ea727301eb5687927
 
 ```
 
-
-
 ### LevelMatchExact
 
 On the **HTTP** server, we also define a second profile called `LevelMatchExact` which only requires
 that only candidates of an exactly equivalent `level` property may be matched together.
 
 ```go
-	levelMatchProfile := make(map[string]int)
-	levelMatchProfile["level"] = 1
-	matching.Define("LevelMatch", levelMatchProfile)
+levelMatchProfile := make(map[string]int)
+levelMatchProfile["level"] = 1
+matching.Define("LevelMatch", levelMatchProfile)
 ```
+
 | User 1 (`level`) | User 2 (`level`) | Match Outcome |
 |:-----------------|:-----------------|:--------------|
 | 1                | 2                | FAIL          |
@@ -179,11 +178,10 @@ that only candidates of an exactly equivalent `level` property may be matched to
 | 5                | 5                | OK            |
 | 30               | 30               | OK            |
 
-### Use Example
+### Use Example (`LevelExactMatch`)
 
 To test our `LevelMatchExact` pooling constraint, execute the following on **(2)** separate instances of
 the provided client:
-
 
 ```sh
 ./remote_bin/cli -uid user-1 -userLevel 5 -userRank 3 -profile LevelMatchExact
@@ -198,7 +196,7 @@ to successfully match them together.
 
 **Output:**
 
-```
+```output
 Connecting to HTTP server first: http://127.0.0.1:7000/endpoint/type/UDP/user/user-1 - clientKey = 
 UDP address = 127.0.0.1:7100
 UDP sid         = 58cb098792f24f8092e1c1437d78ad2d

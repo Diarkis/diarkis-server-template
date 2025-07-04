@@ -116,10 +116,10 @@ distance matchmaking constraint. This means that our two clients are able to mat
 successfully.
 
 **Output:**
+
 ```output
 [2025/07/03 06:39:11.996]<SERVER>      DEBUG    UDP|127.0.0.1:8101      Candidates matched successfully Owner=user-a Candidate=user-b Distance=3986.9854666330843 MaxAllowedDistance=5000
 ```
-
 
 ### Invalid Matching
 
@@ -139,6 +139,7 @@ The distance between NYC and Tokyo is **~18744 km**, and therefore is less than 
 distance matchmaking constraint. This means that our two clients will fail to match together.
 
 **Output:**
+
 ```output
 [2025/07/03 06:39:11.996]<SERVER>      DEBUG    UDP|127.0.0.1:8101      Cannot match candidates Owner=user-a Candidate=user-b Distance=18744.26784351792 MaxAllowedDistance=5000
 ```
