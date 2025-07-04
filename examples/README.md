@@ -5,7 +5,7 @@ This directory contains standalone Diarkis examples that are able to be built an
 ## Build Instructions
 
 In order to build the following examples you must have a valid Diarkis **Project ID** and its
-corresponding **Build Token**. 
+corresponding **Build Token**.
 
 Next invoke the following command from the root of the
 `diarkis-server-template` repository:
@@ -33,9 +33,6 @@ Once the example installation is finished, navigate to your `OUTPUT_DIRECTORY` a
 - [Team-Based Matchmaking](./matching/team/README.md)
 - [Secure Matchmaking](./matching/secure-matching/README.md)
 
-
-
 ---
 
 _First created on 2025-07-03. Updated on 2025-07-04._
-
