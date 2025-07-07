@@ -226,11 +226,9 @@ cmds/custom/main.go
 ## Sample Matching IDs
 
 - RankMatch
-
   - `rank` is range of 5
 
 - RateAndPlay
-
   - `rate` is range of 1
 
   - `play` is range of 1

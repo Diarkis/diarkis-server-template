@@ -261,6 +261,7 @@ func main() {
 	}
 
 	if isServerMode == "true" {
+		setupPprof()
 		err := listen()
 		if err != nil {
 			logger.Fatal("\x1b[0;91m%v\x1b[0m", err.Error())

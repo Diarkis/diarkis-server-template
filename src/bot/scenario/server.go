@@ -13,10 +13,10 @@ import (
 	"path"
 	"strings"
 
-	"github.com/Diarkis/diarkis/util"
-
 	"github.com/Diarkis/diarkis-server-template/bot/scenario/lib/report"
 	"github.com/Diarkis/diarkis-server-template/bot/scenario/scenarios"
+
+	"github.com/Diarkis/diarkis/util"
 )
 
 type String string
