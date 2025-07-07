@@ -148,7 +148,7 @@ push-container-azure: ## Push container to azure
 	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t $(registry)/mars:$(tag)
 
 .PHONY: .push-container
-.push-container: auth-docker-aws ## Push container internal
+.push-container: ## Push container internal
 	docker push $(registry)/http:$(tag)
 	docker push $(registry)/udp:$(tag)
 	docker push $(registry)/tcp:$(tag)
