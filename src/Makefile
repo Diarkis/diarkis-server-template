@@ -9,9 +9,11 @@ DIARKIS_VERSION = $(shell go mod edit -json | jq -r '.Require[] | select(.Path |
 DIARKIS_CLI = ./diarkis-cli/os/linux/bin/diarkis-cli
 BUILD_CONFIG = ./build/linux-build.yml
 AWS_ACCOUNT_NUM = __AWS_ACCOUNT_NUM__
-AWS_CONTAINER_REGISTRY = $(AWS_ACCOUNT_NUM).dkr.ecr.ap-northeast-1.amazonaws.com
+AWS_REGION = ap-northeast-1
+AWS_CONTAINER_REGISTRY = $(AWS_ACCOUNT_NUM).dkr.ecr.$(AWS_REGION).amazonaws.com
 GCP_PROJECT_ID = __GCP_PROJECT_ID__
-GCP_CONTAINER_REGISTRY = asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis
+GCP_REGION = asia-northeast1
+GCP_CONTAINER_REGISTRY = $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis
 ACR_DOMAIN = __ACR_DOMAIN__
 
 ifeq ($(shell uname), Darwin)
@@ -88,7 +90,7 @@ setup-aws: ## Setup AWS
 
 .PHONY: auth-docker-aws
 auth-docker-aws: ## Authenticate docker to push images to AWS
-	aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin $(AWS_CONTAINER_REGISTRY)
+	aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_CONTAINER_REGISTRY)
 
 .PHONY: build-container-aws
 build-container-aws: ## Build container for AWS
@@ -99,7 +101,7 @@ push-container-aws: auth-docker-aws ## Push container for AWS
 	make .push-container registry=$(AWS_CONTAINER_REGISTRY) tag=dev0
 
 ################################################################################
-## Setup, build and push container for AWS
+## Setup, build and push container for GCP
 ################################################################################
 
 .PHONY: setup-gcp
@@ -108,7 +110,7 @@ setup-gcp: ## Set up GCP
 
 .PHONY: auth-docker-gcp
 auth-docker-gcp: ## Authenticate docker to push images to GCP
-	gcloud auth configure-docker asia-northeast1-docker.pkg.dev --quiet
+	gcloud auth configure-docker $(GCP_REGION)-docker.pkg.dev --quiet
 
 .PHONY: build-container-gcp
 build-container-gcp: ## Build container for GCP
