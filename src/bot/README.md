@@ -67,6 +67,7 @@ The config.json should contain all these values:
   "Host": "127.0.0.1:7000",
   "ClientKey": "",
   "BotCnt": 50,
+  "SyncLimit": 0,
   "NewPayloadFormat": true,
   "MoveIntervalMs": 2000,
   "AreaWidth": 10000,

@@ -39,6 +39,7 @@ type Config struct {
 	HostURL                              string `json:"Host"`
 	ClientKey                            string `json:"ClientKey"`
 	BotCnt                               int    `json:"BotCnt"`
+	SyncLimit                            int    `json:"SyncLimit"`
 	NewPayloadFormat                     bool   `json:"NewPayloadFormat"`
 	MovementIntervalMs                   int    `json:"MoveIntervalMs"`
 	AreaWidth                            int    `json:"AreaWidth"`
@@ -55,6 +56,7 @@ var DefaultConfig = Config{
 	HostURL:                              "127.0.0.1:7000",
 	ClientKey:                            "",
 	BotCnt:                               250,
+	SyncLimit:                            0,
 	NewPayloadFormat:                     true,
 	MovementIntervalMs:                   2000,
 	AreaWidth:                            10000,
@@ -87,6 +89,7 @@ var movementRange = 1200
 var nbSyncPerMovement = 3
 var nbMoveFrame = 16
 var movementDuration = 1000
+var syncLimit = 0
 
 // metrics counter
 var botCounter = 0
@@ -261,7 +264,7 @@ func startBot(bot *botData) {
 	for {
 		switch bot.state {
 		case STATUS_BEFORE_START:
-			bot.field.Join(int64(bot.x), int64(bot.y), 0, 300, 0, nil, false, bot.uid)
+			bot.field.Join(int64(bot.x), int64(bot.y), 0, syncLimit, 0, nil, false, bot.uid)
 			bot.state = STATUS_AFTER_START
 		case STATUS_AFTER_START:
 			randomSync(bot)
@@ -585,7 +588,7 @@ func randomSync(bot *botData) {
 			nextY := currentY + stepY
 			isLast := i >= nbSyncPerMovement-1
 			message := createMovementPayload(bot.angle, currentX, currentY, nextX, nextY, nbMoveFrame, timeStamp, frameInterval, useNewPayloadFormat, isLast)
-			bot.field.Sync(int64(nextX), int64(nextY), 0, 0, 0, message, false, bot.uid)
+			bot.field.Sync(int64(nextX), int64(nextY), 0, syncLimit, 0, message, false, bot.uid)
 			currentX = nextX
 			currentY = nextY
 			time.Sleep(time.Millisecond * time.Duration(frameInterval*(nbMoveFrame-1)))
@@ -594,9 +597,9 @@ func randomSync(bot *botData) {
 				nextX := currentX
 				nextY := currentY
 				message := createMovementPayload(bot.angle, currentX, currentY, nextX, nextY, 1, timeStamp, frameInterval, useNewPayloadFormat, isLast)
-				bot.field.Sync(int64(nextX), int64(nextY), 0, 0, 0, message, false, bot.uid)
-				bot.field.Sync(int64(nextX), int64(nextY), 0, 0, 0, message, false, bot.uid)
-				bot.field.Sync(int64(nextX), int64(nextY), 0, 0, 0, message, false, bot.uid)
+				bot.field.Sync(int64(nextX), int64(nextY), 0, syncLimit, 0, message, false, bot.uid)
+				bot.field.Sync(int64(nextX), int64(nextY), 0, syncLimit, 0, message, false, bot.uid)
+				bot.field.Sync(int64(nextX), int64(nextY), 0, syncLimit, 0, message, false, bot.uid)
 			}
 		}
 		time.Sleep(time.Millisecond * time.Duration(100))
@@ -667,6 +670,7 @@ func parseFieldArgs() {
 		}
 		useNewPayloadFormat = config.NewPayloadFormat
 		interval = int64(config.MovementIntervalMs)
+		syncLimit = config.SyncLimit
 		mapSize = config.AreaWidth
 		movementRange = config.MovementRange
 		movementDuration = config.MovementDuration
