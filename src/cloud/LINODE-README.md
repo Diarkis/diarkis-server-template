@@ -51,16 +51,16 @@ Linode は Docker イメージのリポジトリサービスが無いため、�
 以下の例では Dockerhub を使用しています。ユーザ情報を書き換えて以下のコマンドを実行してください。
 
 ```
-kubectl create secret docker-registry secrets-dockerhub --docker-server=https://index.docker.io/v1/ --docker-username=YOUR_USER_NAME --docker-password=YOUR_PASSWORD --docker-email=YOUR_EMAIL_ADDRESS --dry-run=client -o yaml > dockerhub-secret.yaml
+kubectl create secret docker-registry secrets-docker --docker-server=https://index.docker.io/v1/ --docker-username=YOUR_USER_NAME --docker-password=YOUR_PASSWORD --docker-email=YOUR_EMAIL_ADDRESS --dry-run=client -o yaml > docker-secret.yaml
 ```
 
 以下のファイルを生成されたファイルで上書きしてください。
 
 ```
-k8s/linode/overlays/dev0/shared/secrets/dockerhub-secrets.yaml
+k8s/linode/overlays/dev0/shared/secrets/docker-secrets.yaml
 ```
 
-また、以下のファイルの `__YOUR_DOCKERHUB_REPOSITORY_NAME__` をリポジトリ名で上書きしてください。
+また、以下のファイルの `__YOUR_DOCKER_REPOSITORY_NAME__` をリポジトリ名で上書きしてください。
 
 ```
 k8s/linode/overlays/dev0/kustomization.yaml
@@ -119,7 +119,7 @@ remote_bin にサーバーの実行ファイル郡が生成されます。
 生成したプロジェクトで、dockerイメージを作成します。
 
 ```
-export DOCKER_REPOSITORY=__YOUR_DOCKERHUB_REPOSITORY_NAME__
+export DOCKER_REPOSITORY=__YOUR_DOCKER_REPOSITORY_NAME__
 docker build -t $DOCKER_REPOSITORY/udp ./remote_bin -f docker/udp/Dockerfile
 docker build -t $DOCKER_REPOSITORY/tcp ./remote_bin -f docker/tcp/Dockerfile
 docker build -t $DOCKER_REPOSITORY/http ./remote_bin -f docker/http/Dockerfile

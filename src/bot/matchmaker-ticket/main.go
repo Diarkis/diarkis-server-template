@@ -11,16 +11,17 @@ import (
 
 	//	"github.com/Diarkis/diarkis/client/go/tcp"
 
-	"github.com/Diarkis/diarkis-server-template/bot/utils"
-	"github.com/Diarkis/diarkis/client/go/modules/matchmaker"
-	"github.com/Diarkis/diarkis/util"
-	v4 "github.com/Diarkis/diarkis/uuid/v4"
 	"os"
 	"os/signal"
 	"strconv"
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/Diarkis/diarkis-server-template/bot/utils"
+	"github.com/Diarkis/diarkis/client/go/modules/matchmaker"
+	"github.com/Diarkis/diarkis/util"
+	v4 "github.com/Diarkis/diarkis/uuid/v4"
 )
 
 var running = true
@@ -121,10 +122,8 @@ func main() {
 }
 
 func setupSignalHandler() {
-	ch := make(chan os.Signal)
-	signal.Notify(ch, syscall.SIGTERM)
-	signal.Notify(ch, syscall.SIGINT)
-	signal.Notify(ch, syscall.SIGQUIT)
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 	go handleSignal(ch)
 }
 

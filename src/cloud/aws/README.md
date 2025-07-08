@@ -2,14 +2,14 @@
 
 ## Overview
 
-AWS EKS上にDiarkisクラスターを構築するための手順です。
+AWS EKS 上に Diarkis クラスターを構築するための手順です。
 プリミティブな設定になっているので、適宜修正したい点があれば修正していただければと思います。
 
 ## prerequisites
 
-- 課金が有効になっているawsアカウント
-- awsコマンドの認証が通っていること
-- kustomize@v4.5.7が使用可能であること
+- 課金が有効になっている aws アカウント
+- aws コマンドの認証が通っていること
+- kustomize@v4.5.7 が使用可能であること
 
 ## 1. install eksctl
 
@@ -18,8 +18,8 @@ https://catalog.us-east-1.prod.workshops.aws/workshops/f5abb693-2d87-43b5-a439-7
 
 ## 2. create ECR for diarkis images
 
-Diarkis構成コンポーネントをpushするためのregistryを準備
-alpineなどもsampleで使用しているが、それに関してはdocker hubから取得
+Diarkis 構成コンポーネントを push するための registry を準備
+alpine なども sample で使用しているが、それに関しては docker hub から取得
 
 ```
 aws sts get-caller-identity # 向き先が正しいか確認してください
@@ -35,7 +35,7 @@ aws ecr create-repository --repository-name mars
 eksctl create cluster -f cloud/aws/cluster_config.yaml # about 10 minutes
 ```
 
-NAT gateway が該当のAZで対応していない等のエラーが出た場合には、AZで別の物を選択してください。
+NAT gateway が該当の AZ で対応していない等のエラーが出た場合には、AZ で別の物を選択してください。
 
 ## 4. connect to eks
 
@@ -45,13 +45,13 @@ aws eks --region ap-northeast-1 update-kubeconfig --name diarkis # get credetial
 
 ## 5. Open EKS firewall
 
-EKSのNodeに対してfirewallで、0.0.0.0/0からtcp,udpの7000-8000を開放します。
+EKS の Node に対して firewall で、0.0.0.0/0 から tcp,udp の 7000-8000 を開放します。
 
 eks-cluster-sg-diarkis-\* のようなセキュリティグループが作成されているので、それに対して設定を行ってください。
 
 ## 6. tagging the server image and push
 
-server-templateから生成した project の root から下記を実行します。
+server-template から生成した project の root から下記を実行します。
 ※ 詳細は[こちら](https://help.diarkis.io/ja/running-diarkis-server-on-local)をご覧ください。
 
 ```
@@ -65,7 +65,7 @@ make setup-aws
 make build-container-aws
 ```
 
-imageをpushします。
+image を push します。
 
 ```
 make push-container-aws
@@ -77,7 +77,7 @@ make push-container-aws
 kustomize build k8s/aws/overlays/dev0 | kubectl apply -f -
 ```
 
-下記のように4つのコンポーネントが立ち上がっていればOKです。
+下記のように 4 つのコンポーネントが立ち上がっていれば OK です。
 
 ```
 $ kubectl get po -n dev0
@@ -90,20 +90,20 @@ udp-fdc6bbccc-dwc5w     1/1     Running   0          3d14h
 
 ## 8. check diarkis cluster
 
-まずpublic endpointを取得します。
+まず public endpoint を取得します。
 
 ```
 EXTERNAL_IP=$(kubectl get svc http -o json -n dev0 | jq -r '.status.loadBalancer.ingress[].hostname')
-kubectl get svc -n dev0 -o wide # このコマンドで表示されるEXTERNAL IPと同一なのでどちらで見ていただいても構いません。
+kubectl get svc -n dev0 -o wide # このコマンドで表示される EXTERNAL IP と同一なのでどちらで見ていただいても構いません。
 ```
 
-取得できたEXTERNAL-IPに対して HTTP GET リクエストを送信します。
+取得できた EXTERNAL-IP に対して HTTP GET リクエストを送信します。
 
 ```
 curl ${EXTERNAL_IP}/auth/1
 ```
 
-下記の様なレスポンスが返ってくればOKです。
+下記の様なレスポンスが返ってくれば OK です。
 
 ```
 {"TCP":"ec2-xx-xx-xx-xx.ap-northeast-1.compute.amazonaws.com:7201","UDP":"ec2-yy-yy-yy-yy.ap-northeast-1.compute.amazonaws.com:7101","sid":"xxxxxxxxxx","encryptionKey":"xxxxxxxxxx","encryptionIV":"xxxxxxxxxx","encryptionMacKey":"xxxxxxxxxx"}
@@ -114,12 +114,40 @@ curl ${EXTERNAL_IP}/auth/1
 ## 9. setup cluster autoscaler
 
 ```
-kubectl apply -f cluster-autoscaler-autodiscover.yaml # cluster 名diarkisとして編集済みですが、別のクラスタ名で作っていた場合、manifest内でdiarkisと書かれている部分を変更してください
+kubectl apply -f cluster-autoscaler-autodiscover.yaml # cluster 名 diarkis として編集済みですが、別のクラスタ名で作っていた場合、manifest 内で diarkis と書かれている部分を変更してください
 ```
 
 ## 10. setup log collector
 
-cloud watch logs 等で container のログを集約することが可能です。
-すでにfluent-bit 等は、amazon-cloudwatch namespace にデプロイされておりますが権限だけがついていない状態なので、NodeRoleに権限をつけるだけでログがCloudwatch logsに集約されます。
-参考画像![NodeInstanceRole](img/NodeInstanceRole.png)のように、diarkis-public とdiarkis-private Nodeに対して`CloudWatchAgentServerPolicy`をつけてあげることによって、logが集約されます。
-対象のログは、`/aws/containerinsights/Cluster_Name/application`というロググループに入りますので、filterling等も行うことができます。
+cloud watch logs 等で container のログを集約することが可能です。(cf. https://docs.aws.amazon.com/ja_jp/AmazonCloudWatch/latest/monitoring/Container-Insights-setup-logs-FluentBit.html)
+
+1. amazon-cloudwatch namespace の作成
+   `kubectl create ns amazon-cloudwatch` を実行
+2. config map の作成
+   下記の ClusterName と RegionName は、構成に合わせて修正していただき shell を実行してください。
+
+```sh
+ClusterName=diarkis
+RegionName=ap-northeast-1
+FluentBitHttpPort='2020'
+FluentBitReadFromHead='Off'
+[[ ${FluentBitReadFromHead} = 'On' ]] && FluentBitReadFromTail='Off'|| FluentBitReadFromTail='On'
+[[ -z ${FluentBitHttpPort} ]] && FluentBitHttpServer='Off' || FluentBitHttpServer='On'
+kubectl create configmap fluent-bit-cluster-info \
+--from-literal=cluster.name=${ClusterName} \
+--from-literal=http.server=${FluentBitHttpServer} \
+--from-literal=http.port=${FluentBitHttpPort} \
+--from-literal=read.head=${FluentBitReadFromHead} \
+--from-literal=read.tail=${FluentBitReadFromTail} \
+--from-literal=logs.region=${RegionName} -n amazon-cloudwatch
+```
+
+3. fluent-bit の deploy
+
+```sh
+kubectl apply -f https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch-container-insights/latest/k8s-deployment-manifest-templates/deployment-mode/daemonset/container-insights-monitoring/fluent-bit/fluent-bit.yaml
+```
+
+4. NodeRole の付与
+   参考画像![NodeInstanceRole](img/NodeInstanceRole.png)のように、diarkis-public と diarkis-private Node に対して`CloudWatchAgentServerPolicy`をつけてあげることによって、log が集約されます。
+   対象のログは、`/aws/containerinsights/Cluster_Name/application`というロググループに入りますので、filterling 等も行うことができます。

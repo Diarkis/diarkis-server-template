@@ -53,6 +53,8 @@ spec:
               name: bot-conf
             - mountPath: /tmp
               name: tmp
+      imagePullSecrets:
+        - name: secrets-docker
       terminationGracePeriodSeconds: 10
       volumes:
         - emptyDir: {}

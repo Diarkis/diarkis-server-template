@@ -1,0 +1,23 @@
+---
+config:
+  layout: dagre
+  theme: default
+  look: neo
+---
+flowchart TD
+ subgraph s1["BattleTicketType"]
+        A("Owner A")
+        B("Owner B")
+  end
+ subgraph subGraph1["TeamTicketType A"]
+        A1("Member A<sub>1</sub>")
+        A2("Member A<sub>2</sub>")
+  end
+ subgraph subGraph2["TeamTicketType B"]
+        B1("Member B<sub>1</sub>")
+        B2("Member B<sub>2</sub>")
+  end
+    Z["matching.TicketMultiBroadcast"] --> A & B
+    A -.-> A1 & A2
+    B -.-> B1 & B2
+    Z@{ shape: rounded}

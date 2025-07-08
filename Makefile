@@ -9,10 +9,15 @@ help:
 init: ## make init project_id={project ID} builder_token={build token} output={absolute path to install} module_name={go module name}
 	go run ./tools/init.go $(project_id) $(builder_token) $(output) $(module_name)
 
+.PHONY: examples
+examples: ## make examples project_id={project ID} build_token={build token} output_dir={absolute path to install}
+	go run ./tools/install_examples.go $(project_id) $(build_token) $(output_dir)
+
 .PHONY: fmt
 fmt: add-license
 	gofmt -w src/
 	npx prettier --write "**/*.{yml,yaml,json,md}"
+	terraform fmt -recursive src/terraform
 
 .PHONY: add-license ## add license header to all go files
 add-license: $(shell find . -type f -name '*.go')

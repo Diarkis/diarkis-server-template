@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/Diarkis/diarkis-server-template/testcli/resonance"
 	"github.com/Diarkis/diarkis/client/go/test/cli"
@@ -39,23 +40,39 @@ func main() {
 
 func resonate() {
 	// This is a sample command to add test commands to the CLI.
-	reader := bufio.NewReader(os.Stdin)
 	fmt.Printf("Which client to join a room? [tcp/udp]")
-	client, _ := reader.ReadString('\n')
+	client, _ := readLine()
 
 	fmt.Println("Enter the message you want to resonate.")
-	message, _ := reader.ReadString('\n')
+	message, _ := readLine()
 
 	switch client {
-	case "tcp\n":
+	case "tcp":
 		if tcpResonance == nil {
 			return
 		}
 		tcpResonance.Resonate(message)
-	case "udp\n":
+	case "udp":
 		if udpResonance == nil {
 			return
 		}
 		udpResonance.Resonate(message)
+	default:
+		fmt.Println("Invalid input. Please provide tcp or udp.")
 	}
+}
+
+func readLine() (string, error) {
+	reader := bufio.NewReader(os.Stdin)
+	str, err := reader.ReadString('\n')
+	if err != nil {
+		return "", err
+	}
+
+	str = strings.TrimSuffix(str, "\n")
+	// On Windows you need to strip the \r control character too.
+	// See issue #2851
+	str = strings.TrimSuffix(str, "\r")
+
+	return str, nil
 }

@@ -3,7 +3,7 @@ kind: Kustomization
 namespace: dev0
 resources:
   - ../../base
-  - ./shared/secrets/dockerhub-secrets.yaml
+  - ./shared/secrets/docker-secrets.yaml
 
 # build target
 patches:
@@ -41,14 +41,14 @@ configMapGenerator:
 
 images:
   - name: udp
-    newName: __YOUR_DOCKERHUB_REPOSITORY_NAME__/udp
+    newName: __YOUR_DOCKER_REPOSITORY_NAME__/udp
     newTag: latest
   - name: tcp
-    newName: __YOUR_DOCKERHUB_REPOSITORY_NAME__/tcp
+    newName: __YOUR_DOCKER_REPOSITORY_NAME__/tcp
     newTag: latest
   - name: mars
-    newName: __YOUR_DOCKERHUB_REPOSITORY_NAME__/mars
+    newName: __YOUR_DOCKER_REPOSITORY_NAME__/mars
     newTag: latest
   - name: http
-    newName: __YOUR_DOCKERHUB_REPOSITORY_NAME__/http
+    newName: __YOUR_DOCKER_REPOSITORY_NAME__/http
     newTag: latest
