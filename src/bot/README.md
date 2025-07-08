@@ -56,6 +56,7 @@ go build
 ```
 # example
 cd field
+go build
 ./field /path/to/your/config.json
 ```
 
