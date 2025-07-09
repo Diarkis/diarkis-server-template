@@ -1,0 +1,6 @@
+{
+  "backend": "debugAllocator",
+  "debugAllocator": {
+    "targetNodeType": "DGS"
+  }
+}

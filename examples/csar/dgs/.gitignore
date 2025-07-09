@@ -1,0 +1,8 @@
+remote_bin/
+puffer/go
+puffer/cs
+puffer/cpp
+coderefs/
+dgs_bin/*
+
+magefiles/common.go

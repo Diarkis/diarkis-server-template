@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dgs
+  labels:
+    component: dgs
+spec:
+  template:
+    spec:
+      hostNetwork: true
+      containers:
+        - name: dgs
+          resources:
+            limits:
+              cpu: "1"
+            requests:
+              cpu: "1"
+          securityContext:
+            runAsUser: 1000
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            privileged: false
