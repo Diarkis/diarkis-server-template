@@ -16,5 +16,13 @@
       "RotationAngles": "u16",
       "TimestampInterval": "u16"
     }
+  },
+  "DiarkisVector3": {
+    "package": "custom",
+    "properties": {
+      "X": "f32",
+      "Y": "f32",
+      "Z": "f32"
+    }
   }
 }
