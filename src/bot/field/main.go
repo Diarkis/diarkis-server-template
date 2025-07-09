@@ -264,7 +264,7 @@ func startBot(bot *botData) {
 	for {
 		switch bot.state {
 		case STATUS_BEFORE_START:
-			bot.field.Join(int64(bot.x), int64(bot.y), 0, syncLimit, 0, nil, false, bot.uid)
+			bot.field.Join(int64(bot.x), int64(bot.y), 0, uint16(syncLimit), 0, nil, false, bot.uid)
 			bot.state = STATUS_AFTER_START
 		case STATUS_AFTER_START:
 			randomSync(bot)
@@ -588,7 +588,7 @@ func randomSync(bot *botData) {
 			nextY := currentY + stepY
 			isLast := i >= nbSyncPerMovement-1
 			message := createMovementPayload(bot.angle, currentX, currentY, nextX, nextY, nbMoveFrame, timeStamp, frameInterval, useNewPayloadFormat, isLast)
-			bot.field.Sync(int64(nextX), int64(nextY), 0, syncLimit, 0, message, false, bot.uid)
+			bot.field.Sync(int64(nextX), int64(nextY), 0, uint16(syncLimit), 0, message, false, bot.uid)
 			currentX = nextX
 			currentY = nextY
 			time.Sleep(time.Millisecond * time.Duration(frameInterval*(nbMoveFrame-1)))
@@ -597,9 +597,9 @@ func randomSync(bot *botData) {
 				nextX := currentX
 				nextY := currentY
 				message := createMovementPayload(bot.angle, currentX, currentY, nextX, nextY, 1, timeStamp, frameInterval, useNewPayloadFormat, isLast)
-				bot.field.Sync(int64(nextX), int64(nextY), 0, syncLimit, 0, message, false, bot.uid)
-				bot.field.Sync(int64(nextX), int64(nextY), 0, syncLimit, 0, message, false, bot.uid)
-				bot.field.Sync(int64(nextX), int64(nextY), 0, syncLimit, 0, message, false, bot.uid)
+				bot.field.Sync(int64(nextX), int64(nextY), 0, uint16(syncLimit), 0, message, false, bot.uid)
+				bot.field.Sync(int64(nextX), int64(nextY), 0, uint16(syncLimit), 0, message, false, bot.uid)
+				bot.field.Sync(int64(nextX), int64(nextY), 0, uint16(syncLimit), 0, message, false, bot.uid)
 			}
 		}
 		time.Sleep(time.Millisecond * time.Duration(100))
