@@ -19,27 +19,23 @@ resources:
 
 images:
   - name: udp
-    newName: __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/udp
+    newName: 354265976659.dkr.ecr.ap-northeast-1.amazonaws.com/udp
     newTag: latest
   - name: mars
-    newName: __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/mars
+    newName: 354265976659.dkr.ecr.ap-northeast-1.amazonaws.com/mars
     newTag: latest
   - name: http
-    newName: __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/http
+    newName: 354265976659.dkr.ecr.ap-northeast-1.amazonaws.com/http
     newTag: latest
   - name: dgs
-    newName: __AWS_ACCOUNT_NUM__.dkr.ecr.ap-northeast-1.amazonaws.com/dgs
+    newName: 354265976659.dkr.ecr.ap-northeast-1.amazonaws.com/dgs
     newTag: latest
 
 configMapGenerator:
   - name: shared-conf
     files:
-      - shared/conf/field.json
-      - shared/conf/group.json
       - shared/conf/log.json
-      - shared/conf/matching.json
       - shared/conf/mesh.json
-      - shared/conf/dm.json
       - shared/conf/dive.json
       - shared/conf/room.json
       - shared/conf/dgs.json

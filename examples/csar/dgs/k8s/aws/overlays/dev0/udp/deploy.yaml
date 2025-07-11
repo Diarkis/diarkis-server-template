@@ -12,9 +12,9 @@ spec:
         - name: udp
           resources:
             limits:
-              cpu: "1"
+              cpu: "500m"
             requests:
-              cpu: "1"
+              cpu: "500m"
           securityContext:
             runAsUser: 1000
             readOnlyRootFilesystem: true

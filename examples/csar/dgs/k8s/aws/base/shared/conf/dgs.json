@@ -1,6 +1,9 @@
 {
-  "backend": "debugAllocator",
+  "backend": "dallocAllocator",
   "debugAllocator": {
+    "targetNodeType": "DGS"
+  },
+  "dallocAllocator": {
     "targetNodeType": "DGS"
   }
 }

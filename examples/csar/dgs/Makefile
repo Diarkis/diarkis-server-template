@@ -139,9 +139,11 @@ push-container-azure: ## Push container to azure
 	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t $(registry)/http:$(tag)
 	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t $(registry)/udp:$(tag)
 	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t $(registry)/mars:$(tag)
+	docker build --platform=linux/amd64 -f docker/dgs/Dockerfile . -t $(registry)/dgs:$(tag)
 
 .PHONY: .push-container
 .push-container: ## Push container internal
 	docker push $(registry)/http:$(tag)
 	docker push $(registry)/udp:$(tag)
 	docker push $(registry)/mars:$(tag)
+	docker push $(registry)/dgs:$(tag)
