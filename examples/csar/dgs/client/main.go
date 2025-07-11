@@ -21,9 +21,9 @@ func main() {
 	cli.SetupBuiltInCommands()
 
 	// You can add custom commands to the CLI.
-	cli.RegisterCommands("test", []cli.Command{
-		{CmdName: "dgs create", Desc: "DGS create from room", CmdFunc: dgsCreate},
-		{CmdName: "dgs backfill", Desc: "DGS backfill from room", CmdFunc: dgsBackfill},
+	cli.RegisterCommands("dgs", []cli.Command{
+		{CmdName: "create", Desc: "DGS create from room", CmdFunc: dgsCreate},
+		{CmdName: "backfill", Desc: "DGS backfill from room", CmdFunc: dgsBackfill},
 	})
 
 	cli.Connect()
