@@ -1,0 +1,34 @@
+/diarkis-cli/
+/remote_bin/
+/dgs_bin/
+# puffer cpp and cs
+/puffer/cpp/
+/puffer/cs/
+/puffer/json_definitions/
+# k8s and cloud do not contain go code
+# k8s directory are spread across the repository
+k8s
+# cloud is only present at the root of the repository
+/cloud/
+# skip coderefs and config files
+/coderefs/
+/configs/
+# docker
+/docker/
+# git
+/.git/
+/.github/
+.gitignore
+# IDE
+/.vscode/
+/.idea/
+# mage
+/magefiles/
+/run-mage.bat
+/run-mage.sh
+# scripts
+/script/
+# Markdown
+*.md
+# build configuration
+/build/

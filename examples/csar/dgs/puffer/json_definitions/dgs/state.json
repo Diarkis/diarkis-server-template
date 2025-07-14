@@ -1,0 +1,25 @@
+{
+  "RoomDGSState": {
+    "package": "dgs",
+    "languages": ["go"],
+    "comment": ["State stored in the room property to manage the lifecycle of the DGS."],
+    "properties": {
+      "lastUpdateTime": {
+        "type": "i64",
+        "comment": "Last time the data was updated."
+      },
+      "state": {
+        "type": "string",
+        "comment": "DGS state."
+      },
+      "dgsIdentifier": {
+        "type": "b[]",
+        "comment": "DGS identifier."
+      },
+      "members": {
+        "type": "string[]",
+        "comment": "Member IDs contained in the DGS creation request."
+      }
+    }
+  }
+}

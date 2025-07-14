@@ -1,0 +1,57 @@
+# This is the KEDA ScaledObject spec:
+# https://keda.sh/docs/2.17/reference/scaledobject-spec/
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: dgs
+spec:
+  #  ────────────────────
+  # Tell KEDA which workload to scale-up/down
+  #  ────────────────────
+  scaleTargetRef:
+    name: dgs
+
+  #  ────────────────────
+  #   Optional tuning
+  #  ────────────────────
+  pollingInterval: 30 # seconds between polls (default: 30)
+  cooldownPeriod: 30 # seconds to wait after a scale event
+
+  minReplicaCount: 1
+  maxReplicaCount: 10 # max number of replicas
+
+  #  ────────────────────
+  #   Trigger: call to the API and parse the JSON
+  #  ────────────────────
+  triggers:
+    # Metrics API is one of the scalers which can parse the JSON response.
+    # https://keda.sh/docs/2.17/scalers/metrics-api/
+    - type: metrics-api
+      name: takenCnt
+      metadata:
+        url: "http://http.dev0.svc.cluster.local/state/noderole/DGS"
+        format: "json"
+        valueLocation: "takenCnt"
+        # targetValue: The target value used to determine whether to scale out or in based on the metric value.
+        #   - desiredReplicas = metricValue / targetValue
+        # However, since scalingModifiers is set, the actual replica count is calculated on scalingModifiers.
+        targetValue: "1"
+        # activationTargetValue: The activation threshold for starting/stopping the scaler itself.
+        #   - If the metric value is less than activationTargetValue, the scaler is stopped.
+        #   - If the metric value is greater than activationTargetValue, the scaler is started.
+        activationTargetValue: "1"
+
+  advanced:
+    # scalingModifiers is the formula to calculate the total number of replicas.
+    # https://keda.sh/docs/2.17/concepts/scaling-deployments/#scaling-modifiers
+    scalingModifiers:
+      # The formula should set the total number of replicas.
+      # For example, if you need 5 online replicas(allocatable replicas),
+      # you should set "takenCnt + 5".
+      formula: "takenCnt + 1"
+
+      # With AverageValue, the total replicas count is calculated as [formula / target].
+      #   - totalReplicas = (takenCnt + N) / target = (takenCnt + 5) / 1
+      #   - onlineReplicas = totalReplicas - takenCnt = N
+      metricType: "AverageValue"
+      target: "1"

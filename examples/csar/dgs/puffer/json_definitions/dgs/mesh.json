@@ -1,0 +1,84 @@
+{
+  "MeshInstanceCreateRequest": {
+    "package": "dgs",
+    "cppOptions": {
+      "namespaces": ["Diarkis", "Server"]
+    },
+    "properties": {
+      "memberIDs": {
+        "type": "string[]",
+        "comment": "Member IDs of users connected to same server as host to join the DGS."
+      },
+      "metadata": {
+        "type": "b[]",
+        "comment": "Metadata payload for instance creation (level data or whatever is needed by the DGS application)."
+      }
+    }
+  },
+  "MeshInstanceCreateResponse": {
+    "package": "dgs",
+    "cppOptions": {
+      "namespaces": ["Diarkis", "Server"]
+    },
+    "properties": {
+      "credentials": {
+        "type": "dgs.MeshInstanceCreateResponseUserCredentials[]",
+        "comment": "Credentials of the session's members."
+      }
+    }
+  },
+  "MeshInstanceRPCRequest": {
+    "package": "dgs",
+    "cppOptions": {
+      "namespaces": ["Diarkis", "Server"]
+    },
+    "comment": [
+      "If type is 'backfill' then the data will be MeshInstanceCreateRequest with only the caller user id in the memberIDs list.",
+      "and the response will be 'MeshInstanceCreateResponseUserCredentials'."
+    ],
+    "properties": {
+      "type": "string",
+      "data": "b[]"
+    }
+  },
+  "MeshInstanceCreateResponseUserCredentials": {
+    "package": "dgs",
+    "cppOptions": {
+      "namespaces": ["Diarkis", "Server"]
+    },
+    "properties": {
+      "UID": {
+        "type": "string",
+        "comment": "UID of remote DGS user."
+      },
+      "SID": {
+        "type": "b[]",
+        "comment": "SID of remote DGS user."
+      },
+      "Key": {
+        "type": "b[]",
+        "comment": "Key of remote DGS user."
+      },
+      "IV": {
+        "type": "b[]",
+        "comment": "IV of remote DGS user."
+      },
+      "MacKey": {
+        "type": "b[]",
+        "comment": "MacKey of remote DGS user."
+      },
+      "ServerType": {
+        "type": "string",
+        "comment": "Server type of remote DGS."
+      },
+      "ServerHost": {
+        "type": "string",
+        "comment": "Host of remote DGS."
+      },
+      "ServerPort": {
+        "type": "u16",
+        "comment": "Port of remote DGS."
+      }
+    }
+  }
+}
