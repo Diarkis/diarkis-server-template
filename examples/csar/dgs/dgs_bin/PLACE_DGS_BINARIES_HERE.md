@@ -4,12 +4,15 @@ The DGS container is built by the following command:
 
 ```
 # for dev0 namespace
-make build-container-with-dgs-aws-dev0
+make build-container-aws
 ```
 
-Then, add the container to the ECR repository:
+Then, add the container to the container registry:
 
 ```
-# for dev0 namespace
-make push-container-aws-dev0
+# for AWS ECR
+make push-container-aws
+
+# for GCP Artifact Registry
+make push-container-gcp
 ```
