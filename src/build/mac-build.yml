@@ -22,11 +22,11 @@ buildSettings:
       target: ./mars
       output: remote_bin/mars
     health-check:
-      target: ./healthcheck
-      output: remote_bin/health-check
+      target: ./tools/healthcheck
+      output: remote_bin/tools/health-check
     ms:
-      target: ./mars-stats
-      output: remote_bin/ms
+      target: ./tools/mars-stats
+      output: remote_bin/tools/ms
     testcli:
       target: ./testcli
       output: remote_bin/testcli

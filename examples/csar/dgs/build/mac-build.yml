@@ -27,8 +27,8 @@ buildSettings:
       target: ./servers/dgs/main.go
       debug: true
     health-check:
-      output: remote_bin/health-check
-      target: ./healthcheck
+      output: remote_bin/tools/health-check
+      target: ./tools/healthcheck
   root: ..
   version: "2"
 diarkis:
