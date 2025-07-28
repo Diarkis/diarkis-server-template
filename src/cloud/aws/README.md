@@ -14,7 +14,7 @@ AWS EKS 上に Diarkis クラスターを構築するための手順です。
 ## 1. install eksctl
 
 https://catalog.us-east-1.prod.workshops.aws/workshops/f5abb693-2d87-43b5-a439-77454f28e2e7/ja-JP/020-create-cluster/10-install-eksctl
-`0.173.0` で動作確認済み
+`0.211.0` で動作確認済み
 
 ## 2. create ECR for diarkis images
 
