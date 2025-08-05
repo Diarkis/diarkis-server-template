@@ -53,7 +53,7 @@ managedNodeGroups:
     desiredCapacity: 3
     minSize: 3
     maxSize: 10
-    amiFamily: Bottlerocket    
+    amiFamily: Bottlerocket
     iam:
       withAddonPolicies:
         autoScaler: true
