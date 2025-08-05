@@ -43,7 +43,6 @@ configMapGenerator:
       - shared/conf/dm.json
       - shared/conf/dive.json
       - shared/conf/room.json
-      - shared/conf/dgs.json
 
   - name: mesh-conf-public
     files:
