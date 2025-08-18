@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/Diarkis/diarkis-server-template/bot/scenario/lib/log"
@@ -18,6 +19,8 @@ import (
 	"github.com/Diarkis/diarkis/client/go/udp"
 	"github.com/Diarkis/diarkis/util"
 )
+
+var running atomic.Bool
 
 // var commonParams map[string]any
 // var scenarioParams map[string]any
@@ -135,6 +138,10 @@ func start() error {
 	var wg sync.WaitGroup
 	wg.Add(gp.HowMany)
 	for i := 0; i <= gp.HowMany-1; i++ {
+		if !running.Load() {
+			logger.Warn("Scenario is stopped in the middle of the client creation")
+			break
+		}
 		go func(i int) {
 			defer wg.Done()
 			scenarioClient := (*scenarioFactory)()
@@ -170,7 +177,7 @@ func start() error {
 					}
 
 					if lastActiveTime.Add(time.Duration(gp.IdleDuration) * time.Second).Before(time.Now()) {
-						logger.Verboseu(userID, "Triggering OnIdle... ")
+						logger.Infou(userID, "Triggering OnIdle... ")
 						// trigger on Idle if the user is idling over IdleDuration
 						scenarioClient.OnIdle()
 						// reset lastActiveTime
@@ -186,14 +193,23 @@ func start() error {
 	}
 
 	// wait for "duration" time if it's set. mainly used for looping scenario
-	if gp.Duration == 0 {
+	if gp.Duration <= 0 {
 		wg.Wait()
 	} else {
-		time.Sleep(time.Duration(gp.Duration) * time.Second)
+		for i := 0; i < gp.Duration; i++ {
+			if !running.Load() {
+				logger.Warn("Scenario is stopped in the middle of the run")
+				break
+			}
+			time.Sleep(time.Second)
+		}
 	}
 
 	// loop again to call scenario end callback
 	for i := 0; i <= gp.HowMany-1; i++ {
+		if clients[i] == nil {
+			continue
+		}
 		(*clients[i]).OnScenarioEnd()
 	}
 
@@ -206,10 +222,14 @@ func start() error {
 	scenarioName := strings.Join([]string{ss.ScenarioName, ss.ScenarioPattern}, "-")
 	report.WriteCSV(scenarioName, inputs)
 
+	time.Sleep(time.Duration(report.Interval) * time.Second)
+	report.ResetAllMetrics()
+	running.Store(false)
 	return nil
 }
 
 func run() error {
+	running.Store(true)
 	err := setup()
 	if err != nil {
 		logger.Fatal("\x1b[0;91m%v\x1b[0m", err.Error())
@@ -224,6 +244,14 @@ func run() error {
 	return nil
 }
 
+func stop() error {
+	if !running.CompareAndSwap(true, false) {
+		return util.NewError("Scenario is not running.")
+	}
+
+	return nil
+}
+
 func main() {
 	ss = &ScenarioSettings{HowMany: -1, Interval: -1, Duration: -1}
 	isServerMode := util.GetEnv("BOT_SERVER_MODE")
@@ -233,6 +261,7 @@ func main() {
 	}
 
 	if isServerMode == "true" {
+		setupPprof()
 		err := listen()
 		if err != nil {
 			logger.Fatal("\x1b[0;91m%v\x1b[0m", err.Error())
