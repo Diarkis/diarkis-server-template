@@ -17,6 +17,17 @@ spec:
         - name: mars
           image: mars
           imagePullPolicy: Always
+          livenessProbe:
+            exec:
+              command:
+              - sh
+              - -c
+              - "/go/bin/health-check mars:6779 show-mars /bin/tools/configs/health-check-for-liveness-probe.json"
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
           ports:
             - containerPort: 6779
               name: mars
