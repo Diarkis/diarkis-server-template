@@ -4,6 +4,8 @@ package report
 
 import (
 	"fmt"
+	"math"
+	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -14,6 +16,8 @@ import (
 	"github.com/Diarkis/diarkis/util"
 )
 
+const FilePrefix = "Bot_Report_"
+
 // 15 is default scraping interval for prometheus
 var Interval = 15
 
@@ -22,7 +26,7 @@ var logger = log.New("BOT/REPORT")
 type Report map[string]int
 type metrics struct {
 	name    string
-	running bool
+	running atomic.Bool
 	sync.RWMutex
 	// a number of metrics elements while scenario is being executed
 	counter atomic.Uint32
@@ -43,12 +47,12 @@ func NewMetrics(name string) *metrics {
 }
 
 func (m *metrics) start() {
-	m.running = true
+	m.running.Store(true)
 	var prevCount uint32
 	var prevTotal float64
 	for {
 		time.Sleep(time.Duration(Interval) * time.Second)
-		if !m.running {
+		if !m.running.Load() {
 			break
 		}
 		var total float64
@@ -79,7 +83,7 @@ func (m *metrics) Stop() {
 }
 
 func (m *metrics) stop() {
-	m.running = false
+	m.running.Store(false)
 
 	var total float64
 	m.RLock()
@@ -143,6 +147,49 @@ func (m *metrics) GetIntervalAverage() float64 {
 	}
 	return m.subTotal / float64(subTotal)
 }
+
+// GetHistogram returns a histogram of the values in the metrics.
+// keys are the bucket names, data is a map of bucket names to counts, count is the total number of values, and sum is the total sum of values.
+// The buckets are sorted in ascending order, and the last bucket is "+Inf" which counts all values greater than the last bucket.
+func (m *metrics) GetHistogram(buckets []float64) (sortedKeys []string, data map[string]int, count int, sum float64) {
+	sortedBuckets := make([]float64, len(buckets))
+	copy(sortedBuckets, buckets)
+	sort.Float64s(sortedBuckets)
+	if sortedBuckets[len(sortedBuckets)-1] != math.Inf(1) {
+		// add +Inf bucket if not present
+		sortedBuckets = append(sortedBuckets, math.Inf(1))
+	}
+
+	sortedKeys = make([]string, len(sortedBuckets))
+	data = make(map[string]int, len(sortedBuckets))
+
+	// initialize the data map
+	for i, bucket := range sortedBuckets {
+		key := fmt.Sprint(bucket)
+		sortedKeys[i] = key
+		data[key] = 0
+	}
+
+	m.RLock()
+	defer m.RUnlock()
+
+	for _, value := range m.values {
+		sum += value
+
+		// loop through the buckets in reverse order to break early
+		for i := len(sortedBuckets) - 1; i >= 0; i-- {
+			bucket := sortedBuckets[i]
+			if bucket <= value {
+				break
+			}
+			// value is less than the bucket.
+			data[fmt.Sprint(bucket)]++
+		}
+	}
+	count = len(m.values)
+	return
+}
+
 func (m *metrics) Reset() {
 	m.counter.Store(0)
 	m.gauge.Store(0)
@@ -193,7 +240,7 @@ func TouchAsActiveUser(userID string) {
 }
 
 func (au *ActiveUsers) GetMetrics() string {
-	label := fmt.Sprintf("Bot_Active_Users", Interval)
+	label := "Bot_Active_Users"
 	var metrics string
 	metrics += fmt.Sprintf("# HELP %s number of users that issued a command in %d seconds\n", label, Interval)
 	metrics += fmt.Sprintf("# TYPE %s gauge\n", label)
@@ -246,18 +293,27 @@ func (se *ScenarioError) Reset() {
 // // // // // // Custom Metrics // // // // // //
 type CustomMetrics struct {
 	sync.RWMutex
-	m map[string]map[string]*metrics
+	m                map[string]map[string]*metrics
+	histogramBuckets map[string][]float64
 }
 
 var customMetrics = &CustomMetrics{
-	m: map[string]map[string]*metrics{},
+	m:                map[string]map[string]*metrics{},
+	histogramBuckets: map[string][]float64{},
 }
 
 func NewCustomMetrics() *CustomMetrics {
 	cm := CustomMetrics{
-		m: map[string]map[string]*metrics{},
+		m:                map[string]map[string]*metrics{},
+		histogramBuckets: map[string][]float64{},
 	}
 	return &cm
+}
+
+var durationBucket []float64 = []float64{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 30, 60, 120, 180}
+
+func init() {
+	customMetrics.SetAsHistogram("MATCHING_DURATION", durationBucket)
 }
 
 // Increment adds 1 to a metrics value to the specified name and key.
@@ -306,7 +362,6 @@ func (cm *CustomMetrics) Add(name, key string, value float64) {
 // Print outputs metrics to the log
 func (cm *CustomMetrics) Print() {
 	for name, keys := range cm.m {
-		logger.Notice("metrics %s", name)
 		for key, m := range keys {
 			total := m.GetTotal()
 			average := m.GetAverage()
@@ -314,9 +369,9 @@ func (cm *CustomMetrics) Print() {
 				return f == float64(int(f))
 			}
 			if (average == 1.0 || average == 0.0) && hasZeroDecimal(total) {
-				logger.Notice(" key:%s total:%d", key, int(total))
+				logger.Notice("metrics:%s key:%s total:%d", name, key, int(total))
 			} else {
-				logger.Notice(" key:%s total:%v  average:%v", key, total, average)
+				logger.Notice("metrics:%s key:%s total:%v  average:%v", name, key, total, average)
 			}
 		}
 	}
@@ -350,37 +405,86 @@ func (cm *CustomMetrics) GetAsKV(kv *KeyValue) {
 	logger.Debug("Returning merged key value for custom metrics :%+v", *kv)
 }
 
+func (cm *CustomMetrics) IsHistogram(name string) bool {
+	cm.RLock()
+	defer cm.RUnlock()
+	if _, ok := cm.histogramBuckets[name]; ok {
+		return true
+	}
+	return false
+}
+
+func (cm *CustomMetrics) SetAsHistogram(name string, buckets []float64) {
+	cm.Lock()
+	defer cm.Unlock()
+
+	if _, ok := cm.m[name]; !ok {
+		cm.m[name] = map[string]*metrics{}
+	}
+	cm.histogramBuckets[name] = buckets
+
+}
+
 // GetMetrics returns a string for Prometheus metrics
 func (cm *CustomMetrics) GetMetrics() string {
 	var c strings.Builder
 	var g strings.Builder
 	var a strings.Builder
+	var h strings.Builder
 	if cm != nil && len(cm.m) > 0 {
 		for name, keys := range cm.m {
 			counterLabel := fmt.Sprintf("Bot_Custom_Metrics_%s_total", name)
-			gaugeLabel := fmt.Sprintf("Bot_Custom_Metrics_%s", name, Interval)
+			gaugeLabel := fmt.Sprintf("Bot_Custom_Metrics_%s", name)
 			averageLabel := fmt.Sprintf("Bot_Custom_Metrics_%s_average", name)
+			histogramLabel := fmt.Sprintf("Bot_Custom_Metrics_%s_duration_seconds", name)
 			fmt.Fprintf(&c, "# HELP %s total value for custom metrics\n", counterLabel)
 			fmt.Fprintf(&c, "# TYPE %s counter\n", counterLabel)
 			fmt.Fprintf(&g, "# HELP %s total value for custom metrics %s in %d seconds\n", gaugeLabel, name, Interval)
 			fmt.Fprintf(&g, "# TYPE %s gauge\n", gaugeLabel)
 			fmt.Fprintf(&a, "# HELP %s average value for custom metrics %s in %d seconds\n", averageLabel, name, Interval)
 			fmt.Fprintf(&a, "# TYPE %s gauge\n", averageLabel)
+			isHistogram := cm.IsHistogram(name)
+			if isHistogram {
+				fmt.Fprintf(&h, "# HELP %s histogram value for custom metrics %s in %d seconds\n", histogramLabel, name, Interval)
+				fmt.Fprintf(&h, "# TYPE %s histogram\n", histogramLabel)
+			}
+			histogramBuckets := cm.histogramBuckets[name]
 			for key, m := range keys {
 
-				var labelMatcher string
-				if key != "" {
-					labelMatcher = fmt.Sprintf("{key=\"%s\"}", key)
+				labels := map[string]string{}
+				getLabels := func() string {
+					var l []string
+					for k, v := range labels {
+						val := fmt.Sprint("\"", v, "\"")
+						l = append(l, fmt.Sprint(k, "=", val))
+					}
+					c := strings.Join(l, ",")
+					return fmt.Sprint("{", c, "}")
 				}
-				m.RLock()
-				fmt.Fprintf(&c, "%s%s %f\n", counterLabel, labelMatcher, m.GetTotal())
-				fmt.Fprintf(&g, "%s%s %f\n", gaugeLabel, labelMatcher, m.GetSubTotal())
-				fmt.Fprintf(&a, "%s%s %f\n", averageLabel, labelMatcher, m.GetIntervalAverage())
-				m.RUnlock()
+
+				if key != "" {
+					labels["key"] = key
+				}
+
+				fmt.Fprintf(&c, "%s%s %f\n", counterLabel, getLabels(), m.GetTotal())
+				fmt.Fprintf(&g, "%s%s %f\n", gaugeLabel, getLabels(), m.GetSubTotal())
+				fmt.Fprintf(&a, "%s%s %f\n", averageLabel, getLabels(), m.GetAverage())
+				if isHistogram {
+					keys, data, count, sum := m.GetHistogram(histogramBuckets)
+					for _, key := range keys {
+						value := data[key]
+						labels["le"] = key
+						fmt.Fprintf(&h, "%s_bucket%s %d\n", histogramLabel, getLabels(), value)
+					}
+					delete(labels, "le")
+					fmt.Fprintf(&h, "%s_sum%s %f\n", histogramLabel, getLabels(), sum)
+					fmt.Fprintf(&h, "%s_count%s %d\n", histogramLabel, getLabels(), count)
+				}
+
 			}
 		}
 	}
-	return util.StrConcat(g.String(), c.String(), a.String())
+	return util.StrConcat(g.String(), c.String(), a.String(), h.String())
 }
 
 // Stop stops metrics loop that is set as Interval
@@ -410,7 +514,8 @@ func (cm *CustomMetrics) WriteCSV(name string) {
 	data := strings.Join(values, ",")
 	output := strings.Join([]string{header, data}, "\n")
 
-	filename := "Bot_Report_Custom_"
+	filename := FilePrefix
+	filename += "Custom_"
 	filename += name
 	filename += "_"
 	filename += time.Now().Format("20060102150405")
@@ -483,7 +588,7 @@ func (cm *CommandMetrics) GetMetrics() string {
 	var g strings.Builder
 	var c strings.Builder
 	if cm != nil && len(cm.m) > 0 {
-		gaugeLabel := fmt.Sprintf("Bot_Command_%s", cm.cType, Interval)
+		gaugeLabel := fmt.Sprintf("Bot_Command_%s", cm.cType)
 		counterLabel := fmt.Sprintf("Bot_Command_%s_total", cm.cType)
 		fmt.Fprintf(&g, "# HELP %s sub total %s count for each commands in %d seconds\n", gaugeLabel, cm.cType, Interval)
 		fmt.Fprintf(&g, "# TYPE %s gauge\n", gaugeLabel)
@@ -575,7 +680,7 @@ func WriteCSV(name string, inputs ...map[string]string) {
 	data := strings.Join(values, ",")
 	output := strings.Join([]string{header, data}, "\n")
 
-	filename := "Bot_Report_"
+	filename := FilePrefix
 	filename += name
 	filename += "_"
 	filename += time.Now().Format("20060102150405")

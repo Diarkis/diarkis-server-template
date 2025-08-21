@@ -1,0 +1,13 @@
+# Downloaded from https://github.com/gangyi89/deploy-linode-operator/blob/main/cluster-firewall-sample.yaml
+apiVersion: firewall.operator.linode.io/v1alpha1
+kind: ClusterFirewall
+metadata:
+  labels:
+    app.kubernetes.io/name: linodeoperator
+  name: clusterfirewall
+spec:
+  firewallId: <MY_FIREWALL_ID>
+  # interval: 1m
+  apiKeySecret:
+    name: linode-api-key
+    key: api-key

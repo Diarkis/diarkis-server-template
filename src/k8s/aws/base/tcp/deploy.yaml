@@ -104,9 +104,6 @@ spec:
               value: "600"
           command:
             - /go/bin/tcp
-          args:
-            - -c
-            - "1"
           volumeMounts:
             - mountPath: /configs/tcp
               name: tcp-conf
@@ -120,8 +117,12 @@ spec:
         alpha.eksctl.io/nodegroup-name: diarkis-public
       volumes:
         - name: shared-conf
-          configMap:
-            name: shared-conf
+          projected:
+            sources:
+              - configMap:
+                  name: shared-conf
+              - configMap:
+                  name: mesh-conf-public
         - name: tcp-conf
           configMap:
             name: tcp-conf

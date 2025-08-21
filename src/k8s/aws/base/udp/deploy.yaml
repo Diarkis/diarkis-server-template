@@ -99,9 +99,6 @@ spec:
               value: "600"
           command:
             - /go/bin/udp
-          args:
-            - -c
-            - "1"
           volumeMounts:
             - mountPath: /configs/shared
               name: shared-conf
@@ -115,8 +112,12 @@ spec:
         alpha.eksctl.io/nodegroup-name: diarkis-public
       volumes:
         - name: shared-conf
-          configMap:
-            name: shared-conf
+          projected:
+            sources:
+              - configMap:
+                  name: shared-conf
+              - configMap:
+                  name: mesh-conf-public
         - name: udp-conf
           configMap:
             name: udp-conf

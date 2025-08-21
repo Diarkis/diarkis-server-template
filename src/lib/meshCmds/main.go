@@ -13,9 +13,6 @@ import (
 	"github.com/Diarkis/diarkis/uuid/v4"
 )
 
-// GetOnlineStatusListCmd is the mesh command ID
-const GetOnlineStatusListCmd uint16 = 2100
-
 const createRemoteRoomCmd uint16 = 10001
 
 func Setup() {
@@ -44,7 +41,7 @@ func CreateRemoteRoom(serverType string, maxMembers int, ttl, interval int64, cb
 		}
 	}
 	if targetNode == "" {
-		cb(errors.New("No available target node found"), "")
+		cb(errors.New("no available target node found"), "")
 		return
 	}
 	mesh.SendRequest(createRemoteRoomCmd, targetNode, data, func(err error, res map[string]interface{}) {
@@ -67,18 +64,9 @@ func handleCreateRemoteRoom(req map[string]interface{}) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	data := make(map[string]interface{})
-	data["sid"] = val.Bytes
-	data["uid"] = val.String
-	data["key"] = ""
-	data["macKey"] = ""
-	_, err = user.New(data, ttl)
-	if err != nil {
-		return nil, err
-	}
-	dummy := user.GetUserByID(val.String)
+	dummy := user.CreateBlankUser(val.String, val.String)
 	if dummy == nil {
-		return nil, errors.New("Failed to create a dummy user")
+		return nil, errors.New("failed to create a dummy user")
 	}
 	roomID, err := room.NewRoom(dummy, maxMembers, allowEmpty, join, ttl, interval)
 	if err != nil {

@@ -9,7 +9,11 @@ DIARKIS_VERSION = $(shell go mod edit -json | jq -r '.Require[] | select(.Path |
 DIARKIS_CLI = ./diarkis-cli/os/linux/bin/diarkis-cli
 BUILD_CONFIG = ./build/linux-build.yml
 AWS_ACCOUNT_NUM = __AWS_ACCOUNT_NUM__
+AWS_REGION = ap-northeast-1
+AWS_CONTAINER_REGISTRY = $(AWS_ACCOUNT_NUM).dkr.ecr.$(AWS_REGION).amazonaws.com
 GCP_PROJECT_ID = __GCP_PROJECT_ID__
+GCP_REGION = asia-northeast1
+GCP_CONTAINER_REGISTRY = $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis
 ACR_DOMAIN = __ACR_DOMAIN__
 
 ifeq ($(shell uname), Darwin)
@@ -76,27 +80,29 @@ run-docker: build-linux ## Run Diarkis locally with docker compose
 stop-docker: ## Stop Diarkis
 	docker compose down
 
+################################################################################
+## Setup, build and push container for AWS
+################################################################################
+
 .PHONY: setup-aws
-setup-aws:
+setup-aws: ## Setup AWS
 	./script/setup_aws.sh
 
 .PHONY: auth-docker-aws
-auth-docker-aws:
-	aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin $(AWS_ACCOUNT_NUM).dkr.ecr.ap-northeast-1.amazonaws.com
+auth-docker-aws: ## Authenticate docker to push images to AWS
+	aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_CONTAINER_REGISTRY)
 
 .PHONY: build-container-aws
-build-container-aws: build-linux ## Build container for AWS
-	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t $(AWS_ACCOUNT_NUM).dkr.ecr.ap-northeast-1.amazonaws.com/http
-	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t $(AWS_ACCOUNT_NUM).dkr.ecr.ap-northeast-1.amazonaws.com/udp
-	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t $(AWS_ACCOUNT_NUM).dkr.ecr.ap-northeast-1.amazonaws.com/tcp
-	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t $(AWS_ACCOUNT_NUM).dkr.ecr.ap-northeast-1.amazonaws.com/mars
+build-container-aws: ## Build container for AWS
+	make .build-container registry=$(AWS_CONTAINER_REGISTRY) tag=dev0
 
 .PHONY: push-container-aws
-push-container-aws: auth-docker-aws ## Push container to AWS
-	docker push $(AWS_ACCOUNT_NUM).dkr.ecr.ap-northeast-1.amazonaws.com/http
-	docker push $(AWS_ACCOUNT_NUM).dkr.ecr.ap-northeast-1.amazonaws.com/udp
-	docker push $(AWS_ACCOUNT_NUM).dkr.ecr.ap-northeast-1.amazonaws.com/tcp
-	docker push $(AWS_ACCOUNT_NUM).dkr.ecr.ap-northeast-1.amazonaws.com/mars
+push-container-aws: auth-docker-aws ## Push container for AWS
+	make .push-container registry=$(AWS_CONTAINER_REGISTRY) tag=dev0
+
+################################################################################
+## Setup, build and push container for GCP
+################################################################################
 
 .PHONY: setup-gcp
 setup-gcp: ## Set up GCP
@@ -104,36 +110,46 @@ setup-gcp: ## Set up GCP
 
 .PHONY: auth-docker-gcp
 auth-docker-gcp: ## Authenticate docker to push images to GCP
-	gcloud auth configure-docker asia-northeast1-docker.pkg.dev --quiet
+	gcloud auth configure-docker $(GCP_REGION)-docker.pkg.dev --quiet
 
 .PHONY: build-container-gcp
-build-container-gcp: build-linux ## Build container for GCP
-	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis/http
-	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis/udp
-	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis/tcp
-	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis/mars
+build-container-gcp: ## Build container for GCP
+	make .build-container registry=$(GCP_CONTAINER_REGISTRY) tag=dev0
 
 .PHONY: push-container-gcp
 push-container-gcp: auth-docker-gcp ## Push container to GCP
-	docker push  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis/http
-	docker push  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis/udp
-	docker push  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis/tcp
-	docker push  asia-northeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis/mars
+	make .push-container registry=$(GCP_CONTAINER_REGISTRY) tag=dev0
+
+################################################################################
+## Setup, build and push container for Azure
+################################################################################
 
 .PHONY: setup-azure
 setup-azure: ## Set up Azure
 	./script/setup_azure.sh
 
 .PHONY: build-container-azure
-build-container-azure: build-linux ## Build container for azure
-	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t $(ACR_DOMAIN)/http
-	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t  $(ACR_DOMAIN)/udp
-	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t  $(ACR_DOMAIN)/tcp
-	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t $(ACR_DOMAIN)/mars
+build-container-azure: ## Build container for azure
+	make .build-container registry=$(ACR_DOMAIN) tag=dev0
 
 .PHONY: push-container-azure
 push-container-azure: ## Push container to azure
-	docker push $(ACR_DOMAIN)/http
-	docker push $(ACR_DOMAIN)/udp
-	docker push $(ACR_DOMAIN)/tcp
-	docker push $(ACR_DOMAIN)/mars
+	make .push-container registry=$(ACR_DOMAIN) tag=dev0
+
+################################################################################
+## Build and push container internal
+################################################################################
+
+.PHONY: .build-container
+.build-container: build-linux ## Build container internal
+	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t $(registry)/http:$(tag)
+	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t $(registry)/udp:$(tag)
+	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t $(registry)/tcp:$(tag)
+	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t $(registry)/mars:$(tag)
+
+.PHONY: .push-container
+.push-container: ## Push container internal
+	docker push $(registry)/http:$(tag)
+	docker push $(registry)/udp:$(tag)
+	docker push $(registry)/tcp:$(tag)
+	docker push $(registry)/mars:$(tag)

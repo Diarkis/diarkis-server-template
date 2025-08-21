@@ -1,0 +1,6 @@
+{
+  "backend": "dallocAllocator",
+  "dallocAllocator": {
+    "targetNodeType": "DGS"
+  }
+}

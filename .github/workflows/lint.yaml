@@ -17,11 +17,26 @@ jobs:
         uses: actions/setup-go@v4
         with:
           # Semantic version range syntax or exact version of Go
-          go-version: "1.22.x"
+          go-version: "1.24.x"
 
       - name: init test
         # check make init command does not fail
         run: make init project_id=PROJECT_ID builder_token=BUILDER_TOKEN output=/tmp/init-test
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.12.2"
+
+      - name: Install kustomize
+        run: go install sigs.k8s.io/kustomize/kustomize/v5@latest
+
+      - name: Build kustomize overlays
+        run: |
+          cd src
+          for provider in aws azure gcp linode; do
+            kustomize build k8s/${provider}/overlays/dev0 >/dev/null
+          done
 
       - name: check format
         run: make fmt

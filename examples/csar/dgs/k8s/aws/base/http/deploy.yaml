@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: http
+  labels:
+    component: http
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: http
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        component: http
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+    spec:
+      terminationGracePeriodSeconds: 600
+      initContainers:
+        - image: alpine:latest
+          name: tuner
+          command:
+            - /bin/sh
+            - -c
+            - |
+              sysctl -w kernel.msgmax=65536
+              sysctl -w kernel.msgmnb=65536
+              sysctl -w net.netfilter.nf_conntrack_max=1048576
+              sysctl -w net.core.somaxconn=32768
+              sysctl -w net.ipv4.tcp_syncookies=0
+              sysctl -w net.ipv4.tcp_max_syn_backlog=32768
+          imagePullPolicy: Always
+          securityContext:
+            privileged: true
+      containers:
+        - name: http
+          # Configure Probes: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+          readinessProbe: &probe
+            httpGet:
+              path: /healthcheck
+              port: 7000
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            <<: *probe
+          securityContext:
+            runAsUser: 1000
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            privileged: false
+          image: http
+          imagePullPolicy: Always
+          command:
+            - /go/bin/http
+          env:
+            - name: DIARKIS_CLOUD_ENV
+              value: AWS
+            - name: DIARKIS_FIELD_MOD
+              value: "true"
+          volumeMounts:
+            - mountPath: /configs/http
+              name: http-conf
+            - mountPath: /configs/shared
+              name: shared-conf
+            - mountPath: /bin/tools/configs
+              name: hc-conf
+            - mountPath: /tmp
+              name: tmp
+          ports:
+            - name: http
+              containerPort: 7000
+      nodeSelector:
+        alpha.eksctl.io/nodegroup-name: diarkis-private
+      tolerations:
+        - key: "diarkis.io/network"
+          operator: "Equal"
+          value: "private"
+          effect: "NoExecute"
+      volumes:
+        - name: http-conf
+          configMap:
+            name: http-conf
+        - name: shared-conf
+          configMap:
+            name: shared-conf
+        - name: hc-conf
+          configMap:
+            name: hc-conf
+        - name: tmp
+          emptyDir: {}

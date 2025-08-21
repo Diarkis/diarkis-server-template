@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: udp
+  labels:
+    component: udp
+spec:
+  template:
+    spec:
+      hostNetwork: true
+      containers:
+        - name: udp
+          resources:
+            limits:
+              cpu: "500m"
+            requests:
+              cpu: "500m"
+          securityContext:
+            runAsUser: 1000
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            privileged: false

@@ -14,11 +14,14 @@ var projectID = ""
 var buildToken = ""
 
 func main() {
+	os.Exit(run())
+}
+
+func run() int {
 	cwd, err := os.Getwd()
 	if err != nil {
 		fmt.Printf("Path failed \x1b[0;91m %v \x1b[0m\n", err)
-		os.Exit(1)
-		return
+		return 1
 	}
 	src := filepath.Join(cwd, "src")
 	projectID = os.Args[1]
@@ -29,25 +32,43 @@ func main() {
 		dest = filepath.Join(cwd, dest)
 	}
 
+	// Ensure dest is either non existing or is an empty directory.
+	if stat, err := os.Stat(dest); err == nil {
+		if stat.IsDir() {
+			entries, err := os.ReadDir(dest)
+			if err != nil {
+				fmt.Printf("Error \x1b[0;91m %v \x1b[0m\n", err)
+				return 1
+			} else if len(entries) != 0 {
+				fmt.Printf("Error \x1b[0;91m %s \x1b[0m\n", "destination directory is not empty")
+				return 1
+			}
+			// empty directory is OK.
+		} else {
+			fmt.Printf("Error \x1b[0;91m %s \x1b[0m\n", "destination exists and is not a directory")
+			return 1
+		}
+	}
+
 	list := strings.Split(filepath.ToSlash(dest), "/")
 	pkg := list[len(list)-1]
 	fmt.Printf("\x1b[0;90m Installing the template to %s \x1b[0m\n", dest)
 	if err := os.MkdirAll(dest, os.FileMode(0777)); err != nil {
 		fmt.Printf("Error \x1b[0;91m %v \x1b[0m\n", err)
-		os.Exit(1)
+		return 1
 	}
 	err = copyDirectory(pkg, src, dest)
 	if err != nil {
 		fmt.Printf("Error \x1b[0;91m %v \x1b[0m\n", err)
-		os.Exit(1)
+		return 1
 	}
 	fmt.Printf("Installation of template completed - \x1b[0;32m %v \x1b[0m\n", dest)
 	err = os.Chdir(dest)
 	if err != nil {
 		fmt.Printf("Error \x1b[0;91m %v \x1b[0m\n", err)
-		os.Exit(1)
+		return 1
 	}
-	os.Exit(0)
+	return 0
 }
 
 func copyDirectory(pkg string, src string, dest string) error {

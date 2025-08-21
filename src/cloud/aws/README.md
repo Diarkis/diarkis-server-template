@@ -1,5 +1,7 @@
 # Overview
 
+
+## Overview
 AWS EKS 上に Diarkis クラスターを構築するための手順です。
 プリミティブな設定になっているので、適宜修正したい点があれば修正していただければと思います。
 
@@ -12,7 +14,7 @@ AWS EKS 上に Diarkis クラスターを構築するための手順です。
 # 1. install eksctl
 
 https://catalog.us-east-1.prod.workshops.aws/workshops/f5abb693-2d87-43b5-a439-77454f28e2e7/ja-JP/020-create-cluster/10-install-eksctl
-`0.173.0` で動作確認済み
+`0.211.0` で動作確認済み
 
 # 2. create ECR for diarkis images
 
@@ -117,7 +119,35 @@ kubectl apply -f cluster-autoscaler-autodiscover.yaml # cluster 名 diarkis と�
 
 # 10. setup log collector
 
-cloud watch logs 等で container のログを集約することが可能です。
-すでに fluent-bit 等は、amazon-cloudwatch namespace にデプロイされておりますが権限だけがついていない状態なので、NodeRole に権限をつけるだけでログが Cloudwatch logs に集約されます。
-参考画像![NodeInstanceRole](img/NodeInstanceRole.png)のように、diarkis-public と diarkis-private Node に対して`CloudWatchAgentServerPolicy`をつけてあげることによって、log が集約されます。
-対象のログは、`/aws/containerinsights/Cluster_Name/application`というロググループに入りますので、filterling等も行うことができます。
+cloud watch logs 等で container のログを集約することが可能です。(cf. https://docs.aws.amazon.com/ja_jp/AmazonCloudWatch/latest/monitoring/Container-Insights-setup-logs-FluentBit.html)
+
+1. amazon-cloudwatch namespace の作成
+   `kubectl create ns amazon-cloudwatch` を実行
+2. config map の作成
+   下記の ClusterName と RegionName は、構成に合わせて修正していただき shell を実行してください。
+
+```sh
+ClusterName=diarkis
+RegionName=ap-northeast-1
+FluentBitHttpPort='2020'
+FluentBitReadFromHead='Off'
+[[ ${FluentBitReadFromHead} = 'On' ]] && FluentBitReadFromTail='Off'|| FluentBitReadFromTail='On'
+[[ -z ${FluentBitHttpPort} ]] && FluentBitHttpServer='Off' || FluentBitHttpServer='On'
+kubectl create configmap fluent-bit-cluster-info \
+--from-literal=cluster.name=${ClusterName} \
+--from-literal=http.server=${FluentBitHttpServer} \
+--from-literal=http.port=${FluentBitHttpPort} \
+--from-literal=read.head=${FluentBitReadFromHead} \
+--from-literal=read.tail=${FluentBitReadFromTail} \
+--from-literal=logs.region=${RegionName} -n amazon-cloudwatch
+```
+
+3. fluent-bit の deploy
+
+```sh
+kubectl apply -f https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch-container-insights/latest/k8s-deployment-manifest-templates/deployment-mode/daemonset/container-insights-monitoring/fluent-bit/fluent-bit.yaml
+```
+
+4. NodeRole の付与
+   参考画像![NodeInstanceRole](img/NodeInstanceRole.png)のように、diarkis-public と diarkis-private Node に対して`CloudWatchAgentServerPolicy`をつけてあげることによって、log が集約されます。
+   対象のログは、`/aws/containerinsights/Cluster_Name/application`というロググループに入りますので、filterling 等も行うことができます。

@@ -5,8 +5,16 @@ It is also used for load test.
 
 ## How to Build
 
+### To build on Linux or macOS
+
+```sh
+./run-mage.sh build:local
 ```
-go build -o remote_bin/bot ./bot/scenario
+
+### To build on Windows
+
+```sh
+.\run-mage.bat build:local
 ```
 
 ## How to Run

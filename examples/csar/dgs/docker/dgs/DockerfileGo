@@ -1,0 +1,7 @@
+# DGS server written in Go
+FROM alpine:latest
+
+COPY dgs /go/bin/
+COPY health-check /go/bin/
+RUN chmod +x /go/bin/dgs && chmod +x /go/bin/health-check
+CMD ["/go/bin/dgs"]

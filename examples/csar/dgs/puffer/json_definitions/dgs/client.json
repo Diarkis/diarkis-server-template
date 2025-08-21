@@ -1,0 +1,131 @@
+{
+  "InstanceCreateRequest": {
+    "package": "dgs",
+    "ver": 2,
+    "cmd": 50000,
+    "cppOptions": {
+      "namespaces": ["Diarkis", "AuthoritativeNetwork", "Command"]
+    },
+    "properties": {}
+  },
+  "InstanceCreateResponse": {
+    "package": "dgs",
+    "ver": 2,
+    "cmd": 50000,
+    "cppOptions": {
+      "namespaces": ["Diarkis", "AuthoritativeNetwork", "Command"]
+    },
+    "comment": [
+      "DGS instance create response.",
+      "The status possible values are:",
+      "  - 0 success (created)",
+      "  - 1 DGS is already starting. A previous call to instance create have been done and it is still ongoing.",
+      "      The caller is part of the DGS creation members request.",
+      "  - 2 DGS is already started. Client should either call backfill or the owner should call clear association.",
+      "  - 3 DGS is starting and the caller is not part of the DGS creation members request.",
+      "      Caller will not receive a credentials push but will receive InstanceAllocatedPush",
+      "      with IsMember=false when the creation will be finished. Caller should call backfill",
+      "      once this push event is received."
+    ],
+    "properties": {
+      "status": {
+        "type": "u8",
+        "comment": "DGS creation status."
+      }
+    }
+  },
+  "InstanceBackfillRequest": {
+    "package": "dgs",
+    "ver": 2,
+    "cmd": 50001,
+    "cppOptions": {
+      "namespaces": ["Diarkis", "AuthoritativeNetwork", "Command"]
+    },
+    "properties": {}
+  },
+  "InstanceBackfillResponse": {
+    "package": "dgs",
+    "ver": 2,
+    "cmd": 50001,
+    "cppOptions": {
+      "namespaces": ["Diarkis", "AuthoritativeNetwork", "Command"]
+    },
+    "comment": [
+      "DGS backfill response.",
+      "The status possible values are:",
+      "  - 0 success",
+      "  - 1 DGS is starting. A previous call to instance create have been done and it is still ongoing.",
+      "  - 2 DGS instance not created. The owner of the session must first call create DGS instance.",
+      "  - 3 DGS is starting and the caller is not part of the DGS creation members request.",
+      "      Caller will not receive a credentials push but will receive InstanceAllocatedPush",
+      "      with IsMember=false when the creation will be finished. Caller should call backfill again",
+      "      once this push event is received."
+    ],
+    "properties": {
+      "status": {
+        "type": "u8",
+        "comment": "DGS backfill status."
+      }
+    }
+  },
+  "InstanceCreatePush": {
+    "package": "dgs",
+    "ver": 2,
+    "cmd": 50000,
+    "cppOptions": {
+      "namespaces": ["Diarkis", "AuthoritativeNetwork", "Command"]
+    },
+    "properties": {
+      "Success": {
+        "type": "bool",
+        "comment": "DGS allocation success value."
+      },
+      "SID": {
+        "type": "b[]",
+        "comment": "SID of remote DGS user."
+      },
+      "Key": {
+        "type": "b[]",
+        "comment": "Key of remote DGS user."
+      },
+      "IV": {
+        "type": "b[]",
+        "comment": "IV of remote DGS user."
+      },
+      "MacKey": {
+        "type": "b[]",
+        "comment": "MacKey of remote DGS user."
+      },
+      "ServerType": {
+        "type": "string",
+        "comment": "Server type of remote DGS."
+      },
+      "ServerHost": {
+        "type": "string",
+        "comment": "Host of remote DGS."
+      },
+      "ServerPort": {
+        "type": "u16",
+        "comment": "Port of remote DGS."
+      }
+    }
+  },
+  "InstanceAllocatedPush": {
+    "package": "dgs",
+    "ver": 2,
+    "cmd": 50002,
+    "cppOptions": {
+      "namespaces": ["Diarkis", "AuthoritativeNetwork", "Command"]
+    },
+    "properties": {
+      "Success": {
+        "type": "bool",
+        "comment": "DGS allocation success value."
+      },
+      "IsMember": {
+        "type": "bool",
+        "comment": "True if the caller was in the room before the call to create DGS, false otherwise."
+      }
+    }
+  }
+}

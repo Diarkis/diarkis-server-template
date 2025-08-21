@@ -1,14 +1,16 @@
-// © 2019-2024 Diarkis Inc. All rights reserved.
+// © 2019-2025 Diarkis Inc. All rights reserved.
 
 package bot_client
 
 import (
 	"slices"
+	"sync/atomic"
 
-	"github.com/Diarkis/diarkis-server-template/bot/scenario/lib/report"
 	"github.com/Diarkis/diarkis/client/go/udp"
 	"github.com/Diarkis/diarkis/server"
 	"github.com/Diarkis/diarkis/util"
+
+	"github.com/Diarkis/diarkis-server-template/bot/scenario/lib/report"
 )
 
 // UDPClient wraps udp.Client in Diarkis core
@@ -16,11 +18,13 @@ import (
 type UDPClient struct {
 	*TransportClient
 	client       *udp.Client
-	lastActivity struct {
-		kind string
-		ver  uint8
-		cmd  uint16
-	}
+	lastActivity atomic.Pointer[clientLastActivity]
+}
+
+type clientLastActivity struct {
+	kind string
+	ver  uint8
+	cmd  uint16
 }
 
 type HandlerType int
@@ -75,15 +79,32 @@ func (c *UDPClient) Connect() {
 		c.credentials.MacKey,
 	)
 
-	logger.Info("Connecting UDP... %s", c.endpoint)
+	logger.Infou(c.userID, "Connecting UDP... %s", c.endpoint)
 	c.client.Connect(c.endpoint)
 }
 
 func (c *UDPClient) Disconnect() {
+	if c == nil {
+		logger.Sys("UDP client already gone, skipping disconnect.")
+		return
+	}
+	if c.client == nil {
+		logger.Sysu(c.userID, "UDP client already gone, skipping disconnect.")
+		return
+	}
 	c.client.Disconnect()
 }
 
 func (c *UDPClient) Send(ver uint8, cmd uint16, payload []byte) {
+	if c == nil {
+		logger.Sys("UDP client already gone, cannot send command.")
+		return
+	}
+	if c.client == nil {
+		logger.Sysu(c.userID, "UDP client already gone, cannot send command.")
+		return
+	}
+
 	logger.Sysu(c.userID, util.StrConcat("\x1b[38;5;219m", "Sending Command,   ver: %d, cmd: %d, payload: %s (0x%x)", "\x1b[0m"), ver, cmd, string(payload), payload)
 	report.IncrementCallCommandMetrics(ver, cmd)
 	report.TouchAsActiveUser(c.userID)
@@ -92,6 +113,14 @@ func (c *UDPClient) Send(ver uint8, cmd uint16, payload []byte) {
 }
 
 func (c *UDPClient) RSend(ver uint8, cmd uint16, payload []byte) {
+	if c == nil {
+		logger.Sys("UDP client already gone, cannot rsend command.")
+		return
+	}
+	if c.client == nil {
+		logger.Sysu(c.userID, "UDP client already gone, cannot rsend command.")
+		return
+	}
 	logger.Sysu(c.userID, util.StrConcat("\x1b[38;5;219m", "RSending Command,  ver: %d, cmd: %d, payload: %s (0x%x)", "\x1b[0m"), ver, cmd, string(payload), payload)
 	report.IncrementCallCommandMetrics(ver, cmd)
 	report.TouchAsActiveUser(c.userID)
@@ -170,12 +199,25 @@ func (c *UDPClient) GetLowLevelClient() *udp.Client {
 }
 
 func (c *UDPClient) setLastActivity(kind string, ver uint8, cmd uint16) {
-	c.lastActivity.ver = ver
-	c.lastActivity.cmd = cmd
-	c.lastActivity.kind = kind
+	if c == nil || c.lastActivity.Load() == nil {
+		return
+	}
+	activity := clientLastActivity{
+		ver:  ver,
+		cmd:  cmd,
+		kind: kind,
+	}
+	c.lastActivity.Store(&activity)
 }
 
 // GetLastActivity returns what command the client got/pushed last
 func (c *UDPClient) GetLastActivity() (string, uint8, uint16) {
-	return c.lastActivity.kind, c.lastActivity.ver, c.lastActivity.cmd
+	if c == nil {
+		return "", 0, 0
+	}
+	activity := c.lastActivity.Load()
+	if activity == nil {
+		return "", 0, 0
+	}
+	return activity.kind, activity.ver, activity.cmd
 }

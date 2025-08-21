@@ -1,11 +1,12 @@
 buildSettings:
   root: ..
   version: "2"
-  goVersion: 1.22.4
+  goVersion: 1.24.0
   env:
     CGO_ENABLED: 0
     CGO_CFLAGS: -I${PROJECT_DIR}
     CGO_LDFLAGS: -L${PROJECT_DIR} -Wl,-rpath,${PROJECT_DIR}
+    GOFLAGS: -trimpath -ldflags=-w -ldflags=-s
     GOOS: windows
     GOARCH: amd64
   projects:
@@ -30,6 +31,9 @@ buildSettings:
     testcli:
       target: ./testcli
       output: remote_bin/testcli.exe
+    bot:
+      target: ./bot/scenario
+      output: remote_bin/bot.exe
 diarkis:
   project_id: "{{PROJECT_ID}}"
   builder_token: "{{BUILD_TOKEN}}"
