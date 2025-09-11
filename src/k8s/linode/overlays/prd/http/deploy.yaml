@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: http
+spec:
+  replicas: 2
+  template:
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: component
+                    operator: In
+                    values:
+                      - mars
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: http
+          resources:
+            requests:
+              cpu: 1000m
+            limits:
+              cpu: 1000m

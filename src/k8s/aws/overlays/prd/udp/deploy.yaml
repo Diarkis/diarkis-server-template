@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: udp
+spec:
+  replicas: 2
+  template:
+    spec:
+      containers:
+        - name: udp
+          resources:
+            requests:
+              cpu: 3500m
+            limits:
+              cpu: 3500m

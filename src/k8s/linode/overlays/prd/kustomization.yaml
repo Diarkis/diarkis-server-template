@@ -1,0 +1,55 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: prd
+resources:
+  - ../../base
+  - ./shared/secrets/docker-secrets.yaml
+
+# build target
+patches:
+  - path: http/deploy.yaml
+  - path: udp/deploy.yaml
+  - path: tcp/deploy.yaml
+  - path: mars/sts.yaml
+
+configMapGenerator:
+  - name: shared-conf
+    behavior: replace
+    files:
+      - shared/conf/field.json
+      - shared/conf/dm.json
+      - shared/conf/group.json
+      - shared/conf/log.json
+      - shared/conf/matching.json
+      - shared/conf/mesh.json
+      - shared/conf/dive.json
+      - shared/conf/room.json
+
+  - name: http-conf
+    behavior: replace
+    files:
+      - http/conf/main.json
+
+  - name: udp-conf
+    behavior: replace
+    files:
+      - udp/conf/main.json
+
+  - name: tcp-conf
+    behavior: replace
+    files:
+      - tcp/conf/main.json
+
+images:
+  - name: udp
+    newName: __YOUR_DOCKER_REPOSITORY_NAME__/udp
+    newTag: prd
+  - name: tcp
+    newName: __YOUR_DOCKER_REPOSITORY_NAME__/tcp
+    newTag: prd
+  - name: mars
+    newName: __YOUR_DOCKER_REPOSITORY_NAME__/mars
+    newTag: prd
+  - name: http
+    newName: __YOUR_DOCKER_REPOSITORY_NAME__/http
+    newTag: prd
