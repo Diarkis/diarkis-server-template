@@ -3,14 +3,15 @@
 package main
 
 import (
+	"fmt"
+	"net"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
 	"os/signal"
+	"strconv"
 	"sync"
 	"syscall"
-
-	dnet "github.com/Diarkis/diarkis/net"
 )
 
 var (
@@ -30,13 +31,14 @@ func togglePprof() {
 		}
 		pprofEnabled = false
 	} else {
-		port := dnet.FindAvailablePort("localhost", "6060")
-		addr := "localhost" + ":" + port
-		server = &http.Server{Addr: addr, Handler: nil}
-
-		logger.Info("Starting pprof server on %s", addr)
+		l, err := findAvailablePort("localhost", 6060)
+		if err != nil {
+			panic(err.Error())
+		}
+		server = &http.Server{Handler: nil}
+		logger.Info("Starting pprof server on %s", l.Addr().String())
 		go func() {
-			if err := server.ListenAndServe(); err != http.ErrServerClosed {
+			if err := server.Serve(l); err != http.ErrServerClosed {
 				logger.Error("pprof server error: %v", err)
 			}
 		}()
@@ -53,5 +55,21 @@ func setupPprof() {
 			togglePprof()
 		}
 	}()
+}
 
+// findAvailablePort Find the first available port starting from port.
+func findAvailablePort(host string, port int) (net.Listener, error) {
+	var l net.Listener
+	var err error
+
+	startingPort := port
+	for range 1000 {
+		listenAddr := net.JoinHostPort(host, strconv.Itoa(port))
+		l, err = net.Listen("tcp", listenAddr)
+		if err == nil {
+			return l, nil
+		}
+		port++
+	}
+	return nil, fmt.Errorf("unable to find available port within %d and %d. %v", startingPort, port, err)
 }
