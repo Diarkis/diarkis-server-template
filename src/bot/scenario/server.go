@@ -245,6 +245,19 @@ func handleGetMetrics(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func handleTogglePprof(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" && r.Method != "PUT" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	togglePprof()
+
+	fmt.Fprint(w, "Toggled pprof\n")
+	logger.Info("Toggled pprof endpoint")
+
+}
+
 func listen() error {
 	address := util.GetEnv("BOT_ADDRESS")
 	if address == "" {
@@ -262,6 +275,7 @@ func listen() error {
 	http.HandleFunc("/report/list/", handleListReport)
 	http.HandleFunc("/report/download/", handleDownloadReport)
 	http.HandleFunc("/metrics/", handleGetMetrics)
+	http.HandleFunc("/admin/pprof/toggle/", handleTogglePprof)
 	logger.Info("Bot server started. listening %s ...", host)
 	http.ListenAndServe(host, nil)
 	return nil

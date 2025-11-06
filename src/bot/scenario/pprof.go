@@ -7,11 +7,8 @@ import (
 	"net"
 	"net/http"
 	_ "net/http/pprof"
-	"os"
-	"os/signal"
 	"strconv"
 	"sync"
-	"syscall"
 )
 
 var (
@@ -44,17 +41,6 @@ func togglePprof() {
 		}()
 		pprofEnabled = true
 	}
-}
-
-func setupPprof() {
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGUSR1)
-
-	go func() {
-		for range sigs {
-			togglePprof()
-		}
-	}()
 }
 
 // findAvailablePort Find the first available port starting from port.
