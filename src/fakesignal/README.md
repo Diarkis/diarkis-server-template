@@ -19,6 +19,7 @@ fakesignal <PID> <SIGNAL>
 ```
 
 ### Examples
+
 ```bash
 fakesignal 1234 SIGUSR1
 fakesignal 5678 SIGHUP

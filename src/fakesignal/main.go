@@ -1,3 +1,5 @@
+// © 2019-2025 Diarkis Inc. All rights reserved.
+
 //go:build windows
 
 // This is a utility to send a signal (SIGUSR1, SIGUSR2 or SIGHUP)
