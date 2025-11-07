@@ -34,9 +34,6 @@ buildSettings:
     bot:
       target: ./bot/scenario
       output: remote_bin/bot.exe
-    fakesignal:
-      target: ./fakesignal
-      output: remote_bin/fakesignal
 diarkis:
   project_id: "{{PROJECT_ID}}"
   builder_token: "{{BUILD_TOKEN}}"
