@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"syscall"
 
 	"golang.org/x/sys/windows"
 )
@@ -29,25 +28,16 @@ func main() {
 		fmt.Printf("invalid pid %q\n", pidStr)
 		os.Exit(1)
 	}
-
-	var sig syscall.Signal
 	switch signalStr {
 	case "SIGUSR1":
-		sig = SIGUSR1
 	case "SIGUSR2":
-		sig = SIGUSR2
 	case "SIGHUP":
-		sig = syscall.SIGHUP
 	default:
 		fmt.Printf("invalid signal name %q\n", signalStr)
 		os.Exit(1)
 	}
 
-	name := formatFakeSignalEventNameWithPID(sig, pid)
-	if name == "" {
-		fmt.Printf("invalid signal name %q\n", signalStr)
-		os.Exit(1)
-	}
+	name := fmt.Sprintf("DIARKIS#SIGNAL_%s#PID_%d", signalStr, pid)
 
 	namep, err := windows.UTF16PtrFromString(name)
 	if err != nil {
