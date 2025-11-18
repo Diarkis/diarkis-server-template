@@ -10,6 +10,7 @@ This sample explains the following two procedures necessary for developing DGS:
 ### 1. Make custom commands
 
 #### To make custom commands on Linux or macOS
+
 ```sh
 make -C ./puffer gen
 ```

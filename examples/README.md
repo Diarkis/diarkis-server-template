@@ -34,6 +34,7 @@ Once the example installation is finished, navigate to your `OUTPUT_DIRECTORY` a
 - [Secure Matchmaking](./matching/secure-matching/README.md)
 
 ### DGS
+
 - [DGS](./csar/dgs/README.md)
 
 ---
