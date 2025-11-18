@@ -33,6 +33,10 @@ Once the example installation is finished, navigate to your `OUTPUT_DIRECTORY` a
 - [Team-Based Matchmaking](./matching/team/README.md)
 - [Secure Matchmaking](./matching/secure-matching/README.md)
 
+### DGS
+
+- [DGS](./csar/dgs/README.md)
+
 ---
 
-_First created on 2025-07-03. Updated on 2025-07-04._
+_First created on 2025-07-03. Updated on 2025-11-18._

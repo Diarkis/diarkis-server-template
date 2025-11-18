@@ -7,7 +7,15 @@ This sample explains the following two procedures necessary for developing DGS:
 
 ## How to Develop DGS
 
-### 1. Build
+### 1. Make custom commands
+
+#### To make custom commands on Linux or macOS
+
+```sh
+make -C ./puffer gen
+```
+
+### 2. Build
 
 #### To build on Linux or macOS
 
@@ -27,12 +35,12 @@ make build-local
 .\run-mage.bat build:local
 ```
 
-### 2. Build DGS
+### 3. Build DGS
 
 Develop and build DGS on the client side.
 For details, please refer to the client-side DGS development documentation.
 
-### 3. Run mars, HTTP, UDP servers
+### 4. Run mars, HTTP, UDP servers
 
 ```sh
 ./run-mage.sh server mars
@@ -48,7 +56,7 @@ or
 ./remote_bin/udp
 ```
 
-### 4. Run DGS
+### 5. Run DGS
 
 Execute the DGS built in step 2.
 For details, please refer to the client-side DGS development documentation.
@@ -366,4 +374,4 @@ eksctl delete cluster --region=ap-northeast-1 --name=diarkis  --disable-nodegrou
 
 ---
 
-_First created on 2025-07-14. Updated on 2025-07-14._
+_First created on 2025-07-14. Updated on 2025-11-18._
