@@ -1,0 +1,7 @@
+{
+  "level": "info",
+  "address": "0.0.0.0",
+  "port": "6779",
+  "enableMetricsLogging": false,
+  "debug": false
+}

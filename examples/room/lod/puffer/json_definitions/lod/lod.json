@@ -1,0 +1,46 @@
+{
+  "BroadcastLoD": {
+    "ver": 2,
+    "cmd": 1001,
+    "package": "room",
+    "comment": [
+      "Broadcast the LoD data to the room. Synchronize data more frequently with nearby characters, and less frequently with distant characters."
+    ],
+    "properties": {
+      "x": { "type": "i32", "comment": "The x coordinate of the local character" },
+      "y": { "type": "i32", "comment": "The y coordinate of the local character" },
+      "payload": { "type": "b[]", "comment": "Data for synchronization" }
+    }
+  },
+  "BroadcastLoDPush": {
+    "ver": 2,
+    "cmd": 1001,
+    "package": "room",
+    "comment": ["Push the LoD data to the client."],
+    "properties": {
+      "payload": { "type": "b[]", "comment": "Data for synchronization" }
+    }
+  },
+  "GetLoDInfo": {
+    "ver": 2,
+    "cmd": 1002,
+    "package": "room",
+    "comment": ["Get the LoD information of the room."],
+    "properties": {}
+  },
+  "GetLoDInfoResponse": {
+    "ver": 2,
+    "cmd": 1002,
+    "package": "room",
+    "comment": ["Response the LoD information of the room."],
+    "properties": {
+      "syncIntervalForNearby": {
+        "type": "u32",
+        "comment": "Synchronization interval for nearby characters (milliseconds)"
+      },
+      "syncIntervalForFar": { "type": "u32", "comment": "Synchronization interval for far characters (milliseconds)" },
+      "maxDistanceForNearby": { "type": "u32", "comment": "The maximum distance for nearby characters (centimeters)" },
+      "maxDistanceForFar": { "type": "u32", "comment": "The maximum distance for far characters (centimeters)" }
+    }
+  }
+}
