@@ -161,9 +161,9 @@ Room に、自分のキャラクターの x, y 座標と同期したいデータ
 
 自キャラクターの座標を元に、以下の条件で相手にデータを送信します。
 
-- 近い位置の相手 ( `maxDistanceForNearby` 以下 ) には頻繁に ( `syncIntervalForNearby` )
-- 遠い位置の相手 ( `maxDistanceForFar` 以下 ) には一定時間間隔に ( `syncIntervalForFar` )
-- それ以外の相手 ( `maxDistanceForFar` 以上 ) には送信しません。
+- 近い位置の相手 ( `maxDistanceForNearby` 以下 ) には頻繁に送信 ( `syncIntervalForNearby` )
+- 遠い位置の相手 ( `maxDistanceForFar` 以下 ) には低頻度で送信 ( `syncIntervalForFar` )
+- それ以外の相手 ( `maxDistanceForFar` 以上 ) には送信しません
 
 #### Command
 
