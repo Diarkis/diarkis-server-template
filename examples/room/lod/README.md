@@ -97,7 +97,6 @@ User 1 broadcasts the LoD information to the room.
 
 ```sh
 > lod broadcast
- > lod broadcast
 Enter X (int32):
 100
 Enter Y (int32):
@@ -149,7 +148,7 @@ LoD (Level of Detail) は、距離によって同期の頻度を変えること�
 | --------------------- | --------------------------------- | ------------- |
 | syncIntervalForNearby | 近距離の同期間隔 (millisecond)    | 16            |
 | syncIntervalForFar    | 遠距離の同期間隔 (millisecond)    | 2000          |
-| maxDistanceForNearby  | 近距離の最大同期距離 (centimeter) | 1000          |
+| maxDistanceForNearby  | 近距離の最大同期距離 (centimeter) | 10000         |
 | maxDistanceForFar     | 遠距離の最大同期距離 (centimeter) | 40000         |
 
 ---
