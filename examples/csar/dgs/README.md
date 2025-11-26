@@ -23,7 +23,7 @@ make build-local
 
 #### To build on Windows
 
-```sh
+```
 .\run-mage.bat build:local
 ```
 
@@ -33,6 +33,7 @@ Develop and build DGS on the client side.
 For details, please refer to the client-side DGS development documentation.
 
 ### 3. Run mars, HTTP, UDP servers
+
 #### Run servers on Linux or macOS
 
 ```sh
@@ -51,10 +52,10 @@ or
 
 #### Run servers on Windows
 
-```sh
-./run-mage.bat server mars
-./run-mage.bat server http
-./run-mage.bat server udp
+```
+.\run-mage.bat server mars
+.\run-mage.bat server http
+.\run-mage.bat server udp
 ```
 
 ### 4. Run DGS
