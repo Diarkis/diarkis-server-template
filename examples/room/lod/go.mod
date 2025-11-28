@@ -4,8 +4,6 @@ go 1.24
 
 require github.com/Diarkis/diarkis v1.2.0-alpha4
 
-require (
-  github.com/magefile/mage v1.15.0 // indirect
-)
+require golang.org/x/sys v0.33.0 // indirect
 
-replace github.com/Diarkis/diarkis => /Users/Shared/Diarkis/diarkis
+replace github.com/Diarkis/diarkis => /Users/kairi/diarkis
