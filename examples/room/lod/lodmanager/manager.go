@@ -57,33 +57,32 @@ func (m *Manager) RemoveUserEntity(userID string) {
 
 func (m *Manager) invokeLodLoop() {
 	for {
+		if !m.started.Load() {
+			break
+		}
 		time.Sleep(time.Duration(m.syncIntervalForNearby) * time.Millisecond)
-		if m.started.Load() {
-			for userID, userEntity := range m.userEntities {
-				if userEntity == nil {
-					m.RemoveUserEntity(userID)
+		for userID, userEntity := range m.userEntities {
+			if userEntity == nil {
+				m.RemoveUserEntity(userID)
+				continue
+			}
+			nearbyUserIDs := make([]string, 0, len(m.userEntities))
+			for otherUserID, otherUserEntity := range m.userEntities {
+				if userID == otherUserID {
 					continue
 				}
-				nearbyUserIDs := make([]string, 0, len(m.userEntities))
-				for otherUserID, otherUserEntity := range m.userEntities {
-					if userID == otherUserID {
-						continue
-					}
-					distance := abs(userEntity.X-otherUserEntity.X) + abs(userEntity.Y-otherUserEntity.Y)
-					if distance < m.maxDistanceForNearby && time.Since(userEntity.LastSyncAt) > time.Duration(m.syncIntervalForNearby)*time.Millisecond {
-						nearbyUserIDs = append(nearbyUserIDs, otherUserID)
-						userEntity.LastSyncAt = time.Now()
-					}
-				}
-				if len(nearbyUserIDs) > 0 {
-					user := user.GetUserBySID(userID)
-					if user != nil {
-						user.PushToClient(m.ver, m.cmd, userEntity.Payload, packet.Unreliable)
-					}
+				distance := abs(userEntity.X-otherUserEntity.X) + abs(userEntity.Y-otherUserEntity.Y)
+				if distance < m.maxDistanceForNearby && time.Since(userEntity.LastSyncAt) > time.Duration(m.syncIntervalForNearby)*time.Millisecond {
+					nearbyUserIDs = append(nearbyUserIDs, otherUserID)
+					userEntity.LastSyncAt = time.Now()
 				}
 			}
-		} else {
-			break
+			if len(nearbyUserIDs) > 0 {
+				user := user.GetUserBySID(userID)
+				if user != nil {
+					user.PushToClient(m.ver, m.cmd, userEntity.Payload, packet.Unreliable)
+				}
+			}
 		}
 	}
 }
