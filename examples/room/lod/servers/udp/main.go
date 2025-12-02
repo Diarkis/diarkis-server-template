@@ -6,6 +6,7 @@ import (
 	"github.com/Diarkis/diarkis/config"
 	"github.com/Diarkis/diarkis/derror"
 	"github.com/Diarkis/diarkis/diarkisexec"
+	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/room"
 	"github.com/Diarkis/diarkis/server"
 	"github.com/Diarkis/diarkis/user"
@@ -20,6 +21,8 @@ var ( // lod.json settings
 	MaxDistanceForNearby  int32
 	MaxDistanceForFar     int32
 )
+
+var logger = log.New("LOD")
 
 const (
 	configPath               = "configs/shared/lod.json"

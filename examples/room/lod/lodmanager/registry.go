@@ -2,12 +2,16 @@ package lodmanager
 
 import (
 	"sync"
+
+	"github.com/Diarkis/diarkis/log"
 )
 
 var (
 	managerMap      = make(map[string]*Manager)
 	managerMapMutex = sync.RWMutex{}
 )
+
+var logger = log.New("LOD_MANAGER")
 
 // GetRoomManager retrieves the LOD manager for a specific room ID
 func GetRoomManager(roomID string) *Manager {
