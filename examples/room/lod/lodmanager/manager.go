@@ -19,15 +19,16 @@ type Manager struct {
 	syncIntervalForFar    int32
 	maxDistanceForNearby  int32
 	maxDistanceForFar     int32
-	cache                 *cache
+	cache                 *cache // TODO: is this needed?
 }
 
 // UserEntity represents a user's position and payload data
 type UserEntity struct {
-	X          int32
-	Y          int32
-	Payload    []byte
-	LastSendAt time.Time
+	X                int32
+	Y                int32
+	Payload          []byte
+	LastSendAt       time.Time // TODO: this needs to store time for each user, so actually, Map is correct.
+	ChangedAfterSend bool
 }
 
 func (m *Manager) String() string {
@@ -54,7 +55,7 @@ func NewManager(ver uint8, cmd uint16, syncIntervalForNearby int32, syncInterval
 
 // AddUserEntity adds or updates a user entity with position and payload data
 func (m *Manager) AddUserEntity(userID string, x int32, y int32, payload []byte) {
-	m.userEntities[userID] = &UserEntity{X: x, Y: y, Payload: payload, LastSendAt: time.Now()}
+	m.userEntities[userID] = &UserEntity{X: x, Y: y, Payload: payload, LastSendAt: time.Now(), ChangedAfterSend: true}
 }
 
 // RemoveUserEntity removes a user entity from the manager
@@ -71,8 +72,8 @@ func (m *Manager) invokeLodLoop() {
 		if !m.started.Load() {
 			break
 		}
-
 		time.Sleep(time.Duration(m.syncIntervalForNearby) * time.Millisecond)
+
 		for senderUserID, senderUserEntity := range m.userEntities {
 			if senderUserEntity == nil {
 				m.RemoveUserEntity(senderUserID)
@@ -90,10 +91,17 @@ func (m *Manager) invokeLodLoop() {
 				}
 				// nearer than maxDistanceForNearby -> send in every syncIntervalForNearby
 				if distance <= m.maxDistanceForNearby {
-					nearbyUserIDs = append(nearbyUserIDs, receiverUserID)
-					senderUserEntity.LastSendAt = time.Now()
-					logger.Debugf("invokeLodLoop", "from", senderUserID, "to", receiverUserID, "distance", distance, "interval", m.syncIntervalForNearby)
-					continue
+					if receiverUserEntity.ChangedAfterSend {
+						addToSendList(&nearbyUserIDs, senderUserEntity, receiverUserID)
+						logger.Debugf("invokeLodLoop", "from", senderUserID, "to", receiverUserID, "distance", distance, "interval", m.syncIntervalForNearby)
+						continue
+					} else {
+						if time.Since(senderUserEntity.LastSendAt) > time.Duration(m.syncIntervalForFar)*time.Millisecond {
+							addToSendList(&nearbyUserIDs, senderUserEntity, receiverUserID)
+							logger.Debugf("invokeLodLoop", "from", senderUserID, "to", receiverUserID, "distance", distance, "interval", m.syncIntervalForFar)
+							continue
+						}
+					}
 				}
 
 				// between maxDistanceForNearby and maxDistanceForFar
@@ -104,8 +112,7 @@ func (m *Manager) invokeLodLoop() {
 					// cf. func loadLodConfigs()
 					interval := (m.syncIntervalForFar - m.syncIntervalForNearby) * (distance - m.maxDistanceForNearby) / (m.maxDistanceForFar - m.maxDistanceForNearby)
 					if time.Since(senderUserEntity.LastSendAt) > time.Duration(interval)*time.Millisecond {
-						nearbyUserIDs = append(nearbyUserIDs, receiverUserID)
-						senderUserEntity.LastSendAt = time.Now()
+						addToSendList(&nearbyUserIDs, senderUserEntity, receiverUserID)
 						logger.Debugf("invokeLodLoop", "from", senderUserID, "to", receiverUserID, "distance", distance, "interval", interval)
 					}
 				}
@@ -121,4 +128,10 @@ func (m *Manager) invokeLodLoop() {
 
 		}
 	}
+}
+
+func addToSendList(nearbyUserIDs *[]string, senderUserEntity *UserEntity, receiverUserID string) {
+	*nearbyUserIDs = append(*nearbyUserIDs, receiverUserID)
+	senderUserEntity.LastSendAt = time.Now()
+	senderUserEntity.ChangedAfterSend = false
 }
