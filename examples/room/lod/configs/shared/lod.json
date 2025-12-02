@@ -1,0 +1,6 @@
+{
+    "SyncIntervalForNearby": 20,
+    "SyncIntervalForFar": 2000,
+    "MaxDistanceForNearby": 10000,
+    "MaxDistanceForFar": 40000
+}

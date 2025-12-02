@@ -3,6 +3,7 @@
 package main
 
 import (
+	"github.com/Diarkis/diarkis/config"
 	"github.com/Diarkis/diarkis/derror"
 	"github.com/Diarkis/diarkis/diarkisexec"
 	"github.com/Diarkis/diarkis/room"
@@ -13,11 +14,19 @@ import (
 	proom "github.com/Diarkis/diarkis-server-template/examples/room/lod/puffer/go/room"
 )
 
-var (
-	SyncIntervalForNearby int32 = 16
-	SyncIntervalForFar    int32 = 2000
-	MaxDistanceForNearby  int32 = 10000
-	MaxDistanceForFar     int32 = 40000
+var ( // lod.json settings
+	SyncIntervalForNearby int32
+	SyncIntervalForFar    int32
+	MaxDistanceForNearby  int32
+	MaxDistanceForFar     int32
+)
+
+const (
+	configPath               = "configs/shared/lod.json"
+	syncIntervalForNearbyKey = "SyncIntervalForNearby"
+	syncIntervalForFarKey    = "SyncIntervalForFar"
+	maxDistanceForNearbyKey  = "MaxDistanceForNearby"
+	maxDistanceForFarKey     = "MaxDistanceForFar"
 )
 
 func main() {
@@ -36,6 +45,7 @@ func main() {
 		lodmanager.RemoveRoomManager(roomID)
 	})
 
+	loadLodConfigs(configPath)
 	diarkisexec.StartDiarkis()
 }
 
@@ -75,4 +85,19 @@ func handleRoomGetLoDInfo(ver uint8, cmd uint16, payload []byte, userData *user.
 
 	userData.ServerRespond(lodInfo.Pack(), ver, cmd, server.Ok, true)
 	next(nil)
+}
+
+func loadLodConfigs(confPath string) {
+	config.Load("Lod", confPath)
+
+	SyncIntervalForNearby = config.GetAsInt32("Lod", syncIntervalForNearbyKey, SyncIntervalForNearby)
+	SyncIntervalForFar = config.GetAsInt32("Lod", syncIntervalForFarKey, SyncIntervalForFar)
+	if SyncIntervalForFar < SyncIntervalForNearby {
+		SyncIntervalForFar = SyncIntervalForNearby
+	}
+	MaxDistanceForNearby = config.GetAsInt32("Lod", maxDistanceForNearbyKey, MaxDistanceForNearby)
+	MaxDistanceForFar = config.GetAsInt32("Lod", maxDistanceForFarKey, MaxDistanceForFar)
+	if MaxDistanceForFar < MaxDistanceForNearby {
+		MaxDistanceForFar = MaxDistanceForNearby
+	}
 }
