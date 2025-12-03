@@ -62,6 +62,9 @@ func (m *Manager) AddUserEntity(userID string, x int32, y int32, payload []byte)
 
 // RemoveUserEntity removes a user entity from the manager
 func (m *Manager) RemoveUserEntity(userID string) {
+	if _, ok := m.userEntities[userID]; !ok {
+		return
+	}
 	delete(m.userEntities, userID)
 }
 

@@ -31,6 +31,9 @@ func SetRoomManager(roomID string, manager *Manager) {
 func RemoveRoomManager(roomID string) {
 	managerMapMutex.Lock()
 	defer managerMapMutex.Unlock()
+	if _, ok := managerMap[roomID]; !ok {
+		return
+	}
 	managerMap[roomID].started.Store(false)
 	delete(managerMap, roomID)
 }
