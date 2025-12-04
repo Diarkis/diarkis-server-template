@@ -13,6 +13,14 @@ import (
 	"github.com/Diarkis/diarkis/user"
 )
 
+// sendMessage represents a message to be sent to a user
+type sendMessage struct {
+	receiverUserID string
+	ver            uint8
+	cmd            uint16
+	payload        []byte
+}
+
 // Manager manages LOD (Level of Detail) synchronization for users
 type Manager struct {
 	userEntities          map[string]*UserEntity
@@ -24,6 +32,8 @@ type Manager struct {
 	maxDistanceForNearby  int32
 	maxDistanceForFar     int32
 	managerMapMutex       sync.Mutex
+	sendBuffer            chan sendMessage
+	senderWg              sync.WaitGroup
 }
 
 func (m *Manager) String() string {
@@ -41,10 +51,17 @@ func NewManager(ver uint8, cmd uint16, syncIntervalForNearby int32, syncInterval
 		maxDistanceForFar:     maxDistanceForFar,
 		userEntities:          make(map[string]*UserEntity),
 		started:               &atomic.Bool{},
+		sendBuffer:            make(chan sendMessage, 10000), // Buffer size: 10000
 	}
 
 	if lm.started.CompareAndSwap(false, true) {
+		// Start send worker goroutine
+		lm.senderWg.Add(1)
+		go lm.sendWorker()
+
+		// Start LOD loop
 		go lm.invokeLodLoop()
+
 		logger.Debugf("NewManager", "syncIntervalForNearby", syncIntervalForNearby, "syncIntervalForFar", syncIntervalForFar, "maxDistanceForNearby", maxDistanceForNearby, "maxDistanceForFar", maxDistanceForFar)
 		return lm
 	}
@@ -71,6 +88,27 @@ func (m *Manager) RemoveUserEntity(userID string) {
 	for _, userEntity := range m.userEntities {
 		delete(userEntity.Remember, userID)
 	}
+}
+
+// sendWorker processes messages from sendBuffer and sends them to users
+func (m *Manager) sendWorker() {
+	defer m.senderWg.Done()
+
+	for msg := range m.sendBuffer {
+		receiverUser := user.GetUserBySID(msg.receiverUserID)
+		if receiverUser != nil {
+			receiverUser.PushToClient(msg.ver, msg.cmd, msg.payload, packet.Unreliable)
+		}
+	}
+	logger.Debugf("sendWorker stopped")
+}
+
+// Stop stops the LOD manager and waits for send worker to finish
+func (m *Manager) Stop() {
+	m.started.Store(false)
+	close(m.sendBuffer)
+	m.senderWg.Wait()
+	logger.Debugf("Manager stopped")
 }
 
 // send packets to nearby users
@@ -139,9 +177,15 @@ func (m *Manager) invokeLodLoop() {
 			}
 			if len(nearbyUserIDs) > 0 {
 				for _, receiverUserID := range nearbyUserIDs {
-					receiverUser := user.GetUserBySID(receiverUserID)
-					if receiverUser != nil {
-						receiverUser.PushToClient(m.ver, m.cmd, senderUserEntity.Payload, packet.Unreliable)
+					select {
+					case m.sendBuffer <- sendMessage{
+						receiverUserID: receiverUserID,
+						ver:            m.ver,
+						cmd:            m.cmd,
+						payload:        senderUserEntity.Payload,
+					}:
+					default:
+						logger.Warnf("sendBuffer full, dropping message", "receiverUserID", receiverUserID, "senderUserID", senderUserID)
 					}
 				}
 			}
