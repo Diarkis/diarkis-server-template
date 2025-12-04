@@ -124,26 +124,30 @@ lod getinfo   - Get the LoD configuration
 ```
 
 ---
+
 ### 距離による同期の仕組み
 
 サーバーは送信者と受信者の距離を計算し、以下のルールで同期間隔を決定します：
 
 #### 1. 近距離ユーザー（距離 ≤ MaxDistanceForNearby）
+
 - **同期間隔**: `SyncIntervalForNearby`（デフォルト: 16ms）
 - **例**: 距離が10,000cm以下の場合、高頻度で同期
 
 #### 2. 中距離ユーザー（MaxDistanceForNearby < 距離 ≤ MaxDistanceForFar）
+
 - **同期間隔**: 距離に応じて線形補間
-- **計算式**: 
+- **計算式**:
   ```
-  interval = SyncIntervalForNearby + 
-             (SyncIntervalForFar - SyncIntervalForNearby) × 
-             (距離 - MaxDistanceForNearby) / 
+  interval = SyncIntervalForNearby +
+             (SyncIntervalForFar - SyncIntervalForNearby) ×
+             (距離 - MaxDistanceForNearby) /
              (MaxDistanceForFar - MaxDistanceForNearby)
   ```
 - **例**: 距離が25,000cmの場合、約1,000ms間隔で同期
 
 #### 3. 遠距離ユーザー（距離 > MaxDistanceForFar）
+
 - **同期間隔**: 同期なし
 - **例**: 距離が40,000cmを超える場合、データは送信されない
 
@@ -158,12 +162,14 @@ lod getinfo   - Get the LoD configuration
 このシナリオでは、3人のプレイヤー（Alice, Bob, Charlie）が異なる位置にいる場合の同期動作を確認します。
 
 ### 設定
+
 - **MaxDistanceForNearby**: 10,000cm (100m)
 - **MaxDistanceForFar**: 40,000cm (400m)
 - **SyncIntervalForNearby**: 16ms
 - **SyncIntervalForFar**: 2000ms
 
 ### プレイヤーの位置
+
 - **Alice**: (0, 0)
 - **Bob**: (5000, 3000) → Aliceからの距離: 8,000cm（近距離）
 - **Charlie**: (20000, 15000) → Aliceからの距離: 35,000cm（中距離）
@@ -203,6 +209,7 @@ Alice at origin
 ```
 
 **3. 期待される動作**
+
 - **Bob**: 距離8,000cm（近距離）→ 約16ms間隔で「Alice at origin」を受信
 - **Charlie**: 距離35,000cm（中距離）→ 約1,666ms間隔で「Alice at origin」を受信
 
@@ -274,6 +281,7 @@ Enter Payload (string):
 ```
 
 **3. 期待される動作**
+
 - 位置1（45,000cm）: Player1には同期されない
 - 位置2（25,000cm）: Player1に約1,000ms間隔で同期
 - 位置3（5,000cm）: Player1に約16ms間隔で同期（滑らかな動き）
@@ -283,14 +291,17 @@ Enter Payload (string):
 ## Tips & Best Practices
 
 ### 1. 座標の単位に注意
+
 - 座標の単位は**センチメートル（cm）**です
 - 1m = 100cm、10m = 1,000cm、100m = 10,000cm
 
 ### 2. データ最適化
+
 - 位置が変わらない場合でも、データが更新されない場合は遠距離の同期間隔が適用されます
 - 頻繁に更新する必要があるデータのみペイロードに含めましょう
 
 ### 3. デバッグ時のヒント
+
 - `lod getinfo`でサーバー設定を確認してから、テストを始めましょう
 - 複数のターミナルを開いて、各プレイヤーの視点で同期を確認しましょう
 
