@@ -22,6 +22,7 @@ var udpLod *lod
 func main() {
 	cli.SetupBuiltInRoomCommands()
 	cli.RegisterCommands("lod", []cli.Command{
+		{CmdName: "b", Desc: "Broadcast the LoD(alias of broadcast)", CmdFunc: broadcastLoD},
 		{CmdName: "broadcast", Desc: "Broadcast the LoD", CmdFunc: broadcastLoD},
 		{CmdName: "getinfo", Desc: "Get the LoD configuration", CmdFunc: getLoDInfo},
 	})
@@ -32,23 +33,30 @@ func main() {
 
 func broadcastLoD() {
 	reader := bufio.NewReader(os.Stdin)
-
-	fmt.Println("Enter X (int32):")
-	x, _ := reader.ReadString('\n')
-	x = strings.Trim(x, "\r\n")
-	xInt, err := strconv.ParseInt(x, 10, 32)
-	if err != nil {
-		fmt.Printf("Failed to parse X: %v\n", err)
-		return
+	xInt := int64(0)
+	yInt := int64(0)
+	var err error
+	for {
+		fmt.Println("Enter X (int32):")
+		x, _ := reader.ReadString('\n')
+		x = strings.Trim(x, "\r\n")
+		xInt, err = strconv.ParseInt(x, 10, 32)
+		if err != nil {
+			fmt.Printf("Failed to parse X: %v\n", err)
+			continue
+		}
+		break
 	}
-
-	fmt.Println("Enter Y (int32):")
-	y, _ := reader.ReadString('\n')
-	y = strings.Trim(y, "\r\n")
-	yInt, err := strconv.ParseInt(y, 10, 32)
-	if err != nil {
-		fmt.Printf("Failed to parse Y: %v\n", err)
-		return
+	for {
+		fmt.Println("Enter Y (int32):")
+		y, _ := reader.ReadString('\n')
+		y = strings.Trim(y, "\r\n")
+		yInt, err = strconv.ParseInt(y, 10, 32)
+		if err != nil {
+			fmt.Printf("Failed to parse Y: %v\n", err)
+			continue
+		}
+		break
 	}
 
 	fmt.Println("Enter Payload (string):")
