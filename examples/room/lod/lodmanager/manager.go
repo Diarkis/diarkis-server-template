@@ -143,12 +143,12 @@ func (m *Manager) invokeLodLoop() {
 				// nearer than maxDistanceForNearby -> send in every syncIntervalForNearby
 				if distance <= m.maxDistanceForNearby {
 					if receiverUserEntity.ChangedAfterSend {
-						addToSendList(&nearbyUserIDs, senderUserEntity, receiverUserID)
+						nearbyUserIDs = addToSendList(nearbyUserIDs, senderUserEntity, receiverUserID)
 						logger.Verbosef("invokeLodLoop", "from", senderUserID, "to", receiverUserID, "distance", distance, "mode", "nearby-changed", "interval", m.syncIntervalForNearby)
 						continue
 					} else {
 						if time.Since(getLastSendAt(senderUserEntity, receiverUserID)) > time.Duration(m.syncIntervalForFar)*time.Millisecond {
-							addToSendList(&nearbyUserIDs, senderUserEntity, receiverUserID)
+							nearbyUserIDs = addToSendList(nearbyUserIDs, senderUserEntity, receiverUserID)
 							logger.Verbosef("invokeLodLoop", "from", senderUserID, "to", receiverUserID, "distance", distance, "mode", "nearby-interval", "interval", m.syncIntervalForFar)
 							continue
 						}
@@ -164,12 +164,12 @@ func (m *Manager) invokeLodLoop() {
 					if receiverUserEntity.ChangedAfterSend {
 						interval := (m.syncIntervalForFar - m.syncIntervalForNearby) * (distance - m.maxDistanceForNearby) / (m.maxDistanceForFar - m.maxDistanceForNearby)
 						if time.Since(getLastSendAt(senderUserEntity, receiverUserID)) > time.Duration(interval)*time.Millisecond {
-							addToSendList(&nearbyUserIDs, senderUserEntity, receiverUserID)
+							nearbyUserIDs = addToSendList(nearbyUserIDs, senderUserEntity, receiverUserID)
 							logger.Verbosef("invokeLodLoop", "from", senderUserID, "to", receiverUserID, "distance", distance, "mode", "far-changed", "interval", interval)
 						}
 					} else {
 						if time.Since(getLastSendAt(senderUserEntity, receiverUserID)) > time.Duration(m.syncIntervalForFar)*time.Millisecond {
-							addToSendList(&nearbyUserIDs, senderUserEntity, receiverUserID)
+							nearbyUserIDs = addToSendList(nearbyUserIDs, senderUserEntity, receiverUserID)
 							logger.Verbosef("invokeLodLoop", "from", senderUserID, "to", receiverUserID, "distance", distance, "mode", "far-interval", "interval", m.syncIntervalForFar)
 						}
 					}
@@ -195,10 +195,11 @@ func (m *Manager) invokeLodLoop() {
 	}
 }
 
-func addToSendList(nearbyUserIDs *[]string, senderUserEntity *UserEntity, receiverUserID string) {
-	*nearbyUserIDs = append(*nearbyUserIDs, receiverUserID)
+func addToSendList(nearbyUserIDs []string, senderUserEntity *UserEntity, receiverUserID string) []string {
+	nearbyUserIDs = append(nearbyUserIDs, receiverUserID)
 	senderUserEntity.Remember[receiverUserID] = time.Now()
 	senderUserEntity.ChangedAfterSend = false
+	return nearbyUserIDs
 }
 
 func getLastSendAt(senderUserEntity *UserEntity, receiverUserID string) time.Time {

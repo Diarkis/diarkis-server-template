@@ -165,7 +165,7 @@ lod getinfo   - Get the LoD configuration
 
 - **MaxDistanceForNearby**: 10,000cm (100m)
 - **MaxDistanceForFar**: 40,000cm (400m)
-- **SyncIntervalForNearby**: 16ms
+- **SyncIntervalForNearby**: 33ms
 - **SyncIntervalForFar**: 2000ms
 
 ### プレイヤーの位置
@@ -284,7 +284,7 @@ Enter Payload (string):
 
 - 位置1（45,000cm）: Player1には同期されない
 - 位置2（25,000cm）: Player1に約1,000ms間隔で同期
-- 位置3（5,000cm）: Player1に約16ms間隔で同期（滑らかな動き）
+- 位置3（5,000cm）: Player1に約33ms間隔で同期（滑らかな動き）
 
 ---
 
@@ -298,12 +298,12 @@ Enter Payload (string):
 ### 2. データ最適化
 
 - 位置が変わらない場合でも、データが更新されない場合は遠距離の同期間隔が適用されます
-- 頻繁に更新する必要があるデータのみペイロードに含めましょう
+- 頻繁に更新する必要があるデータのみペイロードに含める
 
 ### 3. デバッグ時のヒント
 
-- `lod getinfo`でサーバー設定を確認してから、テストを始めましょう
-- 複数のターミナルを開いて、各プレイヤーの視点で同期を確認しましょう
+- `lod getinfo`でサーバー設定を確認してから、テストを開始
+- 複数のターミナルを開いて、各プレイヤーの視点で同期を確認
 
 ---
 

@@ -195,7 +195,7 @@ func spawnBot(id string, isCreator bool) {
 }
 
 func broadcast(bot *bot) {
-	message := make([]byte, packetSize, packetSize)
+	message := make([]byte, packetSize)
 	// Use LOD broadcast instead of regular room broadcast
 	proto := proom.NewBroadcastLoD()
 	proto.X = bot.x
