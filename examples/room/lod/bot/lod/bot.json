@@ -1,0 +1,17 @@
+{
+    "Host": "localhost:7000",
+    "Bots": 100,
+    "AuthInterval": 200,
+    "RoomSize": 100,
+    "PacketInterval": 100,
+    "PacketSize": 100,
+    "LogLevel": "info",
+    "Protocol": "udp",
+    "UdpClientSendInterval": 5,
+    "MapMinX": -25000,
+    "MapMaxX": 25000,
+    "MapMinY": -25000,
+    "MapMaxY": 25000,
+    "MovementInterval": 300,
+    "MovementSpeed": 50
+}

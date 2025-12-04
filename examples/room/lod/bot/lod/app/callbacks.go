@@ -8,8 +8,30 @@ import (
 
 func handleOnConnect(bot *bot) {
 	botCounter++
+	// Start movement loop
 	go func() {
-		searchAndJoin(bot)
+		for {
+			time.Sleep(time.Millisecond * time.Duration(MovementInterval))
+			if bot.isJoined() {
+				moveBot(bot)
+			}
+		}
+	}()
+	// Start broadcast loop
+	go func() {
+		// Decide whether to create or join room based on bot role
+		if bot.isCreator {
+			logger.Info("Bot creating room",
+				"bot.uid", bot.uid)
+			createRoom(bot)
+		} else {
+			// Wait a bit for room creators to create rooms
+			time.Sleep(time.Second * 2)
+			logger.Info("Bot joining room",
+				"bot.uid", bot.uid)
+			joinRoom(bot)
+		}
+
 		for {
 			time.Sleep(time.Millisecond * time.Duration(packetInterval))
 			if bot.isJoined() {

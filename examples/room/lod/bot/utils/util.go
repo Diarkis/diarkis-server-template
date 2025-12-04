@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"strings"
 	"time"
@@ -78,4 +79,12 @@ func EndpointWithKey(host, uid, serverType, clientKey string) (EndpointResponse,
 	}
 
 	return endpointResp, nil
+}
+
+// RandomInt32 returns a random int32 value between min and max (inclusive)
+func RandomInt32(min, max int32) int32 {
+	if min >= max {
+		return min
+	}
+	return min + rand.Int31n(max-min+1)
 }

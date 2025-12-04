@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log/slog"
+	"os"
 	"sync/atomic"
 	"time"
 
@@ -35,6 +36,7 @@ var botCounter = 0
 var joinedCnt atomic.Int64
 var broadcastSendCnt atomic.Int64
 var broadcastReceiveCnt atomic.Int64
+var createdRoomID string
 
 // sleepTime is in seconds
 var sleepTime int64 = 1
@@ -49,6 +51,7 @@ type bot struct {
 	broadcastRcvCnt  atomic.Int64
 	x                int32 // position x for LOD
 	y                int32 // position y for LOD
+	isCreator        bool  // whether this bot creates a room
 }
 
 func (b *bot) isJoined() bool {
@@ -58,7 +61,28 @@ func (b *bot) isJoined() bool {
 var bm botManager
 
 func Run() {
-	parseArgs()
+	// Setup logger
+	programLevel := new(slog.LevelVar)
+	logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: programLevel}))
+
+	// Load configuration
+	loadBotConfig()
+	loadBotLodConfig() // Load LOD config from file
+
+	// Set log level
+	switch logLevel {
+	case "debug":
+		programLevel.Set(slog.LevelDebug)
+	case "info":
+		programLevel.Set(slog.LevelInfo)
+	case "warn":
+		programLevel.Set(slog.LevelWarn)
+	case "error":
+		programLevel.Set(slog.LevelError)
+	default:
+		programLevel.Set(slog.LevelInfo)
+	}
+
 	logger.Info("bot args",
 		"host", host,
 		"bots", bots,
@@ -99,14 +123,22 @@ func printMetrics() {
 }
 
 func spawnBots() {
+	// Calculate how many rooms are needed
+	numRooms := (bots + roomSize - 1) / roomSize
+	logger.Info("Room creation plan",
+		"totalBots", bots,
+		"roomSize", roomSize,
+		"numRoomsToCreate", numRooms)
+
 	for i := 0; i < bots; i++ {
 		botUuid, _ := uuid.New()
-		go spawnBot(botUuid.String)
+		isCreator := i < numRooms
+		go spawnBot(botUuid.String, isCreator)
 		time.Sleep(time.Millisecond * time.Duration(authInterval))
 	}
 }
 
-func newBot(id string) *bot {
+func newBot(id string, isCreator bool) *bot {
 	eResp, err := utils.Endpoint(host, id, protocol)
 	if err != nil {
 		logger.Error("Auth error",
@@ -132,6 +164,10 @@ func newBot(id string) *bot {
 	bot.uid = id
 	bot.state = 0
 	bot.udp = cli
+	bot.isCreator = isCreator
+	// Initialize bot position randomly within map boundaries
+	bot.x = utils.RandomInt32(MapMinX, MapMaxX)
+	bot.y = utils.RandomInt32(MapMinY, MapMaxY)
 	cli.SetEncryptionKeys(sid, key, iv, macKey)
 	cli.OnResponse(func(ver uint8, cmd uint16, status uint8, payload []byte) {
 		handleOnResponse(bot, ver, cmd, status, payload)
@@ -153,8 +189,8 @@ func newBot(id string) *bot {
 	return bot
 }
 
-func spawnBot(id string) {
-	bot := newBot(id)
+func spawnBot(id string, isCreator bool) {
+	bot := newBot(id, isCreator)
 	bm.bots = append(bm.bots, bot)
 }
 
@@ -170,7 +206,7 @@ func broadcast(bot *bot) {
 	broadcastSendCnt.Add(1)
 }
 
-func searchAndJoin(bot *bot) {
+func createRoom(bot *bot) {
 	if bot.state == 0 && bot.udp == nil && bot.tcp == nil {
 		logger.Error("bot is not connected to any server")
 		return
@@ -182,27 +218,104 @@ func searchAndJoin(bot *bot) {
 	case TCP_STRING:
 		roomCli.SetupAsTCP(bot.tcp)
 	}
-	joinMessage := []byte("")
-	roomCli.JoinRandom(roomSize, 60, joinMessage, 0)
+
+	// Use JoinRandom - if no rooms exist, it will create one
+
+	roomCli.Create(uint16(roomSize), false, true, 60, 0)
+	bot.room = roomCli
+
+	roomCli.OnCreate(func(success bool, roomID string, createdTime uint) {
+		if success {
+			joinedCnt.Add(1)
+			bot.state = STATUS_BROADCAST
+			createdRoomID = roomID
+			logger.Info("Room created",
+				"bot.uid", bot.uid,
+				"roomID", roomID,
+				"createdTime", createdTime,
+				"maxMembers", roomSize)
+		} else {
+			logger.Error("OnCreate failed",
+				"bot.uid", bot.uid)
+		}
+	})
+
+	roomCli.OnJoin(func(success bool, createdTime uint) {
+		if success {
+			joinedCnt.Add(1)
+			bot.state = STATUS_BROADCAST
+			logger.Info("Creator joined existing room",
+				"bot.uid", bot.uid,
+				"roomID", bot.room.ID,
+				"createdTime", createdTime)
+		}
+	})
+
+	roomCli.OnMemberLeave(func(message []byte) {
+		logger.Debug("OnMemberLeave",
+			"bot.uid", bot.uid,
+			"message", message)
+	})
+	roomCli.OnMemberBroadcast(func(bytes []byte) {
+		broadcastReceiveCnt.Add(1)
+		bot.broadcastRcvCnt.Add(1)
+	})
+}
+
+func joinRoom(bot *bot) {
+	if bot.state == 0 && bot.udp == nil && bot.tcp == nil {
+		logger.Error("bot is not connected to any server")
+		return
+	}
+	roomCli := new(room.Room)
+	switch protocol {
+	case UDP_STRING:
+		roomCli.SetupAsUDP(bot.udp)
+	case TCP_STRING:
+		roomCli.SetupAsTCP(bot.tcp)
+	}
+
+	if createdRoomID == "" {
+		for {
+			time.Sleep(time.Second * 1)
+			logger.Info("Waiting for room to be created",
+				"bot.uid", bot.uid)
+			if createdRoomID != "" {
+				break
+			}
+		}
+	}
+	logger.Info("Joining room",
+		"bot.uid", bot.uid,
+		"roomID", createdRoomID)
+	roomCli.Join(createdRoomID, []byte(""))
 	bot.room = roomCli
 
 	roomCli.OnJoin(func(success bool, createdTime uint) {
-		joinedCnt.Add(1)
-		logger.Debug("OnJoin",
-			"bot.uid", bot.uid,
-			"success", success,
-			"createdTime", createdTime)
 		if success {
+			joinedCnt.Add(1)
 			bot.state = STATUS_BROADCAST
+			logger.Info("Joiner joined room",
+				"bot.uid", bot.uid,
+				"roomID", bot.room.ID,
+				"createdTime", createdTime)
+		} else {
+			logger.Warn("OnJoin failed, retrying...",
+				"bot.uid", bot.uid)
+			// Retry after delay
+			time.Sleep(time.Millisecond * 500)
+			joinRoom(bot)
 		}
 	})
+
 	roomCli.OnCreate(func(success bool, name string, createdTime uint) {
-		logger.Info("OnCreate",
-			"bot.uid", bot.uid,
-			"success", success,
-			"createdTime", createdTime)
+		// Joiners shouldn't create rooms, but if they do, log it
 		if success {
+			joinedCnt.Add(1)
 			bot.state = STATUS_BROADCAST
+			logger.Warn("Joiner unexpectedly created room",
+				"bot.uid", bot.uid,
+				"roomID", name)
 		}
 	})
 
