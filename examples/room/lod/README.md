@@ -124,6 +124,177 @@ lod getinfo   - Get the LoD configuration
 ```
 
 ---
+### 距離による同期の仕組み
+
+サーバーは送信者と受信者の距離を計算し、以下のルールで同期間隔を決定します：
+
+#### 1. 近距離ユーザー（距離 ≤ MaxDistanceForNearby）
+- **同期間隔**: `SyncIntervalForNearby`（デフォルト: 16ms）
+- **例**: 距離が10,000cm以下の場合、高頻度で同期
+
+#### 2. 中距離ユーザー（MaxDistanceForNearby < 距離 ≤ MaxDistanceForFar）
+- **同期間隔**: 距離に応じて線形補間
+- **計算式**: 
+  ```
+  interval = SyncIntervalForNearby + 
+             (SyncIntervalForFar - SyncIntervalForNearby) × 
+             (距離 - MaxDistanceForNearby) / 
+             (MaxDistanceForFar - MaxDistanceForNearby)
+  ```
+- **例**: 距離が25,000cmの場合、約1,000ms間隔で同期
+
+#### 3. 遠距離ユーザー（距離 > MaxDistanceForFar）
+- **同期間隔**: 同期なし
+- **例**: 距離が40,000cmを超える場合、データは送信されない
+
+> **Note**: 距離はマンハッタン距離（`|X1 - X2| + |Y1 - Y2|`）で計算されます。
+
+---
+
+# 実践的な使用例 / Practical Use Cases
+
+## シナリオ1: 3人のプレイヤーによる距離ベースの同期
+
+このシナリオでは、3人のプレイヤー（Alice, Bob, Charlie）が異なる位置にいる場合の同期動作を確認します。
+
+### 設定
+- **MaxDistanceForNearby**: 10,000cm (100m)
+- **MaxDistanceForFar**: 40,000cm (400m)
+- **SyncIntervalForNearby**: 16ms
+- **SyncIntervalForFar**: 2000ms
+
+### プレイヤーの位置
+- **Alice**: (0, 0)
+- **Bob**: (5000, 3000) → Aliceからの距離: 8,000cm（近距離）
+- **Charlie**: (20000, 15000) → Aliceからの距離: 35,000cm（中距離）
+
+### テスト手順
+
+**1. 各プレイヤーがRoomに参加**
+
+```sh
+# Alice (Terminal 1)
+./remote_bin/cli -host=127.0.0.1:7000 -uid=alice
+> room create
+> lod getinfo
+
+# Bob (Terminal 2)
+./remote_bin/cli -host=127.0.0.1:7000 -uid=bob
+> room join
+# Enter Room ID from Alice
+
+# Charlie (Terminal 3)
+./remote_bin/cli -host=127.0.0.1:7000 -uid=charlie
+> room join
+# Enter Room ID from Alice
+```
+
+**2. Aliceが位置情報をブロードキャスト**
+
+```sh
+# Alice (Terminal 1)
+> lod b
+Enter X (int32):
+0
+Enter Y (int32):
+0
+Enter Payload (string):
+Alice at origin
+```
+
+**3. 期待される動作**
+- **Bob**: 距離8,000cm（近距離）→ 約16ms間隔で「Alice at origin」を受信
+- **Charlie**: 距離35,000cm（中距離）→ 約1,666ms間隔で「Alice at origin」を受信
+
+**4. Bobが移動して遠距離になった場合**
+
+```sh
+# Bob (Terminal 2)
+> lod b
+Enter X (int32):
+50000
+Enter Y (int32):
+0
+Enter Payload (string):
+Bob moved far away
+```
+
+この時、BobとAliceの距離は50,000cm（遠距離超過）となり、相互に同期が停止します。
+
+---
+
+## シナリオ2: 移動するプレイヤーの連続ブロードキャスト
+
+実際のゲームでは、プレイヤーが連続的に位置を更新します。このシナリオでは、移動中のプレイヤーがどのように同期されるかを確認します。
+
+### テスト手順
+
+**1. Player1が原点に立つ**
+
+```sh
+# Player1
+> lod b
+Enter X (int32):
+0
+Enter Y (int32):
+0
+Enter Payload (string):
+{"status": "idle", "hp": 100}
+```
+
+**2. Player2が近づきながら複数回ブロードキャスト**
+
+```sh
+# Player2 - 位置1（遠距離）
+> lod b
+Enter X (int32):
+45000
+Enter Y (int32):
+0
+Enter Payload (string):
+{"status": "walking", "direction": "west"}
+
+# Player2 - 位置2（中距離）
+> lod b
+Enter X (int32):
+25000
+Enter Y (int32):
+0
+Enter Payload (string):
+{"status": "walking", "direction": "west"}
+
+# Player2 - 位置3（近距離）
+> lod b
+Enter X (int32):
+5000
+Enter Y (int32):
+0
+Enter Payload (string):
+{"status": "walking", "direction": "west"}
+```
+
+**3. 期待される動作**
+- 位置1（45,000cm）: Player1には同期されない
+- 位置2（25,000cm）: Player1に約1,000ms間隔で同期
+- 位置3（5,000cm）: Player1に約16ms間隔で同期（滑らかな動き）
+
+---
+
+## Tips & Best Practices
+
+### 1. 座標の単位に注意
+- 座標の単位は**センチメートル（cm）**です
+- 1m = 100cm、10m = 1,000cm、100m = 10,000cm
+
+### 2. データ最適化
+- 位置が変わらない場合でも、データが更新されない場合は遠距離の同期間隔が適用されます
+- 頻繁に更新する必要があるデータのみペイロードに含めましょう
+
+### 3. デバッグ時のヒント
+- `lod getinfo`でサーバー設定を確認してから、テストを始めましょう
+- 複数のターミナルを開いて、各プレイヤーの視点で同期を確認しましょう
+
+---
 
 # 仕様 / Specification
 
