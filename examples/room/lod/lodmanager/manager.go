@@ -57,8 +57,9 @@ func (m *Manager) RemoveUserEntity(userID string) {
 		return
 	}
 	delete(m.userEntities, userID)
+	// delete from others remember data
 	for _, userEntity := range m.userEntities {
-		userEntity.Remember.clearBy(userID)
+		delete(userEntity.Remember, userID)
 	}
 }
 
@@ -72,7 +73,7 @@ func (m *Manager) invokeLodLoop() {
 			break
 		}
 		time.Sleep(time.Duration(m.syncIntervalForNearby) * time.Millisecond)
-
+		start := time.Now()
 		for senderUserID, senderUserEntity := range m.userEntities {
 			if senderUserEntity == nil {
 				m.RemoveUserEntity(senderUserID)
@@ -91,12 +92,12 @@ func (m *Manager) invokeLodLoop() {
 				// nearer than maxDistanceForNearby -> send in every syncIntervalForNearby
 				if distance <= m.maxDistanceForNearby {
 					if receiverUserEntity.ChangedAfterSend {
-						addToSendList(&nearbyUserIDs, senderUserEntity, senderUserID, receiverUserID)
+						addToSendList(&nearbyUserIDs, senderUserEntity, receiverUserID)
 						logger.Debugf("invokeLodLoop", "from", senderUserID, "to", receiverUserID, "distance", distance, "interval", m.syncIntervalForNearby)
 						continue
 					} else {
-						if time.Since(getLastSendAt(senderUserEntity, senderUserID, receiverUserID)) > time.Duration(m.syncIntervalForFar)*time.Millisecond {
-							addToSendList(&nearbyUserIDs, senderUserEntity, senderUserID, receiverUserID)
+						if time.Since(getLastSendAt(senderUserEntity, receiverUserID)) > time.Duration(m.syncIntervalForFar)*time.Millisecond {
+							addToSendList(&nearbyUserIDs, senderUserEntity, receiverUserID)
 							logger.Debugf("invokeLodLoop", "from", senderUserID, "to", receiverUserID, "distance", distance, "interval", m.syncIntervalForFar)
 							continue
 						}
@@ -110,8 +111,8 @@ func (m *Manager) invokeLodLoop() {
 					// syncIntervalForNearby and maxDistanceForNearby always
 					// cf. func loadLodConfigs()
 					interval := (m.syncIntervalForFar - m.syncIntervalForNearby) * (distance - m.maxDistanceForNearby) / (m.maxDistanceForFar - m.maxDistanceForNearby)
-					if time.Since(getLastSendAt(senderUserEntity, senderUserID, receiverUserID)) > time.Duration(interval)*time.Millisecond {
-						addToSendList(&nearbyUserIDs, senderUserEntity, senderUserID, receiverUserID)
+					if time.Since(getLastSendAt(senderUserEntity, receiverUserID)) > time.Duration(interval)*time.Millisecond {
+						addToSendList(&nearbyUserIDs, senderUserEntity, receiverUserID)
 						logger.Debugf("invokeLodLoop", "from", senderUserID, "to", receiverUserID, "distance", distance, "interval", interval)
 					}
 				}
@@ -126,15 +127,16 @@ func (m *Manager) invokeLodLoop() {
 			}
 
 		}
+		logger.Debugf("invokeLodLoop", "time", time.Since(start))
 	}
 }
 
-func addToSendList(nearbyUserIDs *[]string, senderUserEntity *UserEntity, senderUserID, receiverUserID string) {
+func addToSendList(nearbyUserIDs *[]string, senderUserEntity *UserEntity, receiverUserID string) {
 	*nearbyUserIDs = append(*nearbyUserIDs, receiverUserID)
-	senderUserEntity.Remember.set(cacheKey{a: senderUserID, b: receiverUserID}, time.Now())
+	senderUserEntity.Remember[receiverUserID] = time.Now()
 	senderUserEntity.ChangedAfterSend = false
 }
 
-func getLastSendAt(senderUserEntity *UserEntity, senderUserID, receiverUserID string) time.Time {
-	return senderUserEntity.Remember.get(cacheKey{a: senderUserID, b: receiverUserID})
+func getLastSendAt(senderUserEntity *UserEntity, receiverUserID string) time.Time {
+	return senderUserEntity.Remember[receiverUserID]
 }

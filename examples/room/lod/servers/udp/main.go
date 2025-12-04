@@ -76,12 +76,10 @@ func handleRoomBroadcastLoD(ver uint8, cmd uint16, payload []byte, userData *use
 		room.SetOnLeaveByID(roomID, func(roomID string, userData *user.User) {
 			manager.RemoveUserEntity(userData.SID)
 		})
-		room.SetOnJoinCompleteByID(roomID, func(roomID string, userData *user.User) {
-			manager.AddUserEntity(userData.SID, proto.X, proto.Y, proto.Payload)
-		})
 	}
 
 	manager.AddUserEntity(userData.SID, proto.X, proto.Y, proto.Payload)
+	logger.Sysf("handleRoomBroadcastLoD", "userID", userData.SID, "x", proto.X, "y", proto.Y)
 	userData.ServerRespond(nil, ver, cmd, server.Ok, true)
 	next(nil)
 }
@@ -99,7 +97,6 @@ func handleRoomGetLoDInfo(ver uint8, cmd uint16, payload []byte, userData *user.
 }
 
 func setupLod() {
-	//	setupCallbacks()
 	loadLodConfigs(configPath)
 }
 
