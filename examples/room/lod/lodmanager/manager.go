@@ -51,11 +51,15 @@ func (m *Manager) AddUserEntity(userID string, x int32, y int32, payload []byte)
 }
 
 // RemoveUserEntity removes a user entity from the manager
+// and remove remember data of other user entities
 func (m *Manager) RemoveUserEntity(userID string) {
 	if _, ok := m.userEntities[userID]; !ok {
 		return
 	}
 	delete(m.userEntities, userID)
+	for _, userEntity := range m.userEntities {
+		userEntity.Remember.clearBy(userID)
+	}
 }
 
 // send packets to nearby users

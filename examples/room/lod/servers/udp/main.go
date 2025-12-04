@@ -44,11 +44,7 @@ func main() {
 	diarkisexec.SetServerCommandHandler(proom.BroadcastLoDVer, proom.BroadcastLoDCmd, handleRoomBroadcastLoD)
 	diarkisexec.SetServerCommandHandler(proom.GetLoDInfoVer, proom.GetLoDInfoCmd, handleRoomGetLoDInfo)
 
-	room.SetOnRoomDiscard(func(roomID string) {
-		lodmanager.RemoveRoomManager(roomID)
-	})
-
-	loadLodConfigs(configPath)
+	setupLod()
 	diarkisexec.StartDiarkis()
 }
 
@@ -69,10 +65,22 @@ func handleRoomBroadcastLoD(ver uint8, cmd uint16, payload []byte, userData *use
 	}
 
 	manager := lodmanager.GetRoomManager(roomID)
+	// when room is not setup for lod
+	// This if clause is executed only once when the lod broadcast command is received
 	if manager == nil {
 		manager = lodmanager.NewManager(ver, cmd, SyncIntervalForNearby, SyncIntervalForFar, MaxDistanceForNearby, MaxDistanceForFar)
 		lodmanager.SetRoomManager(roomID, manager)
+		room.SetOnRoomDiscardByID(roomID, func(roomID string) {
+			lodmanager.RemoveRoomManager(roomID)
+		})
+		room.SetOnLeaveByID(roomID, func(roomID string, userData *user.User) {
+			manager.RemoveUserEntity(userData.SID)
+		})
+		room.SetOnJoinCompleteByID(roomID, func(roomID string, userData *user.User) {
+			manager.AddUserEntity(userData.SID, proto.X, proto.Y, proto.Payload)
+		})
 	}
+
 	manager.AddUserEntity(userData.SID, proto.X, proto.Y, proto.Payload)
 	userData.ServerRespond(nil, ver, cmd, server.Ok, true)
 	next(nil)
@@ -88,6 +96,11 @@ func handleRoomGetLoDInfo(ver uint8, cmd uint16, payload []byte, userData *user.
 
 	userData.ServerRespond(lodInfo.Pack(), ver, cmd, server.Ok, true)
 	next(nil)
+}
+
+func setupLod() {
+	//	setupCallbacks()
+	loadLodConfigs(configPath)
 }
 
 func loadLodConfigs(confPath string) {
