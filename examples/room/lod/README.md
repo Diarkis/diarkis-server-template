@@ -408,4 +408,4 @@ TODO: エラー定義
 
 ---
 
-_First created on 2025-11-26. Updated on 2025-11-26._
+_First created on 2025-11-26. Updated on 2025-12-04._
