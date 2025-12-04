@@ -22,8 +22,7 @@ var udpLod *lod
 func main() {
 	cli.SetupBuiltInRoomCommands()
 	cli.RegisterCommands("lod", []cli.Command{
-		{CmdName: "b", Desc: "Broadcast the LoD(alias of broadcast)", CmdFunc: broadcastLoD},
-		{CmdName: "broadcast", Desc: "Broadcast the LoD", CmdFunc: broadcastLoD},
+		{CmdName: "broadcast", AliasName: "b", Desc: "Broadcast the LoD", CmdFunc: broadcastLoD},
 		{CmdName: "getinfo", Desc: "Get the LoD configuration", CmdFunc: getLoDInfo},
 	})
 	cli.Connect()
