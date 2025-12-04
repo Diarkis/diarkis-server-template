@@ -4,10 +4,11 @@ package lodmanager
 
 import (
 	"sync"
+	"time"
 )
 
 type cache struct {
-	m map[cacheKey][]byte
+	m map[cacheKey]time.Time
 	k map[string]map[cacheKey]struct{}
 	sync.RWMutex
 }
@@ -18,20 +19,20 @@ type cacheKey struct {
 }
 
 func newCache() *cache {
-	c := &cache{m: make(map[cacheKey][]byte), k: make(map[string]map[cacheKey]struct{})}
+	c := &cache{m: make(map[cacheKey]time.Time), k: make(map[string]map[cacheKey]struct{})}
 	return c
 }
 
-func (c *cache) get(key cacheKey) ([]byte, bool) {
+func (c *cache) get(key cacheKey) time.Time {
 	c.RLock()
 	defer c.RUnlock()
 
-	v, ok := c.m[key]
+	v := c.m[key]
 
-	return v, ok
+	return v
 }
 
-func (c *cache) set(key cacheKey, data []byte) bool {
+func (c *cache) set(key cacheKey, data time.Time) {
 	c.Lock()
 	defer c.Unlock()
 
@@ -47,17 +48,15 @@ func (c *cache) set(key cacheKey, data []byte) bool {
 
 	c.k[key.a][key] = struct{}{}
 	c.k[key.b][key] = struct{}{}
-
-	return true
 }
 
 // clears all cache by cacheKey's a or b
-func (c *cache) clearBy(cacheKeyFragment string) bool {
+func (c *cache) clearBy(cacheKeyFragment string) {
 	c.Lock()
 	defer c.Unlock()
 
 	if _, ok := c.k[cacheKeyFragment]; !ok {
-		return false
+		return
 	}
 
 	keys := c.k[cacheKeyFragment]
@@ -67,13 +66,13 @@ func (c *cache) clearBy(cacheKeyFragment string) bool {
 	}
 	delete(c.k, cacheKeyFragment)
 
-	return true
+	return
 }
 
 func (c *cache) clear() {
 	c.Lock()
 	defer c.Unlock()
 
-	c.m = make(map[cacheKey][]byte)
+	c.m = make(map[cacheKey]time.Time)
 	c.k = make(map[string]map[cacheKey]struct{})
 }
