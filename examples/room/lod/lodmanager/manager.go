@@ -4,6 +4,7 @@ package lodmanager
 
 import (
 	"fmt"
+	"maps"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -84,7 +85,7 @@ func (m *Manager) invokeLodLoop() {
 		time.Sleep(time.Duration(m.syncIntervalForNearby) * time.Millisecond)
 		start := time.Now()
 		m.managerMapMutex.Lock()
-		userEntities := m.userEntities
+		userEntities := maps.Clone(m.userEntities)
 		m.managerMapMutex.Unlock()
 		for senderUserID, senderUserEntity := range userEntities {
 			if senderUserEntity == nil {
@@ -105,12 +106,12 @@ func (m *Manager) invokeLodLoop() {
 				if distance <= m.maxDistanceForNearby {
 					if receiverUserEntity.ChangedAfterSend {
 						addToSendList(&nearbyUserIDs, senderUserEntity, receiverUserID)
-						logger.Debugf("invokeLodLoop", "from", senderUserID, "to", receiverUserID, "distance", distance, "interval", m.syncIntervalForNearby)
+						logger.Verbosef("invokeLodLoop", "from", senderUserID, "to", receiverUserID, "distance", distance, "mode", "nearby-changed", "interval", m.syncIntervalForNearby)
 						continue
 					} else {
 						if time.Since(getLastSendAt(senderUserEntity, receiverUserID)) > time.Duration(m.syncIntervalForFar)*time.Millisecond {
 							addToSendList(&nearbyUserIDs, senderUserEntity, receiverUserID)
-							logger.Debugf("invokeLodLoop", "from", senderUserID, "to", receiverUserID, "distance", distance, "interval", m.syncIntervalForFar)
+							logger.Verbosef("invokeLodLoop", "from", senderUserID, "to", receiverUserID, "distance", distance, "mode", "nearby-interval", "interval", m.syncIntervalForFar)
 							continue
 						}
 					}
@@ -122,10 +123,17 @@ func (m *Manager) invokeLodLoop() {
 					// syncIntervalForFar and maxDistanceForFar is larger than
 					// syncIntervalForNearby and maxDistanceForNearby always
 					// cf. func loadLodConfigs()
-					interval := (m.syncIntervalForFar - m.syncIntervalForNearby) * (distance - m.maxDistanceForNearby) / (m.maxDistanceForFar - m.maxDistanceForNearby)
-					if time.Since(getLastSendAt(senderUserEntity, receiverUserID)) > time.Duration(interval)*time.Millisecond {
-						addToSendList(&nearbyUserIDs, senderUserEntity, receiverUserID)
-						logger.Debugf("invokeLodLoop", "from", senderUserID, "to", receiverUserID, "distance", distance, "interval", interval)
+					if receiverUserEntity.ChangedAfterSend {
+						interval := (m.syncIntervalForFar - m.syncIntervalForNearby) * (distance - m.maxDistanceForNearby) / (m.maxDistanceForFar - m.maxDistanceForNearby)
+						if time.Since(getLastSendAt(senderUserEntity, receiverUserID)) > time.Duration(interval)*time.Millisecond {
+							addToSendList(&nearbyUserIDs, senderUserEntity, receiverUserID)
+							logger.Verbosef("invokeLodLoop", "from", senderUserID, "to", receiverUserID, "distance", distance, "mode", "far-changed", "interval", interval)
+						}
+					} else {
+						if time.Since(getLastSendAt(senderUserEntity, receiverUserID)) > time.Duration(m.syncIntervalForFar)*time.Millisecond {
+							addToSendList(&nearbyUserIDs, senderUserEntity, receiverUserID)
+							logger.Verbosef("invokeLodLoop", "from", senderUserID, "to", receiverUserID, "distance", distance, "mode", "far-interval", "interval", m.syncIntervalForFar)
+						}
 					}
 				}
 			}
