@@ -69,13 +69,15 @@ func handleRoomBroadcastLoD(ver uint8, cmd uint16, payload []byte, userData *use
 	// This if clause is executed only once when the lod broadcast command is received
 	if manager == nil {
 		manager = lodmanager.NewManager(ver, cmd, SyncIntervalForNearby, SyncIntervalForFar, MaxDistanceForNearby, MaxDistanceForFar)
-		lodmanager.SetRoomManager(roomID, manager)
-		room.SetOnRoomDiscardByID(roomID, func(roomID string) {
-			lodmanager.RemoveRoomManager(roomID)
-		})
-		room.SetOnLeaveByID(roomID, func(roomID string, userData *user.User) {
-			manager.RemoveUserEntity(userData.SID)
-		})
+		if manager != nil {
+			lodmanager.SetRoomManager(roomID, manager)
+			room.SetOnRoomDiscardByID(roomID, func(roomID string) {
+				lodmanager.RemoveRoomManager(roomID)
+			})
+			room.SetOnLeaveByID(roomID, func(roomID string, userData *user.User) {
+				manager.RemoveUserEntity(userData.SID)
+			})
+		}
 	}
 
 	manager.AddUserEntity(userData.SID, proto.X, proto.Y, proto.Payload)

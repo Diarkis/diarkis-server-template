@@ -4,6 +4,7 @@ package lodmanager
 
 import (
 	"fmt"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -21,6 +22,7 @@ type Manager struct {
 	syncIntervalForFar    int32
 	maxDistanceForNearby  int32
 	maxDistanceForFar     int32
+	managerMapMutex       sync.Mutex
 }
 
 func (m *Manager) String() string {
@@ -39,20 +41,27 @@ func NewManager(ver uint8, cmd uint16, syncIntervalForNearby int32, syncInterval
 		userEntities:          make(map[string]*UserEntity),
 		started:               &atomic.Bool{},
 	}
-	lm.started.Store(true)
-	logger.Debugf("NewManager", "syncIntervalForNearby", syncIntervalForNearby, "syncIntervalForFar", syncIntervalForFar, "maxDistanceForNearby", maxDistanceForNearby, "maxDistanceForFar", maxDistanceForFar)
-	go lm.invokeLodLoop()
-	return lm
+
+	if lm.started.CompareAndSwap(false, true) {
+		go lm.invokeLodLoop()
+		logger.Debugf("NewManager", "syncIntervalForNearby", syncIntervalForNearby, "syncIntervalForFar", syncIntervalForFar, "maxDistanceForNearby", maxDistanceForNearby, "maxDistanceForFar", maxDistanceForFar)
+		return lm
+	}
+	return nil
 }
 
 // AddUserEntity adds or updates a user entity with position and payload data
 func (m *Manager) AddUserEntity(userID string, x int32, y int32, payload []byte) {
+	m.managerMapMutex.Lock()
+	defer m.managerMapMutex.Unlock()
 	m.userEntities[userID] = NewUserEntity(x, y, payload)
 }
 
 // RemoveUserEntity removes a user entity from the manager
 // and remove remember data of other user entities
 func (m *Manager) RemoveUserEntity(userID string) {
+	m.managerMapMutex.Lock()
+	defer m.managerMapMutex.Unlock()
 	if _, ok := m.userEntities[userID]; !ok {
 		return
 	}
@@ -74,13 +83,16 @@ func (m *Manager) invokeLodLoop() {
 		}
 		time.Sleep(time.Duration(m.syncIntervalForNearby) * time.Millisecond)
 		start := time.Now()
-		for senderUserID, senderUserEntity := range m.userEntities {
+		m.managerMapMutex.Lock()
+		userEntities := m.userEntities
+		m.managerMapMutex.Unlock()
+		for senderUserID, senderUserEntity := range userEntities {
 			if senderUserEntity == nil {
 				m.RemoveUserEntity(senderUserID)
 				continue
 			}
-			nearbyUserIDs := make([]string, 0, len(m.userEntities))
-			for receiverUserID, receiverUserEntity := range m.userEntities {
+			nearbyUserIDs := make([]string, 0, len(userEntities))
+			for receiverUserID, receiverUserEntity := range userEntities {
 				if senderUserID == receiverUserID {
 					continue
 				}
