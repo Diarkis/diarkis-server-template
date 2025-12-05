@@ -34,6 +34,6 @@ func RemoveRoomManager(roomID string) {
 	if _, ok := managerMap[roomID]; !ok {
 		return
 	}
-	managerMap[roomID].started.Store(false)
+	managerMap[roomID].Stop()
 	delete(managerMap, roomID)
 }

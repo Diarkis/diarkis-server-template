@@ -24,19 +24,21 @@ type sendMessage struct {
 // Manager manages LOD (Level of Detail) synchronization for users
 type Manager struct {
 	userEntities          map[string]*UserEntity
-	started               *atomic.Bool
+	started               atomic.Bool
 	ver                   uint8
 	cmd                   uint16
 	syncIntervalForNearby int32
 	syncIntervalForFar    int32
 	maxDistanceForNearby  int32
 	maxDistanceForFar     int32
-	managerMapMutex       sync.Mutex
+	managerMapMutex       sync.RWMutex
 	sendBuffer            chan sendMessage
 	senderWg              sync.WaitGroup
 }
 
 func (m *Manager) String() string {
+	m.managerMapMutex.RLock()
+	defer m.managerMapMutex.RUnlock()
 	return fmt.Sprintf("Manager{userEntities: %v, started: %v, ver: %v, cmd: %v, syncIntervalForNearby: %v, syncIntervalForFar: %v, maxDistanceForNearby: %v, maxDistanceForFar: %v}", m.userEntities, m.started, m.ver, m.cmd, m.syncIntervalForNearby, m.syncIntervalForFar, m.maxDistanceForNearby, m.maxDistanceForFar)
 }
 
@@ -50,22 +52,21 @@ func NewManager(ver uint8, cmd uint16, syncIntervalForNearby int32, syncInterval
 		maxDistanceForNearby:  maxDistanceForNearby,
 		maxDistanceForFar:     maxDistanceForFar,
 		userEntities:          make(map[string]*UserEntity),
-		started:               &atomic.Bool{},
+		started:               atomic.Bool{},
 		sendBuffer:            make(chan sendMessage, 10000), // Buffer size: 10000
 	}
 
-	if lm.started.CompareAndSwap(false, true) {
-		// Start send worker goroutine
-		lm.senderWg.Add(1)
-		go lm.sendWorker()
+	lm.started.Store(true)
 
-		// Start LOD loop
-		go lm.invokeLodLoop()
+	// Start send worker goroutine
+	lm.senderWg.Add(1)
+	go lm.sendWorker()
 
-		logger.Debugf("NewManager", "syncIntervalForNearby", syncIntervalForNearby, "syncIntervalForFar", syncIntervalForFar, "maxDistanceForNearby", maxDistanceForNearby, "maxDistanceForFar", maxDistanceForFar)
-		return lm
-	}
-	return nil
+	// Start LOD loop
+	go lm.invokeLodLoop()
+
+	logger.Debugf("NewManager", "syncIntervalForNearby", syncIntervalForNearby, "syncIntervalForFar", syncIntervalForFar, "maxDistanceForNearby", maxDistanceForNearby, "maxDistanceForFar", maxDistanceForFar)
+	return lm
 }
 
 // AddUserEntity adds or updates a user entity with position and payload data
@@ -106,7 +107,6 @@ func (m *Manager) sendWorker() {
 // Stop stops the LOD manager and waits for send worker to finish
 func (m *Manager) Stop() {
 	m.started.Store(false)
-	close(m.sendBuffer)
 	m.senderWg.Wait()
 	logger.Debugf("Manager stopped")
 }
@@ -133,7 +133,7 @@ func (m *Manager) shouldSendUpdate(
 		}
 
 		if time.Since(getLastSendAt(senderEntity, receiverID)) > time.Duration(m.syncIntervalForFar)*time.Millisecond {
-			logger.Verbosef("invokeLodLoop", "from", senderID, "to", receiverID, "distance", distance, "mode", "nearby-interval", "interval", m.syncIntervalForFar)
+			logger.Verbosef("invokeLodLoop", "from", senderID, "to", receiverID, "distance", distance, "mode", "nearby-unchanged", "interval", m.syncIntervalForFar)
 			return true
 		}
 		return false
@@ -152,7 +152,7 @@ func (m *Manager) shouldSendUpdate(
 			}
 		} else {
 			if time.Since(getLastSendAt(senderEntity, receiverID)) > time.Duration(m.syncIntervalForFar)*time.Millisecond {
-				logger.Verbosef("invokeLodLoop", "from", senderID, "to", receiverID, "distance", distance, "mode", "far-interval", "interval", m.syncIntervalForFar)
+				logger.Verbosef("invokeLodLoop", "from", senderID, "to", receiverID, "distance", distance, "mode", "far-unchanged", "interval", m.syncIntervalForFar)
 				return true
 			}
 		}
@@ -217,15 +217,11 @@ func (m *Manager) processSingleSender(
 // processAllUsers processes all users in the manager
 func (m *Manager) processAllUsers() {
 	start := time.Now()
-	m.managerMapMutex.Lock()
+	m.managerMapMutex.RLock()
 	userEntities := maps.Clone(m.userEntities)
-	m.managerMapMutex.Unlock()
+	m.managerMapMutex.RUnlock()
 
 	for senderUserID, senderUserEntity := range userEntities {
-		if senderUserEntity == nil {
-			m.RemoveUserEntity(senderUserID)
-			continue
-		}
 		m.processSingleSender(senderUserID, senderUserEntity, userEntities)
 	}
 
@@ -244,6 +240,7 @@ func (m *Manager) invokeLodLoop() {
 		time.Sleep(time.Duration(m.syncIntervalForNearby) * time.Millisecond)
 		m.processAllUsers()
 	}
+	close(m.sendBuffer)
 }
 
 // calculateDistance computes Manhattan distance between two entities
