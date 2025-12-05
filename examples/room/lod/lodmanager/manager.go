@@ -72,8 +72,7 @@ func NewManager(ver uint8, cmd uint16, syncIntervalForNearby int32, syncInterval
 func (m *Manager) AddUserEntity(userID string, x int32, y int32, payload []byte) {
 	m.managerMapMutex.Lock()
 	defer m.managerMapMutex.Unlock()
-	if m.userEntities[userID] != nil { // update
-		userEntity := m.userEntities[userID]
+	if userEntity, ok := m.userEntities[userID]; ok { // update
 		userEntity.Payload = payload
 		userEntity.X = x
 		userEntity.Y = y
@@ -191,6 +190,10 @@ func (m *Manager) processSenderReceiverPair(
 }
 
 // processSingleSender processes all receivers for one sender
+// NOTE: processSingleSender is now looping through each sender and sending packets to each receiver,
+// but if we loop through each receiver and send the packets in batches,
+// we can reduce packet transmission loads.
+// TODO: Optimize this and batch the packets
 func (m *Manager) processSingleSender(
 	senderUserID string,
 	senderUserEntity *UserEntity,
@@ -204,7 +207,7 @@ func (m *Manager) processSingleSender(
 			nearbyUserIDs = addToSendList(nearbyUserIDs, senderUserEntity, receiverID)
 		}
 	}
-	// send messages to packet 	sender worker
+	// send messages to packet sender worker
 	if len(nearbyUserIDs) > 0 {
 		for _, receiverUserID := range nearbyUserIDs {
 			select {
