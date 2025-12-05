@@ -87,7 +87,9 @@ func (m *Manager) RemoveUserEntity(userID string) {
 	delete(m.userEntities, userID)
 	// delete from others remember data
 	for _, userEntity := range m.userEntities {
+		userEntity.RememberMutex.Lock()
 		delete(userEntity.Remember, userID)
+		userEntity.RememberMutex.Unlock()
 	}
 }
 
@@ -256,5 +258,7 @@ func addToSendList(nearbyUserIDs []string, senderUserEntity *UserEntity, receive
 }
 
 func getLastSendAt(senderUserEntity *UserEntity, receiverUserID string) time.Time {
+	senderUserEntity.RememberMutex.RLock()
+	defer senderUserEntity.RememberMutex.RUnlock()
 	return senderUserEntity.Remember[receiverUserID]
 }

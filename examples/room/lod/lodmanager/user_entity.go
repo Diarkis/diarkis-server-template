@@ -4,6 +4,7 @@ package lodmanager
 
 import (
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -13,6 +14,7 @@ type UserEntity struct {
 	Y                int32
 	Payload          []byte
 	Remember         map[string]time.Time
+	RememberMutex    sync.RWMutex
 	ChangedAfterSend bool
 }
 
