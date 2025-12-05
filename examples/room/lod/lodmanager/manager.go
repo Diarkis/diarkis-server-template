@@ -73,6 +73,14 @@ func NewManager(ver uint8, cmd uint16, syncIntervalForNearby int32, syncInterval
 func (m *Manager) AddUserEntity(userID string, x int32, y int32, payload []byte) {
 	m.managerMapMutex.Lock()
 	defer m.managerMapMutex.Unlock()
+	if m.userEntities[userID] != nil {
+		userEntity := m.userEntities[userID]
+		userEntity.Payload = payload
+		userEntity.X = x
+		userEntity.Y = y
+		userEntity.ChangedAfterSend = true
+		return
+	}
 	m.userEntities[userID] = NewUserEntity(x, y, payload)
 }
 
@@ -149,12 +157,12 @@ func (m *Manager) shouldSendUpdate(
 		if senderEntity.ChangedAfterSend {
 			interval := (m.syncIntervalForFar - m.syncIntervalForNearby) * (distance - m.maxDistanceForNearby) / (m.maxDistanceForFar - m.maxDistanceForNearby)
 			if time.Since(getLastSendAt(senderEntity, receiverID)) > time.Duration(interval)*time.Millisecond {
-				logger.Verbosef("shouldSendUpdate", "from", senderID, "to", receiverID, "distance", distance, "mode", "far-changed", "interval", interval)
+				logger.Verbosef("shouldSendUpdate", "from", senderID, "to", receiverID, "distance", distance, "mode", "far-changed", "interval", interval, "since", time.Since(getLastSendAt(senderEntity, receiverID)))
 				return true
 			}
 		} else {
 			if time.Since(getLastSendAt(senderEntity, receiverID)) > time.Duration(m.syncIntervalForFar)*time.Millisecond {
-				logger.Verbosef("shouldSendUpdate", "from", senderID, "to", receiverID, "distance", distance, "mode", "far-unchanged", "interval", m.syncIntervalForFar)
+				logger.Verbosef("shouldSendUpdate", "from", senderID, "to", receiverID, "distance", distance, "mode", "far-unchanged", "interval", m.syncIntervalForFar, "since", time.Since(getLastSendAt(senderEntity, receiverID)))
 				return true
 			}
 		}
@@ -218,7 +226,7 @@ func (m *Manager) processSingleSender(
 
 // processAllUsers processes all users in the manager
 func (m *Manager) processAllUsers() {
-	start := time.Now()
+	//start := time.Now()
 	m.managerMapMutex.RLock()
 	userEntities := maps.Clone(m.userEntities)
 	m.managerMapMutex.RUnlock()
@@ -227,7 +235,7 @@ func (m *Manager) processAllUsers() {
 		m.processSingleSender(senderUserID, senderUserEntity, userEntities)
 	}
 
-	logger.Verbosef("invokeLodLoop", "time", time.Since(start))
+	//logger.Verbosef("invokeLodLoop", "time", time.Since(start))
 }
 
 // send packets to nearby users
