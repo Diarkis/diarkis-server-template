@@ -65,7 +65,6 @@ func NewManager(ver uint8, cmd uint16, syncIntervalForNearby int32, syncInterval
 	// Start LOD loop
 	go lm.invokeLodLoop()
 
-	logger.Debugf("NewManager", "syncIntervalForNearby", syncIntervalForNearby, "syncIntervalForFar", syncIntervalForFar, "maxDistanceForNearby", maxDistanceForNearby, "maxDistanceForFar", maxDistanceForFar)
 	return lm
 }
 
@@ -73,7 +72,7 @@ func NewManager(ver uint8, cmd uint16, syncIntervalForNearby int32, syncInterval
 func (m *Manager) AddUserEntity(userID string, x int32, y int32, payload []byte) {
 	m.managerMapMutex.Lock()
 	defer m.managerMapMutex.Unlock()
-	if m.userEntities[userID] != nil {
+	if m.userEntities[userID] != nil { // update
 		userEntity := m.userEntities[userID]
 		userEntity.Payload = payload
 		userEntity.X = x
@@ -111,14 +110,12 @@ func (m *Manager) sendWorker() {
 			receiverUser.PushToClient(msg.ver, msg.cmd, msg.payload, packet.Unreliable)
 		}
 	}
-	logger.Debugf("sendWorker stopped")
 }
 
 // Stop stops the LOD manager and waits for send worker to finish
 func (m *Manager) Stop() {
 	m.started.Store(false)
 	m.senderWg.Wait()
-	logger.Debugf("Manager stopped")
 }
 
 // shouldSendUpdate determines if an update should be sent to a receiver
@@ -138,12 +135,12 @@ func (m *Manager) shouldSendUpdate(
 	// nearer than maxDistanceForNearby -> send based on nearby rules
 	if distance <= m.maxDistanceForNearby {
 		if senderEntity.ChangedAfterSend {
-			logger.Verbosef("shouldSendUpdate", "from", senderID, "to", receiverID, "distance", distance, "mode", "nearby-changed", "interval", m.syncIntervalForNearby)
+			//logger.Verbosef("shouldSendUpdate", "from", senderID, "to", receiverID, "distance", distance, "mode", "nearby-changed", "interval", m.syncIntervalForNearby)
 			return true
 		}
 
 		if time.Since(getLastSendAt(senderEntity, receiverID)) > time.Duration(m.syncIntervalForFar)*time.Millisecond {
-			logger.Verbosef("shouldSendUpdate", "from", senderID, "to", receiverID, "distance", distance, "mode", "nearby-unchanged", "interval", m.syncIntervalForFar)
+			//logger.Verbosef("shouldSendUpdate", "from", senderID, "to", receiverID, "distance", distance, "mode", "nearby-unchanged", "interval", m.syncIntervalForFar)
 			return true
 		}
 		return false
@@ -157,12 +154,12 @@ func (m *Manager) shouldSendUpdate(
 		if senderEntity.ChangedAfterSend {
 			interval := (m.syncIntervalForFar - m.syncIntervalForNearby) * (distance - m.maxDistanceForNearby) / (m.maxDistanceForFar - m.maxDistanceForNearby)
 			if time.Since(getLastSendAt(senderEntity, receiverID)) > time.Duration(interval)*time.Millisecond {
-				logger.Verbosef("shouldSendUpdate", "from", senderID, "to", receiverID, "distance", distance, "mode", "far-changed", "interval", interval, "since", time.Since(getLastSendAt(senderEntity, receiverID)))
+				//logger.Verbosef("shouldSendUpdate", "from", senderID, "to", receiverID, "distance", distance, "mode", "far-changed", "interval", interval, "since", time.Since(getLastSendAt(senderEntity, receiverID)))
 				return true
 			}
 		} else {
 			if time.Since(getLastSendAt(senderEntity, receiverID)) > time.Duration(m.syncIntervalForFar)*time.Millisecond {
-				logger.Verbosef("shouldSendUpdate", "from", senderID, "to", receiverID, "distance", distance, "mode", "far-unchanged", "interval", m.syncIntervalForFar, "since", time.Since(getLastSendAt(senderEntity, receiverID)))
+				//logger.Verbosef("shouldSendUpdate", "from", senderID, "to", receiverID, "distance", distance, "mode", "far-unchanged", "interval", m.syncIntervalForFar, "since", time.Since(getLastSendAt(senderEntity, receiverID)))
 				return true
 			}
 		}
@@ -226,7 +223,7 @@ func (m *Manager) processSingleSender(
 
 // processAllUsers processes all users in the manager
 func (m *Manager) processAllUsers() {
-	//start := time.Now()
+	start := time.Now()
 	m.managerMapMutex.RLock()
 	userEntities := maps.Clone(m.userEntities)
 	m.managerMapMutex.RUnlock()
@@ -235,7 +232,7 @@ func (m *Manager) processAllUsers() {
 		m.processSingleSender(senderUserID, senderUserEntity, userEntities)
 	}
 
-	//logger.Verbosef("invokeLodLoop", "time", time.Since(start))
+	logger.Debugf("invokeLodLoop", "time", time.Since(start))
 }
 
 // send packets to nearby users
