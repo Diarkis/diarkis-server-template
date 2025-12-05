@@ -71,6 +71,7 @@ func handleRoomBroadcastLoD(ver uint8, cmd uint16, payload []byte, userData *use
 		manager = lodmanager.NewManager(ver, cmd, SyncIntervalForNearby, SyncIntervalForFar, MaxDistanceForNearby, MaxDistanceForFar)
 		if manager != nil {
 			lodmanager.SetRoomManager(roomID, manager)
+			// set room and member cleanup handlers
 			room.SetOnRoomDiscardByID(roomID, func(roomID string) {
 				lodmanager.RemoveRoomManager(roomID)
 			})
@@ -87,7 +88,6 @@ func handleRoomBroadcastLoD(ver uint8, cmd uint16, payload []byte, userData *use
 }
 
 func handleRoomGetLoDInfo(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
-	// TODO: Get the LoD information from configuration
 	lodInfo := proom.NewGetLoDInfoResponse()
 	lodInfo.SyncIntervalForNearby = int32(SyncIntervalForNearby)
 	lodInfo.SyncIntervalForFar = int32(SyncIntervalForFar)
