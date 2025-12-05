@@ -129,13 +129,13 @@ func (m *Manager) shouldSendUpdate(
 
 	// nearer than maxDistanceForNearby -> send based on nearby rules
 	if distance <= m.maxDistanceForNearby {
-		if receiverEntity.ChangedAfterSend {
-			logger.Verbosef("invokeLodLoop", "from", senderID, "to", receiverID, "distance", distance, "mode", "nearby-changed", "interval", m.syncIntervalForNearby)
+		if senderEntity.ChangedAfterSend {
+			logger.Verbosef("shouldSendUpdate", "from", senderID, "to", receiverID, "distance", distance, "mode", "nearby-changed", "interval", m.syncIntervalForNearby)
 			return true
 		}
 
 		if time.Since(getLastSendAt(senderEntity, receiverID)) > time.Duration(m.syncIntervalForFar)*time.Millisecond {
-			logger.Verbosef("invokeLodLoop", "from", senderID, "to", receiverID, "distance", distance, "mode", "nearby-unchanged", "interval", m.syncIntervalForFar)
+			logger.Verbosef("shouldSendUpdate", "from", senderID, "to", receiverID, "distance", distance, "mode", "nearby-unchanged", "interval", m.syncIntervalForFar)
 			return true
 		}
 		return false
@@ -146,15 +146,15 @@ func (m *Manager) shouldSendUpdate(
 		// syncIntervalForFar and maxDistanceForFar is larger than
 		// syncIntervalForNearby and maxDistanceForNearby always
 		// cf. func loadLodConfigs()
-		if receiverEntity.ChangedAfterSend {
+		if senderEntity.ChangedAfterSend {
 			interval := (m.syncIntervalForFar - m.syncIntervalForNearby) * (distance - m.maxDistanceForNearby) / (m.maxDistanceForFar - m.maxDistanceForNearby)
 			if time.Since(getLastSendAt(senderEntity, receiverID)) > time.Duration(interval)*time.Millisecond {
-				logger.Verbosef("invokeLodLoop", "from", senderID, "to", receiverID, "distance", distance, "mode", "far-changed", "interval", interval)
+				logger.Verbosef("shouldSendUpdate", "from", senderID, "to", receiverID, "distance", distance, "mode", "far-changed", "interval", interval)
 				return true
 			}
 		} else {
 			if time.Since(getLastSendAt(senderEntity, receiverID)) > time.Duration(m.syncIntervalForFar)*time.Millisecond {
-				logger.Verbosef("invokeLodLoop", "from", senderID, "to", receiverID, "distance", distance, "mode", "far-unchanged", "interval", m.syncIntervalForFar)
+				logger.Verbosef("shouldSendUpdate", "from", senderID, "to", receiverID, "distance", distance, "mode", "far-unchanged", "interval", m.syncIntervalForFar)
 				return true
 			}
 		}
@@ -227,7 +227,7 @@ func (m *Manager) processAllUsers() {
 		m.processSingleSender(senderUserID, senderUserEntity, userEntities)
 	}
 
-	logger.Debugf("invokeLodLoop", "time", time.Since(start))
+	logger.Verbosef("invokeLodLoop", "time", time.Since(start))
 }
 
 // send packets to nearby users
