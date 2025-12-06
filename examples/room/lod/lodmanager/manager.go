@@ -39,7 +39,8 @@ type Manager struct {
 func (m *Manager) String() string {
 	m.managerMapMutex.RLock()
 	defer m.managerMapMutex.RUnlock()
-	return fmt.Sprintf("Manager{userEntities: %v, started: %v, ver: %v, cmd: %v, syncIntervalForNearby: %v, syncIntervalForFar: %v, maxDistanceForNearby: %v, maxDistanceForFar: %v}", m.userEntities, m.started, m.ver, m.cmd, m.syncIntervalForNearby, m.syncIntervalForFar, m.maxDistanceForNearby, m.maxDistanceForFar)
+	return fmt.Sprintf("Manager{userEntities: %v, started: %v, ver: %v, cmd: %v, syncIntervalForNearby: %v, syncIntervalForFar: %v,	 maxDistanceForNearby: %v, maxDistanceForFar: %v}",
+		m.userEntities, m.started.Load(), m.ver, m.cmd, m.syncIntervalForNearby, m.syncIntervalForFar, m.maxDistanceForNearby, m.maxDistanceForFar)
 }
 
 // NewManager creates a new LOD manager with the specified configuration
@@ -189,27 +190,19 @@ func (m *Manager) processSenderReceiverPair(
 	return ""
 }
 
-// processSingleSender processes all receivers for one sender
-// NOTE: processSingleSender is now looping through each sender and sending packets to each receiver,
-// but if we loop through each receiver and send the packets in batches,
-// we can reduce packet transmission loads.
-// TODO: Optimize this and batch the packets
-func (m *Manager) processSingleSender(
-	senderUserID string,
-	senderUserEntity *UserEntity,
+// processSingleReceiver processes all senders for one receiver
+func (m *Manager) processSingleReceiver(
+	receiverUserID string,
+	receiverUserEntity *UserEntity,
 	userEntities map[string]*UserEntity,
 ) {
-	nearbyUserIDs := make([]string, 0, len(userEntities))
+	for senderUserID, senderUserEntity := range userEntities {
+		targetID := m.processSenderReceiverPair(senderUserID, senderUserEntity, receiverUserID, receiverUserEntity)
+		if targetID != "" {
+			senderUserEntity.RememberMutex.Lock()
+			senderUserEntity.Remember[receiverUserID] = time.Now()
+			senderUserEntity.RememberMutex.Unlock()
 
-	for receiverUserID, receiverUserEntity := range userEntities {
-		receiverID := m.processSenderReceiverPair(senderUserID, senderUserEntity, receiverUserID, receiverUserEntity)
-		if receiverID != "" {
-			nearbyUserIDs = addToSendList(nearbyUserIDs, senderUserEntity, receiverID)
-		}
-	}
-	// send messages to packet sender worker
-	if len(nearbyUserIDs) > 0 {
-		for _, receiverUserID := range nearbyUserIDs {
 			select {
 			case m.sendBuffer <- sendMessage{
 				receiverUserID: receiverUserID,
@@ -231,8 +224,12 @@ func (m *Manager) processAllUsers() {
 	userEntities := maps.Clone(m.userEntities)
 	m.managerMapMutex.RUnlock()
 
-	for senderUserID, senderUserEntity := range userEntities {
-		m.processSingleSender(senderUserID, senderUserEntity, userEntities)
+	for receiverID, receiverEntity := range userEntities {
+		m.processSingleReceiver(receiverID, receiverEntity, userEntities)
+	}
+
+	for _, userEntity := range userEntities {
+		userEntity.ChangedAfterSend = false
 	}
 
 	logger.Debugf("invokeLodLoop", "time", time.Since(start))
@@ -256,13 +253,6 @@ func (m *Manager) invokeLodLoop() {
 // calculateDistance computes Manhattan distance between two entities
 func calculateDistance(x1, y1, x2, y2 int32) int32 {
 	return abs(x1-x2) + abs(y1-y2)
-}
-
-func addToSendList(nearbyUserIDs []string, senderUserEntity *UserEntity, receiverUserID string) []string {
-	nearbyUserIDs = append(nearbyUserIDs, receiverUserID)
-	senderUserEntity.Remember[receiverUserID] = time.Now()
-	senderUserEntity.ChangedAfterSend = false
-	return nearbyUserIDs
 }
 
 func getLastSendAt(senderUserEntity *UserEntity, receiverUserID string) time.Time {
