@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -32,11 +33,12 @@ const DiarkisClientLogLevel = 70
 var logger *slog.Logger
 
 // metrics
+// metrics
 var botCounter = 0
 var joinedCnt atomic.Int64
 var broadcastSendCnt atomic.Int64
 var broadcastReceiveCnt atomic.Int64
-var createdRoomID string
+var createdRoomMap sync.Map
 
 // sleepTime is in seconds
 var sleepTime int64 = 1
@@ -52,6 +54,7 @@ type bot struct {
 	x                int32 // position x for LOD
 	y                int32 // position y for LOD
 	isCreator        bool  // whether this bot creates a room
+	targetRoomIndex  int   // index of the room this bot should join/create
 }
 
 func (b *bot) isJoined() bool {
@@ -67,7 +70,7 @@ func Run() {
 
 	// Load configuration
 	loadBotConfig()
-	loadBotLodConfig() // Load LOD config from file
+	loadBotLodConfig()
 
 	// Set log level
 	switch logLevel {
@@ -88,6 +91,7 @@ func Run() {
 		"bots", bots,
 		"authInterval", authInterval,
 		"roomSize", roomSize,
+		"averageRoomMember", averageRoomMember,
 		"packetInterval", packetInterval,
 		"packetSize", packetSize,
 		"logLevel", logLevel,
@@ -124,21 +128,43 @@ func printMetrics() {
 
 func spawnBots() {
 	// Calculate how many rooms are needed
-	numRooms := (bots + roomSize - 1) / roomSize
+	// If averageRoomMember is set (>0), use it to calculate numRooms.
+	// Otherwise, default to filling rooms to capacity (roomSize).
+	memberPerRoom := roomSize
+	if averageRoomMember > 0 {
+		memberPerRoom = averageRoomMember
+	}
+	numRooms := (bots + memberPerRoom - 1) / memberPerRoom
+
 	logger.Info("Room creation plan",
 		"totalBots", bots,
 		"roomSize", roomSize,
+		"averageRoomMember", averageRoomMember,
+		"targetMemberPerRoom", memberPerRoom,
 		"numRoomsToCreate", numRooms)
 
 	for i := 0; i < bots; i++ {
 		botUuid, _ := uuid.New()
+		// Determine which room this bot belongs to
+		targetRoomIdx := i % numRooms
+		// The first bot assigned to a room index becomes the creator for that room
+		// This simple logic works because we iterate i=0..bots.
+		// i < numRooms logic was: 0..numRooms-1 are creators.
+		// New logic: We need exactly ONE creator per targetRoomIdx.
+		// We can assign creators where i < numRooms.
+		// e.g. bots=10, numRooms=2.
+		// i=0 -> idx=0. Creator? Yes (0 < 2)
+		// i=1 -> idx=1. Creator? Yes (1 < 2)
+		// i=2 -> idx=0. Creator? No.
+		// ...
 		isCreator := i < numRooms
-		go spawnBot(botUuid.String, isCreator)
+
+		go spawnBot(botUuid.String, isCreator, targetRoomIdx)
 		time.Sleep(time.Millisecond * time.Duration(authInterval))
 	}
 }
 
-func newBot(id string, isCreator bool) *bot {
+func newBot(id string, isCreator bool, targetRoomIndex int) *bot {
 	eResp, err := utils.Endpoint(host, id, protocol)
 	if err != nil {
 		logger.Error("Auth error",
@@ -165,6 +191,7 @@ func newBot(id string, isCreator bool) *bot {
 	bot.state = 0
 	bot.udp = cli
 	bot.isCreator = isCreator
+	bot.targetRoomIndex = targetRoomIndex
 	// Initialize bot position randomly within map boundaries
 	bot.x = utils.RandomInt32(MapMinX, MapMaxX)
 	bot.y = utils.RandomInt32(MapMinY, MapMaxY)
@@ -189,8 +216,8 @@ func newBot(id string, isCreator bool) *bot {
 	return bot
 }
 
-func spawnBot(id string, isCreator bool) {
-	bot := newBot(id, isCreator)
+func spawnBot(id string, isCreator bool, targetRoomIndex int) {
+	bot := newBot(id, isCreator, targetRoomIndex)
 	bm.bots = append(bm.bots, bot)
 }
 
@@ -219,8 +246,7 @@ func createRoom(bot *bot) {
 		roomCli.SetupAsTCP(bot.tcp)
 	}
 
-	// Use JoinRandom - if no rooms exist, it will create one
-
+	// Use Create to make a room.
 	roomCli.Create(uint16(roomSize), false, true, 60, 0)
 	bot.room = roomCli
 
@@ -228,10 +254,13 @@ func createRoom(bot *bot) {
 		if success {
 			joinedCnt.Add(1)
 			bot.state = STATUS_BROADCAST
-			createdRoomID = roomID
+			// Store roomID in map with index
+			createdRoomMap.Store(bot.targetRoomIndex, roomID)
+
 			logger.Info("Room created",
 				"bot.uid", bot.uid,
 				"roomID", roomID,
+				"roomIndex", bot.targetRoomIndex,
 				"createdTime", createdTime,
 				"maxMembers", roomSize)
 		} else {
@@ -275,20 +304,24 @@ func joinRoom(bot *bot) {
 		roomCli.SetupAsTCP(bot.tcp)
 	}
 
-	if createdRoomID == "" {
-		for {
-			time.Sleep(time.Second * 1)
-			logger.Info("Waiting for room to be created",
-				"bot.uid", bot.uid)
-			if createdRoomID != "" {
-				break
-			}
+	var targetRoomID string
+	// Loop until the target room is created
+	for {
+		if val, ok := createdRoomMap.Load(bot.targetRoomIndex); ok {
+			targetRoomID = val.(string)
+			break
 		}
+		time.Sleep(time.Second * 1)
+		logger.Info("Waiting for room to be created",
+			"bot.uid", bot.uid,
+			"targetRoomIndex", bot.targetRoomIndex)
 	}
+
 	logger.Info("Joining room",
 		"bot.uid", bot.uid,
-		"roomID", createdRoomID)
-	roomCli.Join(createdRoomID, []byte(""))
+		"roomID", targetRoomID,
+		"targetRoomIndex", bot.targetRoomIndex)
+	roomCli.Join(targetRoomID, []byte(""))
 	bot.room = roomCli
 
 	roomCli.OnJoin(func(success bool, createdTime uint) {

@@ -16,6 +16,7 @@ var (
 	packetSize            int
 	logLevel              string
 	protocol              string
+	averageRoomMember     int
 	udpClientSendInterval int
 )
 
@@ -28,6 +29,8 @@ const (
 	defaultAuthInterval              = 100
 	roomSizeKey                      = "RoomSize"
 	defaultRoomSize                  = 10
+	averageRoomMemberKey             = "AverageRoomMember"
+	defaultAverageRoomMember         = 0
 	packetIntervalMillisecondKey     = "PacketIntervalMillisecond"
 	defaultPacketIntervalMilliSecond = 100
 	packetSizeKey                    = "PacketSize"
@@ -50,6 +53,7 @@ func loadBotConfig() {
 	bots = int(config.GetAsInt32(configName, botsKey, int32(defaultBots)))
 	authInterval = int(config.GetAsInt32(configName, authIntervalKey, int32(defaultAuthInterval)))
 	roomSize = int(config.GetAsInt32(configName, roomSizeKey, int32(defaultRoomSize)))
+	averageRoomMember = int(config.GetAsInt32(configName, averageRoomMemberKey, int32(defaultAverageRoomMember)))
 	packetInterval = int(config.GetAsInt32(configName, packetIntervalMillisecondKey, int32(defaultPacketIntervalMilliSecond)))
 	packetSize = int(config.GetAsInt32(configName, packetSizeKey, int32(defaultPacketSize)))
 	logLevel = config.GetAsString(configName, logLevelKey, defaultLogLevel)
@@ -62,6 +66,7 @@ func loadBotConfig() {
 		"bots", bots,
 		"authInterval", authInterval,
 		"roomSize", roomSize,
+		"averageRoomMember", averageRoomMember,
 		"packetInterval", packetInterval,
 		"packetSize", packetSize,
 		"logLevel", logLevel,
