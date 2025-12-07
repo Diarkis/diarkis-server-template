@@ -3,61 +3,105 @@
 package app
 
 import (
+	"fmt"
+	"log/slog"
+	"os"
+
 	"github.com/Diarkis/diarkis/config"
 )
 
-// Bot config values
-var (
-	BotStartX        int32 // Starting X position for bots
-	BotStartY        int32 // Starting Y position for bots
-	MapMinX          int32 // Minimum X boundary
-	MapMaxX          int32 // Maximum X boundary
-	MapMinY          int32 // Minimum Y boundary
-	MapMaxY          int32 // Maximum Y boundary
-	MovementInterval int32 // Movement update interval in milliseconds
-	MovementSpeed    int32 // Movement distance per update
-)
+// Settings holds all bot configuration
+type Settings struct {
+	// Connection
+	Host                  string
+	Protocol              string
+	AuthInterval          int
+	UDPClientSendInterval int
 
-const (
-	configPath              = "bot/lod/bot.json"
-	botStartXKey            = "BotStartX"
-	botStartYKey            = "BotStartY"
-	mapMinXKey              = "MapMinX"
-	mapMaxXKey              = "MapMaxX"
-	mapMinYKey              = "MapMinY"
-	mapMaxYKey              = "MapMaxY"
-	movementIntervalKey     = "MovementInterval"
-	movementSpeedKey        = "MovementSpeed"
-	defaultBotStartX        = 0
-	defaultBotStartY        = 0
-	defaultMapMinX          = -25000
-	defaultMapMaxX          = 25000
-	defaultMapMinY          = -25000
-	defaultMapMaxY          = 25000
-	defaultMovementInterval = 100
-	defaultMovementSpeed    = 50
-)
+	// Bot logic
+	BotsCount         int
+	RoomSize          int
+	AverageRoomMember int
+	PacketInterval    int
+	PacketSize        int
+	LogLevel          string
 
-// loadBotLodConfig loads bot configuration from file
-func loadBotLodConfig() {
-	config.Load("BotConfig", configPath)
+	// Movement & Map
+	BotStartX        int32
+	BotStartY        int32
+	MapMinX          int32
+	MapMaxX          int32
+	MapMinY          int32
+	MapMaxY          int32
+	MovementInterval int32
+	MovementSpeed    int32
+}
 
-	BotStartX = config.GetAsInt32("BotConfig", botStartXKey, defaultBotStartX)
-	BotStartY = config.GetAsInt32("BotConfig", botStartYKey, defaultBotStartY)
-	MapMinX = config.GetAsInt32("BotConfig", mapMinXKey, defaultMapMinX)
-	MapMaxX = config.GetAsInt32("BotConfig", mapMaxXKey, defaultMapMaxX)
-	MapMinY = config.GetAsInt32("BotConfig", mapMinYKey, defaultMapMinY)
-	MapMaxY = config.GetAsInt32("BotConfig", mapMaxYKey, defaultMapMaxY)
-	MovementInterval = config.GetAsInt32("BotConfig", movementIntervalKey, defaultMovementInterval)
-	MovementSpeed = config.GetAsInt32("BotConfig", movementSpeedKey, defaultMovementSpeed)
+func (s *Settings) String() string {
+	return fmt.Sprintf("Settings{Host: %s, Protocol: %s, AuthInterval: %d, UDPClientSendInterval: %d, BotsCount: %d, RoomSize: %d, AverageRoomMember: %d, PacketInterval: %d, PacketSize: %d, LogLevel: %s, BotStartX: %d, BotStartY: %d, MapMinX: %d, MapMaxX: %d, MapMinY: %d, MapMaxY: %d, MovementInterval: %d, MovementSpeed: %d}",
+		s.Host,
+		s.Protocol,
+		s.AuthInterval,
+		s.UDPClientSendInterval,
+		s.BotsCount,
+		s.RoomSize,
+		s.AverageRoomMember,
+		s.PacketInterval,
+		s.PacketSize,
+		s.LogLevel,
+		s.BotStartX,
+		s.BotStartY,
+		s.MapMinX,
+		s.MapMaxX,
+		s.MapMinY,
+		s.MapMaxY,
+		s.MovementInterval,
+		s.MovementSpeed)
+}
 
-	logger.Info("Bot config loaded",
-		"BotStartX", BotStartX,
-		"BotStartY", BotStartY,
-		"MapMinX", MapMinX,
-		"MapMaxX", MapMaxX,
-		"MapMinY", MapMinY,
-		"MapMaxY", MapMaxY,
-		"MovementInterval", MovementInterval,
-		"MovementSpeed", MovementSpeed)
+func LoadSettings() *Settings {
+	const configPath = "bot/lod/bot.json"
+	const configName = "BotConfig"
+	config.Load(configName, configPath)
+
+	s := &Settings{}
+
+	s.Host = config.GetAsString(configName, "Host", "localhost:7000")
+	s.BotsCount = int(config.GetAsInt32(configName, "Bots", 10))
+	s.AuthInterval = int(config.GetAsInt32(configName, "AuthInterval", 100))
+	s.RoomSize = int(config.GetAsInt32(configName, "RoomSize", 10))
+	s.AverageRoomMember = int(config.GetAsInt32(configName, "AverageRoomMember", 0))
+	s.PacketInterval = int(config.GetAsInt32(configName, "PacketIntervalMillisecond", 100))
+	s.PacketSize = int(config.GetAsInt32(configName, "PacketSize", 100))
+	s.LogLevel = config.GetAsString(configName, "LogLevel", "info")
+	s.Protocol = config.GetAsString(configName, "Protocol", "udp")
+	s.UDPClientSendInterval = int(config.GetAsInt32(configName, "UDPClientSendInterval", 5))
+	s.BotStartX = config.GetAsInt32(configName, "BotStartX", 0)
+	s.BotStartY = config.GetAsInt32(configName, "BotStartY", 0)
+	s.MapMinX = config.GetAsInt32(configName, "MapMinX", -25000)
+	s.MapMaxX = config.GetAsInt32(configName, "MapMaxX", 25000)
+	s.MapMinY = config.GetAsInt32(configName, "MapMinY", -25000)
+	s.MapMaxY = config.GetAsInt32(configName, "MapMaxY", 25000)
+	s.MovementInterval = config.GetAsInt32(configName, "MovementInterval", 100)
+	s.MovementSpeed = config.GetAsInt32(configName, "MovementSpeed", 50)
+	return s
+}
+
+func setupLogger(settings *Settings) *slog.Logger {
+	programLevel := new(slog.LevelVar)
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: programLevel}))
+
+	switch settings.LogLevel {
+	case "debug":
+		programLevel.Set(slog.LevelDebug)
+	case "info":
+		programLevel.Set(slog.LevelInfo)
+	case "warn":
+		programLevel.Set(slog.LevelWarn)
+	case "error":
+		programLevel.Set(slog.LevelError)
+	default:
+		programLevel.Set(slog.LevelInfo)
+	}
+	return logger
 }

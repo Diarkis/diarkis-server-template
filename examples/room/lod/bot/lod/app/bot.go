@@ -6,8 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log/slog"
-	"os"
-	"sync"
+	"math/rand"
 	"sync/atomic"
 	"time"
 
@@ -19,29 +18,20 @@ import (
 	"github.com/Diarkis/diarkis/uuid/v4"
 )
 
-const UDP_STRING string = "udp"
-const TCP_STRING string = "tcp"
-
 const (
-	STATUS_BROADCAST = iota
+	UDP_STRING               string = "udp"
+	TCP_STRING               string = "tcp"
+	STATUS_BROADCAST                = iota
+	RCV_BYTE_SIZE                   = 1400
+	DIARKIS_CLIENT_LOG_LEVEL        = 70
 )
 
-// udp client settings
-const RcvByteSize = 1400
-const DiarkisClientLogLevel = 70
-
-var logger *slog.Logger
-
-// metrics
-// metrics
-var botCounter = 0
-var joinedCnt atomic.Int64
-var broadcastSendCnt atomic.Int64
-var broadcastReceiveCnt atomic.Int64
-var createdRoomMap sync.Map
-
-// sleepTime is in seconds
-var sleepTime int64 = 1
+var (
+	joinedCnt           atomic.Int64
+	broadcastSendCnt    atomic.Int64
+	broadcastReceiveCnt atomic.Int64
+	logger              *slog.Logger
+)
 
 type bot struct {
 	uid              string
@@ -55,6 +45,9 @@ type bot struct {
 	y                int32 // position y for LOD
 	isCreator        bool  // whether this bot creates a room
 	targetRoomIndex  int   // index of the room this bot should join/create
+
+	settings        *Settings
+	roomCoordinator *RoomCoordinator
 }
 
 func (b *bot) isJoined() bool {
@@ -64,42 +57,15 @@ func (b *bot) isJoined() bool {
 var bm botManager
 
 func Run() {
-	// Setup logger
-	programLevel := new(slog.LevelVar)
-	logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: programLevel}))
-
 	// Load configuration
-	loadBotConfig()
-	loadBotLodConfig()
+	settings := LoadSettings()
+	logger = setupLogger(settings)
 
-	// Set log level
-	switch logLevel {
-	case "debug":
-		programLevel.Set(slog.LevelDebug)
-	case "info":
-		programLevel.Set(slog.LevelInfo)
-	case "warn":
-		programLevel.Set(slog.LevelWarn)
-	case "error":
-		programLevel.Set(slog.LevelError)
-	default:
-		programLevel.Set(slog.LevelInfo)
-	}
+	roomCoordinator := NewRoomCoordinator()
 
-	logger.Info("bot args",
-		"host", host,
-		"bots", bots,
-		"authInterval", authInterval,
-		"roomSize", roomSize,
-		"averageRoomMember", averageRoomMember,
-		"packetInterval", packetInterval,
-		"packetSize", packetSize,
-		"logLevel", logLevel,
-		"protocol", protocol,
-	)
-	spawnBots()
-	for {
-		time.Sleep(time.Second * time.Duration(sleepTime))
+	spawnBots(settings, roomCoordinator)
+	for { // every second print metrics
+		time.Sleep(time.Second)
 		printMetrics()
 	}
 }
@@ -126,24 +92,24 @@ func printMetrics() {
 	bm.resetCnt()
 }
 
-func spawnBots() {
+func spawnBots(settings *Settings, rc *RoomCoordinator) {
 	// Calculate how many rooms are needed
 	// If averageRoomMember is set (>0), use it to calculate numRooms.
 	// Otherwise, default to filling rooms to capacity (roomSize).
-	memberPerRoom := roomSize
-	if averageRoomMember > 0 {
-		memberPerRoom = averageRoomMember
+	memberPerRoom := settings.RoomSize
+	if settings.AverageRoomMember > 0 {
+		memberPerRoom = settings.AverageRoomMember
 	}
-	numRooms := (bots + memberPerRoom - 1) / memberPerRoom
+	numRooms := (settings.BotsCount + memberPerRoom - 1) / memberPerRoom
 
 	logger.Info("Room creation plan",
-		"totalBots", bots,
-		"roomSize", roomSize,
-		"averageRoomMember", averageRoomMember,
+		"totalBots", settings.BotsCount,
+		"roomSize", settings.RoomSize,
+		"averageRoomMember", settings.AverageRoomMember,
 		"targetMemberPerRoom", memberPerRoom,
 		"numRoomsToCreate", numRooms)
 
-	for i := 0; i < bots; i++ {
+	for i := 0; i < settings.BotsCount; i++ {
 		botUuid, _ := uuid.New()
 		// Determine which room this bot belongs to
 		targetRoomIdx := i % numRooms
@@ -159,13 +125,13 @@ func spawnBots() {
 		// ...
 		isCreator := i < numRooms
 
-		go spawnBot(botUuid.String, isCreator, targetRoomIdx)
-		time.Sleep(time.Millisecond * time.Duration(authInterval))
+		go spawnBot(botUuid.String, isCreator, targetRoomIdx, settings, rc)
+		time.Sleep(time.Millisecond * time.Duration(settings.AuthInterval))
 	}
 }
 
-func newBot(id string, isCreator bool, targetRoomIndex int) *bot {
-	eResp, err := utils.Endpoint(host, id, protocol)
+func newBot(id string, isCreator bool, targetRoomIndex int, settings *Settings, rc *RoomCoordinator) *bot {
+	eResp, err := utils.Endpoint(settings.Host, id, settings.Protocol)
 	if err != nil {
 		logger.Error("Auth error",
 			"bot.uid", id,
@@ -182,31 +148,32 @@ func newBot(id string, isCreator bool, targetRoomIndex int) *bot {
 	iv, _ := hex.DecodeString(eResp.EncryptionIV)
 	macKey, _ := hex.DecodeString(eResp.EncryptionMacKey)
 
-	rcvByteSize := RcvByteSize
-	udpSendInterval := int64(udpClientSendInterval)
-	udp.LogLevel(DiarkisClientLogLevel)
+	rcvByteSize := RCV_BYTE_SIZE
+	udpSendInterval := int64(settings.UDPClientSendInterval)
+	udp.LogLevel(DIARKIS_CLIENT_LOG_LEVEL)
 	cli := udp.New(rcvByteSize, udpSendInterval)
-	bot := new(bot)
-	bot.uid = id
-	bot.state = 0
-	bot.udp = cli
-	bot.isCreator = isCreator
-	bot.targetRoomIndex = targetRoomIndex
-	// Initialize bot position randomly within map boundaries
-	bot.x = utils.RandomInt32(MapMinX, MapMaxX)
-	bot.y = utils.RandomInt32(MapMinY, MapMaxY)
+	bot := &bot{
+		uid:             id,
+		udp:             cli,
+		isCreator:       isCreator,
+		targetRoomIndex: targetRoomIndex,
+		settings:        settings,
+		roomCoordinator: rc,
+		x:               utils.RandomInt32(settings.MapMinX, settings.MapMaxX),
+		y:               utils.RandomInt32(settings.MapMinY, settings.MapMaxY),
+	}
 	cli.SetEncryptionKeys(sid, key, iv, macKey)
 	cli.OnResponse(func(ver uint8, cmd uint16, status uint8, payload []byte) {
-		handleOnResponse(bot, ver, cmd, status, payload)
+		bot.handleOnResponse(ver, cmd, status, payload)
 	})
 	cli.OnPush(func(ver uint8, cmd uint16, payload []byte) {
-		handleOnPush(bot, ver, cmd, payload)
+		bot.handleOnPush(ver, cmd, payload)
 	})
 	cli.OnConnect(func() {
-		handleOnConnect(bot)
+		bot.handleOnConnect()
 	})
 	cli.OnDisconnect(func() {
-		handleOnDisconnect()
+
 	})
 	addr := eResp.ServerHost + ":" + fmt.Sprintf("%v", eResp.ServerPort)
 	cli.Connect(addr)
@@ -216,149 +183,215 @@ func newBot(id string, isCreator bool, targetRoomIndex int) *bot {
 	return bot
 }
 
-func spawnBot(id string, isCreator bool, targetRoomIndex int) {
-	bot := newBot(id, isCreator, targetRoomIndex)
-	bm.bots = append(bm.bots, bot)
+func spawnBot(id string, isCreator bool, targetRoomIndex int, settings *Settings, rc *RoomCoordinator) {
+	bot := newBot(id, isCreator, targetRoomIndex, settings, rc)
+	if bot != nil {
+		bm.bots = append(bm.bots, bot)
+	}
 }
 
-func broadcast(bot *bot) {
-	message := make([]byte, packetSize)
+func (b *bot) LodBroadcast() {
+	message := make([]byte, b.settings.PacketSize)
 	// Use LOD broadcast instead of regular room broadcast
 	proto := proom.NewBroadcastLoD()
-	proto.X = bot.x
-	proto.Y = bot.y
+	proto.X = b.x
+	proto.Y = b.y
 	proto.Payload = message
-	bot.udp.RSend(proto.Ver, proto.Cmd, proto.Pack())
-	bot.broadcastSendCnt.Add(1)
+	b.udp.RSend(proto.Ver, proto.Cmd, proto.Pack())
+	b.broadcastSendCnt.Add(1)
 	broadcastSendCnt.Add(1)
 }
 
-func createRoom(bot *bot) {
-	if bot.state == 0 && bot.udp == nil && bot.tcp == nil {
+func (b *bot) CreateRoom() {
+	if b.state == 0 && b.udp == nil && b.tcp == nil {
 		logger.Error("bot is not connected to any server")
 		return
 	}
-	roomCli := new(room.Room)
-	switch protocol {
+
+	switch b.settings.Protocol {
 	case UDP_STRING:
-		roomCli.SetupAsUDP(bot.udp)
+		b.room.SetupAsUDP(b.udp)
 	case TCP_STRING:
-		roomCli.SetupAsTCP(bot.tcp)
+		b.room.SetupAsTCP(b.tcp)
 	}
 
 	// Use Create to make a room.
-	roomCli.Create(uint16(roomSize), false, true, 60, 0)
-	bot.room = roomCli
+	b.room.Create(uint16(b.settings.RoomSize), false, true, 60, 0)
 
-	roomCli.OnCreate(func(success bool, roomID string, createdTime uint) {
+	b.room.OnCreate(func(success bool, roomID string, createdTime uint) {
 		if success {
 			joinedCnt.Add(1)
-			bot.state = STATUS_BROADCAST
+			b.state = STATUS_BROADCAST
 			// Store roomID in map with index
-			createdRoomMap.Store(bot.targetRoomIndex, roomID)
+			b.roomCoordinator.AddRoom(b.targetRoomIndex, roomID)
 
 			logger.Info("Room created",
-				"bot.uid", bot.uid,
+				"bot.uid", b.uid,
 				"roomID", roomID,
-				"roomIndex", bot.targetRoomIndex,
+				"roomIndex", b.targetRoomIndex,
 				"createdTime", createdTime,
-				"maxMembers", roomSize)
+				"maxMembers", b.settings.RoomSize)
 		} else {
 			logger.Error("OnCreate failed",
-				"bot.uid", bot.uid)
+				"bot.uid", b.uid)
 		}
 	})
 
-	roomCli.OnJoin(func(success bool, createdTime uint) {
+	b.room.OnJoin(func(success bool, createdTime uint) {
 		if success {
 			joinedCnt.Add(1)
-			bot.state = STATUS_BROADCAST
+			b.state = STATUS_BROADCAST
 			logger.Info("Creator joined existing room",
-				"bot.uid", bot.uid,
-				"roomID", bot.room.ID,
+				"bot.uid", b.uid,
+				"roomID", b.room.ID,
 				"createdTime", createdTime)
 		}
 	})
 
-	roomCli.OnMemberLeave(func(message []byte) {
-		logger.Debug("OnMemberLeave",
-			"bot.uid", bot.uid,
-			"message", message)
-	})
-	roomCli.OnMemberBroadcast(func(bytes []byte) {
-		broadcastReceiveCnt.Add(1)
-		bot.broadcastRcvCnt.Add(1)
-	})
+	b.setupRoomCallbacks()
 }
 
-func joinRoom(bot *bot) {
-	if bot.state == 0 && bot.udp == nil && bot.tcp == nil {
+func (b *bot) JoinRoom() {
+	if b.state == 0 && b.udp == nil && b.tcp == nil {
 		logger.Error("bot is not connected to any server")
 		return
 	}
-	roomCli := new(room.Room)
-	switch protocol {
+
+	switch b.settings.Protocol {
 	case UDP_STRING:
-		roomCli.SetupAsUDP(bot.udp)
+		b.room.SetupAsUDP(b.udp)
 	case TCP_STRING:
-		roomCli.SetupAsTCP(bot.tcp)
+		b.room.SetupAsTCP(b.tcp)
 	}
 
 	var targetRoomID string
 	// Loop until the target room is created
 	for {
-		if val, ok := createdRoomMap.Load(bot.targetRoomIndex); ok {
-			targetRoomID = val.(string)
+		if val, ok := b.roomCoordinator.GetRoom(b.targetRoomIndex); ok {
+			targetRoomID = val
 			break
 		}
 		time.Sleep(time.Second * 1)
 		logger.Info("Waiting for room to be created",
-			"bot.uid", bot.uid,
-			"targetRoomIndex", bot.targetRoomIndex)
+			"bot.uid", b.uid,
+			"targetRoomIndex", b.targetRoomIndex)
 	}
 
 	logger.Info("Joining room",
-		"bot.uid", bot.uid,
+		"bot.uid", b.uid,
 		"roomID", targetRoomID,
-		"targetRoomIndex", bot.targetRoomIndex)
-	roomCli.Join(targetRoomID, []byte(""))
-	bot.room = roomCli
+		"targetRoomIndex", b.targetRoomIndex)
+	b.room.Join(targetRoomID, []byte(""))
 
-	roomCli.OnJoin(func(success bool, createdTime uint) {
+	b.room.OnJoin(func(success bool, createdTime uint) {
 		if success {
 			joinedCnt.Add(1)
-			bot.state = STATUS_BROADCAST
+			b.state = STATUS_BROADCAST
 			logger.Info("Joiner joined room",
-				"bot.uid", bot.uid,
-				"roomID", bot.room.ID,
+				"bot.uid", b.uid,
+				"roomID", b.room.ID,
 				"createdTime", createdTime)
 		} else {
 			logger.Warn("OnJoin failed, retrying...",
-				"bot.uid", bot.uid)
+				"bot.uid", b.uid)
 			// Retry after delay
 			time.Sleep(time.Millisecond * 500)
-			joinRoom(bot)
+			b.JoinRoom()
 		}
 	})
 
-	roomCli.OnCreate(func(success bool, name string, createdTime uint) {
+	b.room.OnCreate(func(success bool, name string, createdTime uint) {
 		// Joiners shouldn't create rooms, but if they do, log it
 		if success {
 			joinedCnt.Add(1)
-			bot.state = STATUS_BROADCAST
+			b.state = STATUS_BROADCAST
 			logger.Warn("Joiner unexpectedly created room",
-				"bot.uid", bot.uid,
+				"bot.uid", b.uid,
 				"roomID", name)
 		}
 	})
 
-	roomCli.OnMemberLeave(func(message []byte) {
+	b.setupRoomCallbacks()
+}
+
+func (b *bot) setupRoomCallbacks() {
+	b.room.OnMemberLeave(func(message []byte) {
 		logger.Debug("OnMemberLeave",
-			"bot.uid", bot.uid,
+			"bot.uid", b.uid,
 			"message", message)
 	})
-	roomCli.OnMemberBroadcast(func(bytes []byte) {
+	b.room.OnMemberBroadcast(func(bytes []byte) {
 		broadcastReceiveCnt.Add(1)
-		bot.broadcastRcvCnt.Add(1)
+		b.broadcastRcvCnt.Add(1)
 	})
+}
+
+// Handlers moved from callbacks.go
+
+func (b *bot) handleOnConnect() {
+	// Start movement loop
+	go func() {
+		for {
+			time.Sleep(time.Millisecond * time.Duration(b.settings.MovementInterval))
+			if b.isJoined() {
+				b.move()
+			}
+		}
+	}()
+	// Start broadcast loop
+	go func() {
+		if b.isCreator {
+			logger.Info("Bot creating room", "bot.uid", b.uid)
+			b.CreateRoom()
+		} else {
+			time.Sleep(time.Second * 2)
+			logger.Info("Bot joining room", "bot.uid", b.uid)
+			b.JoinRoom()
+		}
+
+		for {
+			time.Sleep(time.Millisecond * time.Duration(b.settings.PacketInterval))
+			if b.isJoined() {
+				b.LodBroadcast()
+			}
+		}
+	}()
+}
+
+func (b *bot) handleOnResponse(ver uint8, cmd uint16, status uint8, payload []byte) {
+}
+
+func (b *bot) handleOnPush(ver uint8, cmd uint16, payload []byte) {
+	if ver == proom.BroadcastLoDPushVer && cmd == proom.BroadcastLoDPushCmd {
+		broadcastReceiveCnt.Add(1)
+		b.broadcastRcvCnt.Add(1)
+	}
+}
+
+// from movement.go
+func (b *bot) move() {
+	// Random movement in 8 directions (N, NE, E, SE, S, SW, W, NW)
+	dx := int32(rand.Intn(3) - 1) // -1, 0, or 1
+	dy := int32(rand.Intn(3) - 1) // -1, 0, or 1
+
+	// Apply movement speed
+	newX := b.x + (dx * b.settings.MovementSpeed)
+	newY := b.y + (dy * b.settings.MovementSpeed)
+
+	// Clamp to map boundaries
+	if newX < b.settings.MapMinX {
+		newX = b.settings.MapMinX
+	} else if newX > b.settings.MapMaxX {
+		newX = b.settings.MapMaxX
+	}
+
+	if newY < b.settings.MapMinY {
+		newY = b.settings.MapMinY
+	} else if newY > b.settings.MapMaxY {
+		newY = b.settings.MapMaxY
+	}
+
+	// Update bot position
+	b.x = newX
+	b.y = newY
 }
