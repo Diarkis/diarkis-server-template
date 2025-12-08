@@ -45,6 +45,8 @@ func (m *Manager) String() string {
 
 // NewManager creates a new LOD manager with the specified configuration
 func NewManager(ver uint8, cmd uint16, syncIntervalForNearby int32, syncIntervalForFar int32, maxDistanceForNearby int32, maxDistanceForFar int32) *Manager {
+	// Initialize metrics on first manager creation
+
 	lm := &Manager{
 		ver:                   ver,
 		cmd:                   cmd,
@@ -58,6 +60,11 @@ func NewManager(ver uint8, cmd uint16, syncIntervalForNearby int32, syncInterval
 	}
 
 	lm.started.Store(true)
+
+	// Increment instance count
+	if instancesGauge != nil {
+		instancesGauge.Inc()
+	}
 
 	// Start send worker goroutine
 	lm.senderWg.Add(1)
@@ -81,6 +88,10 @@ func (m *Manager) AddUserEntity(userID string, x int32, y int32, payload []byte)
 		return
 	}
 	m.userEntities[userID] = NewUserEntity(x, y, payload)
+	// Update active users gauge
+	if activeUsersGauge != nil {
+		activeUsersGauge.Set(int64(len(m.userEntities)))
+	}
 }
 
 // RemoveUserEntity removes a user entity from the manager
@@ -98,6 +109,10 @@ func (m *Manager) RemoveUserEntity(userID string) {
 		delete(userEntity.Remember, userID)
 		userEntity.RememberMutex.Unlock()
 	}
+	// Update active users gauge
+	if activeUsersGauge != nil {
+		activeUsersGauge.Set(int64(len(m.userEntities)))
+	}
 }
 
 // sendWorker processes messages from sendBuffer and sends them to users
@@ -108,6 +123,15 @@ func (m *Manager) sendWorker() {
 		receiverUser := user.GetUserBySID(msg.receiverUserID)
 		if receiverUser != nil {
 			receiverUser.PushToClient(msg.ver, msg.cmd, msg.payload, packet.Unreliable)
+			// Track successfully sent messages
+			if messagesSentCounter != nil {
+				messagesSentCounter.Inc()
+			}
+		} else {
+			// Track errors
+			if errorsCounter != nil {
+				errorsCounter.WithLabelValues("user_not_found").Inc()
+			}
 		}
 	}
 }
@@ -116,6 +140,10 @@ func (m *Manager) sendWorker() {
 func (m *Manager) Stop() {
 	m.started.Store(false)
 	m.senderWg.Wait()
+	// Decrement instance count
+	if instancesGauge != nil {
+		instancesGauge.Dec()
+	}
 }
 
 // shouldSendUpdate determines if an update should be sent to a receiver
@@ -129,6 +157,9 @@ func (m *Manager) shouldSendUpdate(
 ) bool {
 	// farther than maxDistanceForFar -> don't send
 	if distance > m.maxDistanceForFar {
+		if updatesSkippedCounter != nil {
+			updatesSkippedCounter.WithLabelValues("too_far").Inc()
+		}
 		return false
 	}
 
@@ -136,12 +167,21 @@ func (m *Manager) shouldSendUpdate(
 	if distance <= m.maxDistanceForNearby {
 		if senderEntity.ChangedAfterSend {
 			//logger.Verbosef("shouldSendUpdate", "from", senderID, "to", receiverID, "distance", distance, "mode", "nearby-changed", "interval", m.syncIntervalForNearby)
+			if updatesSentCounter != nil {
+				updatesSentCounter.WithLabelValues("nearby", "changed").Inc()
+			}
 			return true
 		}
 
 		if time.Since(getLastSendAt(senderEntity, receiverID)) > time.Duration(m.syncIntervalForFar)*time.Millisecond {
 			//logger.Verbosef("shouldSendUpdate", "from", senderID, "to", receiverID, "distance", distance, "mode", "nearby-unchanged", "interval", m.syncIntervalForFar)
+			if updatesSentCounter != nil {
+				updatesSentCounter.WithLabelValues("nearby", "interval").Inc()
+			}
 			return true
+		}
+		if updatesSkippedCounter != nil {
+			updatesSkippedCounter.WithLabelValues("interval_not_met").Inc()
 		}
 		return false
 	}
@@ -155,13 +195,22 @@ func (m *Manager) shouldSendUpdate(
 			interval := (m.syncIntervalForFar - m.syncIntervalForNearby) * (distance - m.maxDistanceForNearby) / (m.maxDistanceForFar - m.maxDistanceForNearby)
 			if time.Since(getLastSendAt(senderEntity, receiverID)) > time.Duration(interval)*time.Millisecond {
 				//logger.Verbosef("shouldSendUpdate", "from", senderID, "to", receiverID, "distance", distance, "mode", "far-changed", "interval", interval, "since", time.Since(getLastSendAt(senderEntity, receiverID)))
+				if updatesSentCounter != nil {
+					updatesSentCounter.WithLabelValues("far", "changed").Inc()
+				}
 				return true
 			}
 		} else {
 			if time.Since(getLastSendAt(senderEntity, receiverID)) > time.Duration(m.syncIntervalForFar)*time.Millisecond {
 				//logger.Verbosef("shouldSendUpdate", "from", senderID, "to", receiverID, "distance", distance, "mode", "far-unchanged", "interval", m.syncIntervalForFar, "since", time.Since(getLastSendAt(senderEntity, receiverID)))
+				if updatesSentCounter != nil {
+					updatesSentCounter.WithLabelValues("far", "interval").Inc()
+				}
 				return true
 			}
+		}
+		if updatesSkippedCounter != nil {
+			updatesSkippedCounter.WithLabelValues("interval_not_met").Inc()
 		}
 	}
 
@@ -177,10 +226,17 @@ func (m *Manager) processSenderReceiverPair(
 	receiverEntity *UserEntity,
 ) string {
 	if senderID == receiverID {
+		if updatesSkippedCounter != nil {
+			updatesSkippedCounter.WithLabelValues("same_user").Inc()
+		}
 		return ""
 	}
 
 	distance := calculateDistance(senderEntity.X, senderEntity.Y, receiverEntity.X, receiverEntity.Y)
+	if userDistancesHistogram != nil {
+		userDistancesHistogram.Observe(float64(distance))
+	}
+
 	shouldSend := m.shouldSendUpdate(senderID, senderEntity, receiverID, receiverEntity, distance)
 
 	if shouldSend {
@@ -212,6 +268,9 @@ func (m *Manager) processSingleReceiver(
 			}:
 			default:
 				logger.Warnf("sendBuffer full, dropping message", "receiverUserID", receiverUserID, "senderUserID", senderUserID)
+				if bufferDropsCounter != nil {
+					bufferDropsCounter.Inc()
+				}
 			}
 		}
 	}
@@ -232,7 +291,16 @@ func (m *Manager) processAllUsers() {
 		userEntity.ChangedAfterSend = false
 	}
 
-	logger.Debugf("invokeLodLoop", "time", time.Since(start))
+	duration := time.Since(start)
+	if loopDurationHistogram != nil {
+		loopDurationHistogram.Observe(duration.Seconds())
+	}
+
+	if bufferSizeGauge != nil {
+		bufferSizeGauge.Set(int64(len(m.sendBuffer)))
+	}
+
+	logger.Debugf("invokeLodLoop", "time", duration)
 }
 
 // send packets to nearby users

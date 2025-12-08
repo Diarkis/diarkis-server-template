@@ -3,6 +3,7 @@
 package main
 
 import (
+	"github.com/Diarkis/diarkis"
 	"github.com/Diarkis/diarkis/config"
 	"github.com/Diarkis/diarkis/derror"
 	"github.com/Diarkis/diarkis/diarkisexec"
@@ -44,7 +45,8 @@ func main() {
 	diarkisexec.SetServerCommandHandler(proom.BroadcastLoDVer, proom.BroadcastLoDCmd, handleRoomBroadcastLoD)
 	diarkisexec.SetServerCommandHandler(proom.GetLoDInfoVer, proom.GetLoDInfoCmd, handleRoomGetLoDInfo)
 
-	setupLod()
+	loadLodConfigs(configPath)
+	diarkis.OnReady(func(f func(error)) { lodmanager.SetupLodMetrics(); f(nil) })
 	diarkisexec.StartDiarkis()
 }
 
@@ -96,10 +98,6 @@ func handleRoomGetLoDInfo(ver uint8, cmd uint16, payload []byte, userData *user.
 
 	userData.ServerRespond(lodInfo.Pack(), ver, cmd, server.Ok, true)
 	next(nil)
-}
-
-func setupLod() {
-	loadLodConfigs(configPath)
 }
 
 func loadLodConfigs(confPath string) {
