@@ -84,6 +84,7 @@ module "eks_al2" {
 
   eks_managed_node_groups = {
     diarkis-private = {
+      use_name_prefix = false
       ami_type       = "AL2_x86_64"
       instance_types = local.env.instance_types
       subnet_ids = module.vpc.private_subnets
