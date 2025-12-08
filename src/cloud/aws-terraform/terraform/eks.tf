@@ -101,6 +101,7 @@ module "eks_al2" {
       }
     }
     diarkis-public = {
+      use_name_prefix = false
       ami_type       = "AL2_x86_64"
       instance_types = local.env.instance_types
       subnet_ids = module.vpc.public_subnets
