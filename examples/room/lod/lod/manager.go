@@ -39,8 +39,8 @@ type Manager struct {
 func (m *Manager) String() string {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	return fmt.Sprintf("Manager{userEntities: %v, started: %v, ver: %v, cmd: %v, syncIntervalForNearby: %v, syncIntervalForFar: %v,	 maxDistanceForNearby: %v, maxDistanceForFar: %v}",
-		m.userEntities, m.started.Load(), m.ver, m.cmd, m.syncIntervalForNearby, m.syncIntervalForFar, m.maxDistanceForNearby, m.maxDistanceForFar)
+	return fmt.Sprintf("Manager{started: %v, ver: %v, cmd: %v, syncIntervalForNearby: %v, syncIntervalForFar: %v,	 maxDistanceForNearby: %v, maxDistanceForFar: %v}",
+		m.started.Load(), m.ver, m.cmd, m.syncIntervalForNearby, m.syncIntervalForFar, m.maxDistanceForNearby, m.maxDistanceForFar)
 }
 
 // NewManager creates a new LOD manager with the specified configuration
@@ -138,6 +138,8 @@ func (m *Manager) Stop() {
 
 // shouldSendUpdate determines if an update should be sent to a receiver
 // Logs the reason when returning true
+// shouldSendUpdate returns false when update should not be sent
+// shouldSendUpdate returns true when update should be sent
 func (m *Manager) shouldSendUpdate(
 	senderID string,
 	senderEntity *UserEntity,
@@ -152,40 +154,62 @@ func (m *Manager) shouldSendUpdate(
 	}
 
 	// nearer than maxDistanceForNearby -> send based on nearby rules
+	// if userEntity doesn't changed after send in previous interval, send update in syncIntervalForFar
+	// if userEntity changed after send in previous interval, send update in syncIntervalForNearby
 	if distance <= m.maxDistanceForNearby {
-		if senderEntity.changedAfterSend {
-			updatesSentCounter.WithLabelValues("nearby", "changed").Inc()
-			return true
-		}
-
-		if time.Since(getLastSendAt(senderEntity, receiverID)) > m.syncIntervalForFar {
-			updatesSentCounter.WithLabelValues("nearby", "interval").Inc()
-			return true
-		}
-		updatesSkippedCounter.WithLabelValues("interval_not_met").Inc()
-		return false
+		return m.checkForNearby(senderID, senderEntity, receiverID, receiverEntity)
 	}
 
 	// between maxDistanceForNearby and maxDistanceForFar -> send based on far rules
+	// if userEntity doesn't changed after send in previous interval, send update in syncIntervalForFar
+	// if userEntity changed after send in previous interval, send update in dynamic interval
+	// dynamic interval is calculated based on distance
+	// dynamic interval is between syncIntervalForFar and syncIntervalForNearby
 	if distance <= m.maxDistanceForFar {
-		// syncIntervalForFar and maxDistanceForFar is larger than
-		// syncIntervalForNearby and maxDistanceForNearby always
-		// cf. func loadLodConfigs()
-		if senderEntity.changedAfterSend {
-			interval := (m.syncIntervalForFar - m.syncIntervalForNearby) * time.Duration(distance-m.maxDistanceForNearby) / time.Duration(m.maxDistanceForFar-m.maxDistanceForNearby)
-			if time.Since(getLastSendAt(senderEntity, receiverID)) > interval {
-				updatesSentCounter.WithLabelValues("far", "changed").Inc()
-				return true
-			}
-		} else {
-			if time.Since(getLastSendAt(senderEntity, receiverID)) > m.syncIntervalForFar {
-				updatesSentCounter.WithLabelValues("far", "interval").Inc()
-				return true
-			}
-		}
-		updatesSkippedCounter.WithLabelValues("interval_not_met").Inc()
+		return m.checkForFar(senderID, senderEntity, receiverID, receiverEntity)
 	}
 
+	return false
+}
+
+func (m *Manager) checkForNearby(
+	senderID string,
+	senderEntity *UserEntity,
+	receiverID string,
+	receiverEntity *UserEntity,
+) bool {
+	if senderEntity.changedAfterSend {
+		updatesSentCounter.WithLabelValues("nearby", "changed").Inc()
+		return true
+	}
+
+	if time.Since(getLastSendAt(senderEntity, receiverID)) > m.syncIntervalForFar {
+		updatesSentCounter.WithLabelValues("nearby", "interval").Inc()
+		return true
+	}
+	updatesSkippedCounter.WithLabelValues("interval_not_met").Inc()
+	return false
+}
+
+func (m *Manager) checkForFar(
+	senderID string,
+	senderEntity *UserEntity,
+	receiverID string,
+	receiverEntity *UserEntity,
+) bool {
+	// syncIntervalForFar and maxDistanceForFar is larger than
+	// syncIntervalForNearby and maxDistanceForNearby always
+	// cf. func loadLodConfigs()
+	if senderEntity.changedAfterSend {
+		updatesSentCounter.WithLabelValues("far", "changed").Inc()
+		return true
+	}
+
+	if time.Since(getLastSendAt(senderEntity, receiverID)) > m.syncIntervalForFar {
+		updatesSentCounter.WithLabelValues("far", "interval").Inc()
+		return true
+	}
+	updatesSkippedCounter.WithLabelValues("interval_not_met").Inc()
 	return false
 }
 
