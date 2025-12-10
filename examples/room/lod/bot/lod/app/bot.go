@@ -10,7 +10,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/Diarkis/diarkis-server-template/examples/room/lod/bot/utils"
 	proom "github.com/Diarkis/diarkis-server-template/examples/room/lod/puffer/go/room"
 	"github.com/Diarkis/diarkis/client/go/modules/room"
 	"github.com/Diarkis/diarkis/client/go/tcp"
@@ -131,7 +130,7 @@ func spawnBots(settings *Settings, rc *RoomCoordinator) {
 }
 
 func newBot(id string, isCreator bool, targetRoomIndex int, settings *Settings, rc *RoomCoordinator) *bot {
-	eResp, err := utils.Endpoint(settings.Host, id, settings.Protocol)
+	eResp, err := endpoint(settings.Host, id, settings.Protocol)
 	if err != nil {
 		logger.Error("Auth error",
 			"bot.uid", id,
@@ -159,8 +158,8 @@ func newBot(id string, isCreator bool, targetRoomIndex int, settings *Settings, 
 		targetRoomIndex: targetRoomIndex,
 		settings:        settings,
 		roomCoordinator: rc,
-		x:               utils.RandomInt32(settings.MapMinX, settings.MapMaxX),
-		y:               utils.RandomInt32(settings.MapMinY, settings.MapMaxY),
+		x:               randomInt32(settings.MapMinX, settings.MapMaxX),
+		y:               randomInt32(settings.MapMinY, settings.MapMaxY),
 	}
 	cli.SetEncryptionKeys(sid, key, iv, macKey)
 	cli.OnResponse(func(ver uint8, cmd uint16, status uint8, payload []byte) {
