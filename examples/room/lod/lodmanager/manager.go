@@ -279,7 +279,15 @@ func (m *Manager) invokeLodLoop() {
 
 // calculateDistance computes Manhattan distance between two entities
 func calculateDistance(x1, y1, x2, y2 int32) int32 {
-	return abs(x1-x2) + abs(y1-y2)
+	x := x1 - x2
+	y := y1 - y2
+	if x < 0 {
+		x = -x
+	}
+	if y < 0 {
+		y = -y
+	}
+	return x + y
 }
 
 func getLastSendAt(senderUserEntity *UserEntity, receiverUserID string) time.Time {
