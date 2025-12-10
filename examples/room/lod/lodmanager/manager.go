@@ -79,10 +79,10 @@ func (m *Manager) AddUserEntity(userID string, x int32, y int32, payload []byte)
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if userEntity, ok := m.userEntities[userID]; ok { // update
-		userEntity.Payload = payload
-		userEntity.X = x
-		userEntity.Y = y
-		userEntity.ChangedAfterSend = true
+		userEntity.payload = payload
+		userEntity.x = x
+		userEntity.y = y
+		userEntity.changedAfterSend = true
 		return
 	}
 	m.userEntities[userID] = NewUserEntity(x, y, payload)
@@ -101,9 +101,9 @@ func (m *Manager) RemoveUserEntity(userID string) {
 	delete(m.userEntities, userID)
 	// delete from others remember data
 	for _, userEntity := range m.userEntities {
-		userEntity.RememberMutex.Lock()
-		delete(userEntity.Remember, userID)
-		userEntity.RememberMutex.Unlock()
+		userEntity.mu.Lock()
+		delete(userEntity.m, userID)
+		userEntity.mu.Unlock()
 	}
 	// Update active users gauge
 	activeUsersGauge.Set(int64(len(m.userEntities)))
@@ -150,7 +150,7 @@ func (m *Manager) shouldSendUpdate(
 
 	// nearer than maxDistanceForNearby -> send based on nearby rules
 	if distance <= m.maxDistanceForNearby {
-		if senderEntity.ChangedAfterSend {
+		if senderEntity.changedAfterSend {
 			updatesSentCounter.WithLabelValues("nearby", "changed").Inc()
 			return true
 		}
@@ -168,7 +168,7 @@ func (m *Manager) shouldSendUpdate(
 		// syncIntervalForFar and maxDistanceForFar is larger than
 		// syncIntervalForNearby and maxDistanceForNearby always
 		// cf. func loadLodConfigs()
-		if senderEntity.ChangedAfterSend {
+		if senderEntity.changedAfterSend {
 			interval := (m.syncIntervalForFar - m.syncIntervalForNearby) * (distance - m.maxDistanceForNearby) / (m.maxDistanceForFar - m.maxDistanceForNearby)
 			if time.Since(getLastSendAt(senderEntity, receiverID)) > time.Duration(interval)*time.Millisecond {
 				updatesSentCounter.WithLabelValues("far", "changed").Inc()
@@ -199,7 +199,7 @@ func (m *Manager) processSenderReceiverPair(
 		return ""
 	}
 
-	distance := calculateDistance(senderEntity.X, senderEntity.Y, receiverEntity.X, receiverEntity.Y)
+	distance := calculateDistance(senderEntity.x, senderEntity.y, receiverEntity.x, receiverEntity.y)
 	userDistancesHistogram.Observe(float64(distance))
 
 	shouldSend := m.shouldSendUpdate(senderID, senderEntity, receiverID, receiverEntity, distance)
@@ -220,16 +220,16 @@ func (m *Manager) processSingleReceiver(
 	for senderUserID, senderUserEntity := range userEntities {
 		targetID := m.processSenderReceiverPair(senderUserID, senderUserEntity, receiverUserID, receiverUserEntity)
 		if targetID != "" {
-			senderUserEntity.RememberMutex.Lock()
-			senderUserEntity.Remember[receiverUserID] = time.Now()
-			senderUserEntity.RememberMutex.Unlock()
+			senderUserEntity.mu.Lock()
+			senderUserEntity.m[receiverUserID] = time.Now()
+			senderUserEntity.mu.Unlock()
 
 			select {
 			case m.sendBuffer <- sendMessage{
 				receiverUserID: receiverUserID,
 				ver:            m.ver,
 				cmd:            m.cmd,
-				payload:        senderUserEntity.Payload,
+				payload:        senderUserEntity.payload,
 			}:
 			default:
 				logger.Warnf("sendBuffer full, dropping message", "receiverUserID", receiverUserID, "senderUserID", senderUserID)
@@ -251,15 +251,13 @@ func (m *Manager) processAllUsers() {
 	}
 
 	for _, userEntity := range userEntities {
-		userEntity.ChangedAfterSend = false
+		userEntity.changedAfterSend = false
 	}
 
 	duration := time.Since(start)
 
 	loopDurationHistogram.Observe(duration.Seconds())
 	bufferSizeGauge.Set(int64(len(m.sendBuffer)))
-
-	logger.Debugf("invokeLodLoop", "time", duration)
 }
 
 // send packets to nearby users
@@ -267,11 +265,13 @@ func (m *Manager) processAllUsers() {
 // 2. farther than maxDistanceForFar -> don't send
 // 3. between maxDistanceForNearby and maxDistanceForFar -> send in every syncIntervalForFar
 func (m *Manager) invokeLodLoop() {
+	tick := time.NewTicker(time.Duration(m.syncIntervalForNearby) * time.Millisecond)
+	defer tick.Stop()
 	for {
 		if !m.started.Load() {
 			break
 		}
-		time.Sleep(time.Duration(m.syncIntervalForNearby) * time.Millisecond)
+		<-tick.C
 		m.processAllUsers()
 	}
 	close(m.sendBuffer)
@@ -283,7 +283,7 @@ func calculateDistance(x1, y1, x2, y2 int32) int32 {
 }
 
 func getLastSendAt(senderUserEntity *UserEntity, receiverUserID string) time.Time {
-	senderUserEntity.RememberMutex.RLock()
-	defer senderUserEntity.RememberMutex.RUnlock()
-	return senderUserEntity.Remember[receiverUserID]
+	senderUserEntity.mu.RLock()
+	defer senderUserEntity.mu.RUnlock()
+	return senderUserEntity.m[receiverUserID]
 }

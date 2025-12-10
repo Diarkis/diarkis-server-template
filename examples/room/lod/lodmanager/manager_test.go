@@ -122,9 +122,9 @@ func TestProcessSenderReceiverPair(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			senderEntity := NewUserEntity(tt.senderPos[0], tt.senderPos[1], nil)
-			senderEntity.ChangedAfterSend = tt.changed
+			senderEntity.changedAfterSend = tt.changed
 			if tt.lastSent > 0 {
-				senderEntity.Remember[tt.receiverID] = time.Now().Add(-tt.lastSent)
+				senderEntity.m[tt.receiverID] = time.Now().Add(-tt.lastSent)
 			}
 
 			receiverEntity := NewUserEntity(tt.receiverPos[0], tt.receiverPos[1], nil)
