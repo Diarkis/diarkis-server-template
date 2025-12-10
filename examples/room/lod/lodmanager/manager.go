@@ -1,6 +1,6 @@
 // © 2019-2025 Diarkis Inc. All rights reserved.
 
-package lodmanager
+package lod
 
 import (
 	"fmt"
@@ -33,7 +33,7 @@ type Manager struct {
 	maxDistanceForFar     int32
 	mu                    sync.RWMutex
 	sendBuffer            chan sendMessage
-	senderWg              sync.WaitGroup
+	done                  chan struct{} // channel to signal send worker to stop
 }
 
 func (m *Manager) String() string {
@@ -57,6 +57,7 @@ func NewManager(ver uint8, cmd uint16, syncIntervalForNearby time.Duration, sync
 		userEntities:          make(map[string]*UserEntity),
 		started:               atomic.Bool{},
 		sendBuffer:            make(chan sendMessage, 10000), // Buffer size: 10000
+		done:                  make(chan struct{}),
 	}
 
 	lm.started.Store(true)
@@ -65,7 +66,6 @@ func NewManager(ver uint8, cmd uint16, syncIntervalForNearby time.Duration, sync
 	instancesGauge.Inc()
 
 	// Start send worker goroutine
-	lm.senderWg.Add(1)
 	go lm.sendWorker()
 
 	// Start LOD loop
@@ -111,17 +111,20 @@ func (m *Manager) RemoveUserEntity(userID string) {
 
 // sendWorker processes messages from sendBuffer and sends them to users
 func (m *Manager) sendWorker() {
-	defer m.senderWg.Done()
-
-	for msg := range m.sendBuffer {
-		receiverUser := user.GetUserBySID(msg.receiverUserID)
-		if receiverUser != nil {
-			receiverUser.PushToClient(msg.ver, msg.cmd, msg.payload, packet.Unreliable)
-			// Track successfully sent messages
-			messagesSentCounter.Inc()
-		} else {
-			// Track errors
-			errorsCounter.WithLabelValues("user_not_found").Inc()
+	for {
+		select {
+		case msg := <-m.sendBuffer:
+			receiverUser := user.GetUserBySID(msg.receiverUserID)
+			if receiverUser != nil {
+				receiverUser.PushToClient(msg.ver, msg.cmd, msg.payload, packet.Unreliable)
+				// Track successfully sent messages
+				messagesSentCounter.Inc()
+			} else {
+				// Track errors
+				errorsCounter.WithLabelValues("user_not_found").Inc()
+			}
+		case <-m.done:
+			return
 		}
 	}
 }
@@ -129,7 +132,7 @@ func (m *Manager) sendWorker() {
 // Stop stops the LOD manager and waits for send worker to finish
 func (m *Manager) Stop() {
 	m.started.Store(false)
-	m.senderWg.Wait()
+	close(m.done)
 	instancesGauge.Dec()
 }
 
