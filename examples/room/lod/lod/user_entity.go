@@ -1,6 +1,6 @@
 // © 2019-2025 Diarkis Inc. All rights reserved.
 
-package lodmanager
+package lod
 
 import (
 	"fmt"

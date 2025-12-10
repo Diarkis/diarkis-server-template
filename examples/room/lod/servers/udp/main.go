@@ -14,7 +14,7 @@ import (
 	"github.com/Diarkis/diarkis/server"
 	"github.com/Diarkis/diarkis/user"
 
-	"github.com/Diarkis/diarkis-server-template/examples/room/lod/lodmanager"
+	"github.com/Diarkis/diarkis-server-template/examples/room/lod/lod"
 	proom "github.com/Diarkis/diarkis-server-template/examples/room/lod/puffer/go/room"
 )
 
@@ -56,7 +56,7 @@ func main() {
 	diarkisexec.SetServerCommandHandler(proom.GetLoDInfoVer, proom.GetLoDInfoCmd, handleRoomGetLoDInfo)
 
 	loadLodConfigs(configPath)
-	diarkis.OnReady(func(f func(error)) { lodmanager.SetupLodMetrics(); f(nil) })
+	diarkis.OnReady(func(f func(error)) { lod.SetupLodMetrics(); f(nil) })
 	diarkisexec.StartDiarkis()
 }
 
@@ -76,20 +76,20 @@ func handleRoomBroadcastLoD(ver uint8, cmd uint16, payload []byte, userData *use
 		return
 	}
 
-	manager := lodmanager.GetRoomManager(roomID)
+	manager := lod.GetRoomManager(roomID)
 	// when room is not setup for lod
 	// This if clause is executed only once when the lod broadcast command is received
 	if manager == nil {
-		manager = lodmanager.NewManager(ver, cmd,
+		manager = lod.NewManager(ver, cmd,
 			time.Duration(SyncIntervalForNearby)*time.Millisecond,
 			time.Duration(SyncIntervalForFar)*time.Millisecond,
 			MaxDistanceForNearby, MaxDistanceForFar)
 
 		if manager != nil {
-			lodmanager.SetRoomManager(roomID, manager)
+			lod.SetRoomManager(roomID, manager)
 			// set room and member cleanup handlers
 			room.SetOnRoomDiscardByID(roomID, func(roomID string) {
-				lodmanager.RemoveRoomManager(roomID)
+				lod.RemoveRoomManager(roomID)
 			})
 			room.SetOnLeaveByID(roomID, func(roomID string, userData *user.User) {
 				manager.RemoveUserEntity(userData.SID)

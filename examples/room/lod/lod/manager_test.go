@@ -1,4 +1,4 @@
-package lodmanager
+package lod
 
 import (
 	"testing"
