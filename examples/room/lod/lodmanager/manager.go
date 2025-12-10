@@ -31,14 +31,14 @@ type Manager struct {
 	syncIntervalForFar    int32
 	maxDistanceForNearby  int32
 	maxDistanceForFar     int32
-	managerMapMutex       sync.RWMutex
+	mu                    sync.RWMutex
 	sendBuffer            chan sendMessage
 	senderWg              sync.WaitGroup
 }
 
 func (m *Manager) String() string {
-	m.managerMapMutex.RLock()
-	defer m.managerMapMutex.RUnlock()
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	return fmt.Sprintf("Manager{userEntities: %v, started: %v, ver: %v, cmd: %v, syncIntervalForNearby: %v, syncIntervalForFar: %v,	 maxDistanceForNearby: %v, maxDistanceForFar: %v}",
 		m.userEntities, m.started.Load(), m.ver, m.cmd, m.syncIntervalForNearby, m.syncIntervalForFar, m.maxDistanceForNearby, m.maxDistanceForFar)
 }
@@ -76,8 +76,8 @@ func NewManager(ver uint8, cmd uint16, syncIntervalForNearby int32, syncInterval
 
 // AddUserEntity adds or updates a user entity with position and payload data
 func (m *Manager) AddUserEntity(userID string, x int32, y int32, payload []byte) {
-	m.managerMapMutex.Lock()
-	defer m.managerMapMutex.Unlock()
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	if userEntity, ok := m.userEntities[userID]; ok { // update
 		userEntity.Payload = payload
 		userEntity.X = x
@@ -93,8 +93,8 @@ func (m *Manager) AddUserEntity(userID string, x int32, y int32, payload []byte)
 // RemoveUserEntity removes a user entity from the manager
 // and remove remember data of other user entities
 func (m *Manager) RemoveUserEntity(userID string) {
-	m.managerMapMutex.Lock()
-	defer m.managerMapMutex.Unlock()
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	if _, ok := m.userEntities[userID]; !ok {
 		return
 	}
@@ -242,9 +242,9 @@ func (m *Manager) processSingleReceiver(
 // processAllUsers processes all users in the manager
 func (m *Manager) processAllUsers() {
 	start := time.Now()
-	m.managerMapMutex.RLock()
+	m.mu.RLock()
 	userEntities := maps.Clone(m.userEntities)
-	m.managerMapMutex.RUnlock()
+	m.mu.RUnlock()
 
 	for receiverID, receiverEntity := range userEntities {
 		m.processSingleReceiver(receiverID, receiverEntity, userEntities)
