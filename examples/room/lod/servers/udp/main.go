@@ -38,8 +38,9 @@ func main() {
 	meshConfigPath := ""
 
 	diarkisexec.SetupDiarkis(logConfigPath, meshConfigPath, &diarkisexec.Modules{
-		Room: &diarkisexec.Options{ConfigPath: "configs/shared/room.json", ExposeCommands: true},
-		Dive: &diarkisexec.Options{ConfigPath: "configs/shared/dive.json"},
+		Room:       &diarkisexec.Options{ConfigPath: "configs/shared/room.json", ExposeCommands: true},
+		MatchMaker: &diarkisexec.Options{ConfigPath: "configs/shared/matching.json", ExposeCommands: true},
+		Dive:       &diarkisexec.Options{ConfigPath: "configs/shared/dive.json"},
 	})
 	diarkisexec.SetupDiarkisUDPServer("configs/udp/main.json")
 	diarkisexec.SetServerCommandHandler(proom.BroadcastLoDVer, proom.BroadcastLoDCmd, handleRoomBroadcastLoD)
