@@ -27,8 +27,8 @@ type Manager struct {
 	started               atomic.Bool
 	ver                   uint8
 	cmd                   uint16
-	syncIntervalForNearby int32
-	syncIntervalForFar    int32
+	syncIntervalForNearby time.Duration
+	syncIntervalForFar    time.Duration
 	maxDistanceForNearby  int32
 	maxDistanceForFar     int32
 	mu                    sync.RWMutex
@@ -44,7 +44,7 @@ func (m *Manager) String() string {
 }
 
 // NewManager creates a new LOD manager with the specified configuration
-func NewManager(ver uint8, cmd uint16, syncIntervalForNearby int32, syncIntervalForFar int32, maxDistanceForNearby int32, maxDistanceForFar int32) *Manager {
+func NewManager(ver uint8, cmd uint16, syncIntervalForNearby time.Duration, syncIntervalForFar time.Duration, maxDistanceForNearby int32, maxDistanceForFar int32) *Manager {
 	// Initialize metrics on first manager creation
 
 	lm := &Manager{
@@ -155,7 +155,7 @@ func (m *Manager) shouldSendUpdate(
 			return true
 		}
 
-		if time.Since(getLastSendAt(senderEntity, receiverID)) > time.Duration(m.syncIntervalForFar)*time.Millisecond {
+		if time.Since(getLastSendAt(senderEntity, receiverID)) > m.syncIntervalForFar {
 			updatesSentCounter.WithLabelValues("nearby", "interval").Inc()
 			return true
 		}
@@ -169,13 +169,13 @@ func (m *Manager) shouldSendUpdate(
 		// syncIntervalForNearby and maxDistanceForNearby always
 		// cf. func loadLodConfigs()
 		if senderEntity.changedAfterSend {
-			interval := (m.syncIntervalForFar - m.syncIntervalForNearby) * (distance - m.maxDistanceForNearby) / (m.maxDistanceForFar - m.maxDistanceForNearby)
-			if time.Since(getLastSendAt(senderEntity, receiverID)) > time.Duration(interval)*time.Millisecond {
+			interval := (m.syncIntervalForFar - m.syncIntervalForNearby) * time.Duration(distance-m.maxDistanceForNearby) / time.Duration(m.maxDistanceForFar-m.maxDistanceForNearby)
+			if time.Since(getLastSendAt(senderEntity, receiverID)) > interval {
 				updatesSentCounter.WithLabelValues("far", "changed").Inc()
 				return true
 			}
 		} else {
-			if time.Since(getLastSendAt(senderEntity, receiverID)) > time.Duration(m.syncIntervalForFar)*time.Millisecond {
+			if time.Since(getLastSendAt(senderEntity, receiverID)) > m.syncIntervalForFar {
 				updatesSentCounter.WithLabelValues("far", "interval").Inc()
 				return true
 			}
@@ -265,7 +265,7 @@ func (m *Manager) processAllUsers() {
 // 2. farther than maxDistanceForFar -> don't send
 // 3. between maxDistanceForNearby and maxDistanceForFar -> send in every syncIntervalForFar
 func (m *Manager) invokeLodLoop() {
-	tick := time.NewTicker(time.Duration(m.syncIntervalForNearby) * time.Millisecond)
+	tick := time.NewTicker(m.syncIntervalForNearby)
 	defer tick.Stop()
 	for {
 		if !m.started.Load() {

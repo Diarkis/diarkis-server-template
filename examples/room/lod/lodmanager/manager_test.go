@@ -8,8 +8,8 @@ import (
 func TestProcessSenderReceiverPair(t *testing.T) {
 	nearbyDistance := int32(100)
 	farDistance := int32(500)
-	nearbyInterval := int32(100)
-	farInterval := int32(500)
+	nearbyInterval := 100 * time.Millisecond
+	farInterval := 500 * time.Millisecond
 	m := NewManager(1, 1, nearbyInterval, farInterval, nearbyDistance, farDistance)
 
 	tests := []struct {

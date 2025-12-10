@@ -3,6 +3,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/Diarkis/diarkis"
 	"github.com/Diarkis/diarkis/config"
 	"github.com/Diarkis/diarkis/derror"
@@ -21,6 +23,13 @@ var ( // lod.json settings
 	SyncIntervalForFar    int32
 	MaxDistanceForNearby  int32
 	MaxDistanceForFar     int32
+)
+
+const (
+	defaultSyncIntervalForNearby = 33
+	defaultSyncIntervalForFar    = 2000
+	defaultMaxDistanceForNearby  = 10000
+	defaultMaxDistanceForFar     = 40000
 )
 
 var logger = log.New("LOD")
@@ -71,7 +80,11 @@ func handleRoomBroadcastLoD(ver uint8, cmd uint16, payload []byte, userData *use
 	// when room is not setup for lod
 	// This if clause is executed only once when the lod broadcast command is received
 	if manager == nil {
-		manager = lodmanager.NewManager(ver, cmd, SyncIntervalForNearby, SyncIntervalForFar, MaxDistanceForNearby, MaxDistanceForFar)
+		manager = lodmanager.NewManager(ver, cmd,
+			time.Duration(SyncIntervalForNearby)*time.Millisecond,
+			time.Duration(SyncIntervalForFar)*time.Millisecond,
+			MaxDistanceForNearby, MaxDistanceForFar)
+
 		if manager != nil {
 			lodmanager.SetRoomManager(roomID, manager)
 			// set room and member cleanup handlers
@@ -104,13 +117,14 @@ func handleRoomGetLoDInfo(ver uint8, cmd uint16, payload []byte, userData *user.
 func loadLodConfigs(confPath string) {
 	config.Load("Lod", confPath)
 
-	SyncIntervalForNearby = config.GetAsInt32("Lod", syncIntervalForNearbyKey, SyncIntervalForNearby)
-	SyncIntervalForFar = config.GetAsInt32("Lod", syncIntervalForFarKey, SyncIntervalForFar)
+	SyncIntervalForNearby = config.GetAsInt32("Lod", syncIntervalForNearbyKey, defaultSyncIntervalForNearby)
+	SyncIntervalForFar = config.GetAsInt32("Lod", syncIntervalForFarKey, defaultSyncIntervalForFar)
 	if SyncIntervalForFar < SyncIntervalForNearby {
 		SyncIntervalForFar = SyncIntervalForNearby
 	}
-	MaxDistanceForNearby = config.GetAsInt32("Lod", maxDistanceForNearbyKey, MaxDistanceForNearby)
-	MaxDistanceForFar = config.GetAsInt32("Lod", maxDistanceForFarKey, MaxDistanceForFar)
+
+	MaxDistanceForNearby = config.GetAsInt32("Lod", maxDistanceForNearbyKey, defaultMaxDistanceForNearby)
+	MaxDistanceForFar = config.GetAsInt32("Lod", maxDistanceForFarKey, defaultMaxDistanceForFar)
 	if MaxDistanceForFar < MaxDistanceForNearby {
 		MaxDistanceForFar = MaxDistanceForNearby
 	}
