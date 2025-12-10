@@ -161,8 +161,10 @@ func (m *Manager) shouldSendUpdate(
 	}
 
 	// between maxDistanceForNearby and maxDistanceForFar -> send based on far rules
-	// if userEntity doesn't changed after send in previous interval, send update in syncIntervalForFar
-	// if userEntity changed after send in previous interval, send update in dynamic interval
+	// if userEntity doesn't changed(changedAfterSend == false) after send in previous interval,
+	//  send update in syncIntervalForFar
+	// if userEntity changed(changedAfterSend == true) after send in previous interval,
+	//  send update in dynamic interval
 	// dynamic interval is calculated based on distance
 	// dynamic interval is between syncIntervalForFar and syncIntervalForNearby
 	if distance <= m.maxDistanceForFar {
