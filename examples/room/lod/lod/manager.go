@@ -47,7 +47,7 @@ func (m *Manager) String() string {
 // NewManager creates a new LOD manager with the specified configuration
 func NewManager(ver uint8, cmd uint16, syncIntervalForNearby time.Duration, syncIntervalForFar time.Duration, maxDistanceForNearby int32, maxDistanceForFar int32) *Manager {
 	// Initialize metrics on first manager creation
-
+	logger.Info("NewManager", "ver", ver, "cmd", cmd, "syncIntervalForNearby", syncIntervalForNearby, "syncIntervalForFar", syncIntervalForFar, "maxDistanceForNearby", maxDistanceForNearby, "maxDistanceForFar", maxDistanceForFar)
 	lm := &Manager{
 		ver:                    ver,
 		cmd:                    cmd,
@@ -133,6 +133,7 @@ func (m *Manager) sendWorker() {
 
 // Stop stops the LOD manager and waits for send worker to finish
 func (m *Manager) Stop() {
+	logger.Info("Stop LOD manager")
 	m.started.Store(false)
 	close(m.done)
 	instancesGauge.Dec()
@@ -299,7 +300,6 @@ func (m *Manager) processAllUsers() {
 	}
 
 	duration := time.Since(start)
-
 	loopDurationHistogram.Observe(duration.Seconds())
 	bufferSizeGauge.Set(int64(len(m.sendBuffer)))
 }
