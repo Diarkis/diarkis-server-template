@@ -25,9 +25,7 @@
     "ver": 2,
     "cmd": 1001,
     "package": "room",
-    "comment": [
-      "Push the LoD data to the client."
-    ],
+    "comment": ["Push the LoD data to the client."],
     "properties": {
       "payload": {
         "type": "b[]",
@@ -39,18 +37,14 @@
     "ver": 2,
     "cmd": 1002,
     "package": "room",
-    "comment": [
-      "Get the LoD information of the room."
-    ],
+    "comment": ["Get the LoD information of the room."],
     "properties": {}
   },
   "GetLoDInfoResponse": {
     "ver": 2,
     "cmd": 1002,
     "package": "room",
-    "comment": [
-      "Response the LoD information of the room."
-    ],
+    "comment": ["Response the LoD information of the room."],
     "properties": {
       "syncIntervalForNearby": {
         "type": "i32",
