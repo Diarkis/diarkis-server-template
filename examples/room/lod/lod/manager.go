@@ -23,24 +23,25 @@ type sendMessage struct {
 
 // Manager manages LOD (Level of Detail) synchronization for users
 type Manager struct {
-	userEntities          map[string]*UserEntity
-	started               atomic.Bool
-	ver                   uint8
-	cmd                   uint16
-	syncIntervalForNearby time.Duration
-	syncIntervalForFar    time.Duration
-	maxDistanceForNearby  int32
-	maxDistanceForFar     int32
-	mu                    sync.RWMutex
-	sendBuffer            chan sendMessage
-	done                  chan struct{} // channel to signal send worker to stop
+	userEntities           map[string]*UserEntity
+	started                atomic.Bool
+	ver                    uint8
+	cmd                    uint16
+	syncIntervalForNearby  time.Duration
+	syncIntervalForFar     time.Duration
+	syncIntervalProportion int64
+	maxDistanceForNearby   int32
+	maxDistanceForFar      int32
+	mu                     sync.RWMutex
+	sendBuffer             chan sendMessage
+	done                   chan struct{} // channel to signal send worker to stop
 }
 
 func (m *Manager) String() string {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	return fmt.Sprintf("Manager{started: %v, ver: %v, cmd: %v, syncIntervalForNearby: %v, syncIntervalForFar: %v,	 maxDistanceForNearby: %v, maxDistanceForFar: %v}",
-		m.started.Load(), m.ver, m.cmd, m.syncIntervalForNearby, m.syncIntervalForFar, m.maxDistanceForNearby, m.maxDistanceForFar)
+	return fmt.Sprintf("Manager{started: %v, ver: %v, cmd: %v, syncIntervalForNearby: %v, syncIntervalForFar: %v, syncIntervalProportion: %v, maxDistanceForNearby: %v, maxDistanceForFar: %v}",
+		m.started.Load(), m.ver, m.cmd, m.syncIntervalForNearby, m.syncIntervalForFar, m.syncIntervalProportion, m.maxDistanceForNearby, m.maxDistanceForFar)
 }
 
 // NewManager creates a new LOD manager with the specified configuration
@@ -48,16 +49,17 @@ func NewManager(ver uint8, cmd uint16, syncIntervalForNearby time.Duration, sync
 	// Initialize metrics on first manager creation
 
 	lm := &Manager{
-		ver:                   ver,
-		cmd:                   cmd,
-		syncIntervalForNearby: syncIntervalForNearby,
-		syncIntervalForFar:    syncIntervalForFar,
-		maxDistanceForNearby:  maxDistanceForNearby,
-		maxDistanceForFar:     maxDistanceForFar,
-		userEntities:          make(map[string]*UserEntity),
-		started:               atomic.Bool{},
-		sendBuffer:            make(chan sendMessage, 10000), // Buffer size: 10000
-		done:                  make(chan struct{}),
+		ver:                    ver,
+		cmd:                    cmd,
+		syncIntervalForNearby:  syncIntervalForNearby,
+		syncIntervalForFar:     syncIntervalForFar,
+		maxDistanceForNearby:   maxDistanceForNearby,
+		maxDistanceForFar:      maxDistanceForFar,
+		userEntities:           make(map[string]*UserEntity),
+		started:                atomic.Bool{},
+		syncIntervalProportion: int64(syncIntervalForFar-syncIntervalForNearby) / int64(maxDistanceForFar-maxDistanceForNearby),
+		sendBuffer:             make(chan sendMessage, 10000), // Buffer size: 10000
+		done:                   make(chan struct{}),
 	}
 
 	lm.started.Store(true)
@@ -168,7 +170,7 @@ func (m *Manager) shouldSendUpdate(
 	// dynamic interval is calculated based on distance
 	// dynamic interval is between syncIntervalForFar and syncIntervalForNearby
 	if distance <= m.maxDistanceForFar {
-		return m.checkForFar(senderID, senderEntity, receiverID, receiverEntity)
+		return m.checkForBetweenNearbyAndFar(senderID, senderEntity, receiverID, receiverEntity, distance)
 	}
 
 	return false
@@ -180,12 +182,19 @@ func (m *Manager) checkForNearby(
 	receiverID string,
 	receiverEntity *UserEntity,
 ) bool {
+
+	// if userEntity changed after send in previous interval, send update in syncIntervalForNearby
 	if senderEntity.changedAfterSend {
-		updatesSentCounter.WithLabelValues("nearby", "changed").Inc()
-		return true
+		if getIntervalFromLastSend(senderEntity, receiverID) > m.syncIntervalForNearby {
+			updatesSentCounter.WithLabelValues("nearby", "changed").Inc()
+			return true
+		}
+		updatesSkippedCounter.WithLabelValues("interval_not_met").Inc()
+		return false
 	}
 
-	if time.Since(getLastSendAt(senderEntity, receiverID)) > m.syncIntervalForFar {
+	// if userEntity doesn't changed after send in previous interval, send update in syncIntervalForFar
+	if getIntervalFromLastSend(senderEntity, receiverID) > m.syncIntervalForFar {
 		updatesSentCounter.WithLabelValues("nearby", "interval").Inc()
 		return true
 	}
@@ -193,21 +202,27 @@ func (m *Manager) checkForNearby(
 	return false
 }
 
-func (m *Manager) checkForFar(
+func (m *Manager) checkForBetweenNearbyAndFar(
 	senderID string,
 	senderEntity *UserEntity,
 	receiverID string,
 	receiverEntity *UserEntity,
+	distance int32,
 ) bool {
+	interval := time.Duration(m.syncIntervalProportion * int64(distance-m.maxDistanceForNearby))
 	// syncIntervalForFar and maxDistanceForFar is larger than
 	// syncIntervalForNearby and maxDistanceForNearby always
 	// cf. func loadLodConfigs()
 	if senderEntity.changedAfterSend {
-		updatesSentCounter.WithLabelValues("far", "changed").Inc()
-		return true
+		if getIntervalFromLastSend(senderEntity, receiverID) > interval {
+			updatesSentCounter.WithLabelValues("far", "changed").Inc()
+			return true
+		}
+		updatesSkippedCounter.WithLabelValues("interval_not_met").Inc()
+		return false
 	}
 
-	if time.Since(getLastSendAt(senderEntity, receiverID)) > m.syncIntervalForFar {
+	if getIntervalFromLastSend(senderEntity, receiverID) > interval {
 		updatesSentCounter.WithLabelValues("far", "interval").Inc()
 		return true
 	}
@@ -294,7 +309,7 @@ func (m *Manager) processAllUsers() {
 // 2. farther than maxDistanceForFar -> don't send
 // 3. between maxDistanceForNearby and maxDistanceForFar -> send in every syncIntervalForFar
 func (m *Manager) invokeLodLoop() {
-	tick := time.NewTicker(m.syncIntervalForNearby)
+	tick := time.NewTicker(m.syncIntervalForNearby / 2)
 	defer tick.Stop()
 	for {
 		if !m.started.Load() {
@@ -323,4 +338,10 @@ func getLastSendAt(senderUserEntity *UserEntity, receiverUserID string) time.Tim
 	senderUserEntity.mu.RLock()
 	defer senderUserEntity.mu.RUnlock()
 	return senderUserEntity.m[receiverUserID]
+}
+
+func getIntervalFromLastSend(senderUserEntity *UserEntity, receiverUserID string) time.Duration {
+	senderUserEntity.mu.RLock()
+	defer senderUserEntity.mu.RUnlock()
+	return time.Since(senderUserEntity.m[receiverUserID])
 }
