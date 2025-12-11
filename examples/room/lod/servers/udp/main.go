@@ -44,7 +44,7 @@ const (
 
 func main() {
 	logConfigPath := "configs/shared/log.json"
-	meshConfigPath := ""
+	meshConfigPath := "configs/shared/mesh.json"
 
 	diarkisexec.SetupDiarkis(logConfigPath, meshConfigPath, &diarkisexec.Modules{
 		Room:       &diarkisexec.Options{ConfigPath: "configs/shared/room.json", ExposeCommands: true},
