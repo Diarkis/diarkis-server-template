@@ -12,4 +12,5 @@ win-arm64/fakesignal.exe <PID> SIGUSR1 # on arm64 arch
 ```
 
 # link
+
 https://help.diarkis.io/en/diarkis-server/setup-windows#fakesignal
