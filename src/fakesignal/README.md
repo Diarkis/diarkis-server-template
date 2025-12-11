@@ -10,3 +10,6 @@ To send **USR1** signal to one of Diarkis process, run the following command.
 win-amd64/fakesignal.exe <PID> SIGUSR1 # on amd64 arch
 win-arm64/fakesignal.exe <PID> SIGUSR1 # on arm64 arch
 ```
+
+# link
+https://help.diarkis.io/en/diarkis-server/setup-windows#fakesignal
