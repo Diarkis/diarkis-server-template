@@ -1,5 +1,6 @@
 {
   "Host": "localhost:7000",
+  "_Host": "136.110.109.53:7001",
   "Bots": 100,
   "AuthInterval": 200,
   "RoomSize": 100,
