@@ -189,18 +189,22 @@ func (m *Manager) checkForNearby(
 	// if userEntity changed after send in previous interval, send update in syncIntervalForNearby
 	if senderEntity.changedAfterSend {
 		if getIntervalFromLastSend(senderEntity, receiverID) > m.syncIntervalForNearby {
+			logger.Verbosef("checkForNearby", "senderID", senderID, "receiverID", receiverID, "intervalFromLastSend", getIntervalFromLastSend(senderEntity, receiverID), "syncIntervalForNearby", m.syncIntervalForNearby, "changed", true, "reason", "changed_after_send")
 			updatesSentCounter.WithLabelValues("nearby", "changed").Inc()
 			return true
 		}
+		logger.Verbosef("checkForNearby", "senderID", senderID, "receiverID", receiverID, "intervalFromLastSend", getIntervalFromLastSend(senderEntity, receiverID), "syncIntervalForNearby", m.syncIntervalForNearby, "changed", true, "reason", "interval_not_met")
 		updatesSkippedCounter.WithLabelValues("interval_not_met").Inc()
 		return false
 	}
 
 	// if userEntity doesn't changed after send in previous interval, send update in syncIntervalForFar
 	if getIntervalFromLastSend(senderEntity, receiverID) > m.syncIntervalForFar {
+		logger.Verbosef("checkForNearby", "senderID", senderID, "receiverID", receiverID, "intervalFromLastSend", getIntervalFromLastSend(senderEntity, receiverID), "syncIntervalForFar", m.syncIntervalForFar, "changed", false, "reason", "interval_met")
 		updatesSentCounter.WithLabelValues("nearby", "interval").Inc()
 		return true
 	}
+	logger.Verbosef("checkForNearby", "senderID", senderID, "receiverID", receiverID, "intervalFromLastSend", getIntervalFromLastSend(senderEntity, receiverID), "syncIntervalForFar", m.syncIntervalForFar, "changed", false, "reason", "interval_not_met")
 	updatesSkippedCounter.WithLabelValues("interval_not_met").Inc()
 	return false
 }
@@ -212,23 +216,28 @@ func (m *Manager) checkForBetweenNearbyAndFar(
 	receiverEntity *UserEntity,
 	distance int32,
 ) bool {
-	interval := time.Duration(m.syncIntervalProportion * int64(distance-m.maxDistanceForNearby))
+	interval := time.Duration(m.syncIntervalProportion*int64(distance-m.maxDistanceForNearby)) + m.syncIntervalForNearby
 	// syncIntervalForFar and maxDistanceForFar is larger than
 	// syncIntervalForNearby and maxDistanceForNearby always
 	// cf. func loadLodConfigs()
 	if senderEntity.changedAfterSend {
 		if getIntervalFromLastSend(senderEntity, receiverID) > interval {
+			logger.Verbosef("checkForBetweenNearbyAndFar", "senderID", senderID, "receiverID", receiverID, "intervalFromLastSend", getIntervalFromLastSend(senderEntity, receiverID), "interval", interval, "changed", true, "reason", "changed_after_send")
 			updatesSentCounter.WithLabelValues("far", "changed").Inc()
 			return true
 		}
+		logger.Verbosef("checkForBetweenNearbyAndFar", "senderID", senderID, "receiverID", receiverID, "intervalFromLastSend", getIntervalFromLastSend(senderEntity, receiverID), "interval", interval, "changed", true, "reason", "interval_not_met")
 		updatesSkippedCounter.WithLabelValues("interval_not_met").Inc()
 		return false
 	}
 
-	if getIntervalFromLastSend(senderEntity, receiverID) > interval {
+	// if userEntity doesn't changed after send in previous interval, send update in syncIntervalForFar
+	if getIntervalFromLastSend(senderEntity, receiverID) > m.syncIntervalForFar {
+		logger.Verbosef("checkForBetweenNearbyAndFar", "senderID", senderID, "receiverID", receiverID, "intervalFromLastSend", getIntervalFromLastSend(senderEntity, receiverID), "interval", interval, "changed", false, "reason", "interval_met")
 		updatesSentCounter.WithLabelValues("far", "interval").Inc()
 		return true
 	}
+	logger.Verbosef("checkForBetweenNearbyAndFar", "senderID", senderID, "receiverID", receiverID, "intervalFromLastSend", getIntervalFromLastSend(senderEntity, receiverID), "interval", interval, "changed", false, "reason", "interval_not_met")
 	updatesSkippedCounter.WithLabelValues("interval_not_met").Inc()
 	return false
 }
@@ -311,13 +320,15 @@ func (m *Manager) processAllUsers() {
 // 2. farther than maxDistanceForFar -> don't send
 // 3. between maxDistanceForNearby and maxDistanceForFar -> send in every syncIntervalForFar
 func (m *Manager) invokeLodLoop() {
-	tick := time.NewTicker(m.syncIntervalForNearby / 2)
+	// Use 1ms ticker for high precision timing
+	// This ensures packets are sent at the correct intervals with minimal delay
+	tick := time.NewTicker(m.syncIntervalForNearby / 3)
 	defer tick.Stop()
 	for {
 		if !m.started.Load() {
 			break
 		}
-		<-tick.C
+		<-tick.C // if tick is not received, it means that the interval is too short
 		m.processAllUsers()
 	}
 	close(m.sendBuffer)
