@@ -12,7 +12,8 @@ func TestProcessSenderReceiverPair(t *testing.T) {
 	farDistance := int32(500)
 	nearbyInterval := 100 * time.Millisecond
 	farInterval := 500 * time.Millisecond
-	m := NewManager(1, 1, nearbyInterval, farInterval, nearbyDistance, farDistance)
+	SetupLodMetrics() // Initialize metrics before creating manager
+	m := NewManager("test-room", 1, 1, nearbyInterval, farInterval, nearbyDistance, farDistance)
 
 	tests := []struct {
 		name           string
@@ -40,7 +41,7 @@ func TestProcessSenderReceiverPair(t *testing.T) {
 			receiverPos:    [2]int32{100, 100}, // same position
 			lastSent:       time.Duration(farInterval) + 10*time.Millisecond,
 			changed:        false,
-			expectedResult: "",
+			expectedResult: "user2",
 		},
 		{
 			name:           "Farther than maxDistanceForFar",

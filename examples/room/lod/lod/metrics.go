@@ -9,10 +9,13 @@ import (
 
 var (
 	// MetricActiveUsersGaugeOpts tracks the number of users managed by LOD manager
-	MetricActiveUsersGaugeOpts = metrics.GaugeOpts{
-		Name:      "lod_manager_active_users",
-		Help:      "Number of user entities currently managed by the LOD manager.",
-		NodeRoles: []diarkis.NodeRole{diarkis.UDP, diarkis.TCP},
+	MetricActiveUsersGaugeOpts = metrics.GaugeVecOpts{
+		GaugeOpts: metrics.GaugeOpts{
+			Name:      "lod_manager_active_users",
+			Help:      "Number of user entities currently managed by the LOD manager.",
+			NodeRoles: []diarkis.NodeRole{diarkis.UDP, diarkis.TCP},
+		},
+		LabelNames: []string{"room_id"},
 	}
 
 	// MetricLoopDurationOpts measures LOD loop processing time
@@ -91,7 +94,7 @@ var (
 )
 
 var (
-	activeUsersGauge       *metrics.Gauge
+	activeUsersGauge       *metrics.GaugeVec
 	loopDurationHistogram  *metrics.Histogram
 	updatesSentCounter     *metrics.CounterVec
 	bufferDropsCounter     *metrics.Counter
@@ -104,7 +107,7 @@ var (
 )
 
 func SetupLodMetrics() {
-	activeUsersGauge = metrics.NewGauge(MetricActiveUsersGaugeOpts)
+	activeUsersGauge = metrics.NewGaugeVec(MetricActiveUsersGaugeOpts)
 	loopDurationHistogram = metrics.NewHistogram(MetricLoopDurationOpts)
 	updatesSentCounter = metrics.NewCounterVec(MetricUpdatesSentOpts)
 	bufferDropsCounter = metrics.NewCounter(MetricBufferDropsOpts)

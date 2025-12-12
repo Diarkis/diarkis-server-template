@@ -25,6 +25,7 @@ type sendMessage struct {
 type Manager struct {
 	userEntities           map[string]*UserEntity
 	started                atomic.Bool
+	roomID                 string
 	ver                    uint8
 	cmd                    uint16
 	syncIntervalForNearby  time.Duration
@@ -40,15 +41,16 @@ type Manager struct {
 func (m *Manager) String() string {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	return fmt.Sprintf("Manager{started: %v, ver: %v, cmd: %v, syncIntervalForNearby: %v, syncIntervalForFar: %v, syncIntervalProportion: %v, maxDistanceForNearby: %v, maxDistanceForFar: %v}",
-		m.started.Load(), m.ver, m.cmd, m.syncIntervalForNearby, m.syncIntervalForFar, m.syncIntervalProportion, m.maxDistanceForNearby, m.maxDistanceForFar)
+	return fmt.Sprintf("Manager{started: %v, roomID: %v, ver: %v, cmd: %v, syncIntervalForNearby: %v, syncIntervalForFar: %v, syncIntervalProportion: %v, maxDistanceForNearby: %v, maxDistanceForFar: %v}",
+		m.started.Load(), m.roomID, m.ver, m.cmd, m.syncIntervalForNearby, m.syncIntervalForFar, m.syncIntervalProportion, m.maxDistanceForNearby, m.maxDistanceForFar)
 }
 
 // NewManager creates a new LOD manager with the specified configuration
-func NewManager(ver uint8, cmd uint16, syncIntervalForNearby time.Duration, syncIntervalForFar time.Duration, maxDistanceForNearby int32, maxDistanceForFar int32) *Manager {
+func NewManager(roomID string, ver uint8, cmd uint16, syncIntervalForNearby time.Duration, syncIntervalForFar time.Duration, maxDistanceForNearby int32, maxDistanceForFar int32) *Manager {
 	// Initialize metrics on first manager creation
-	logger.Info("NewManager", "ver", ver, "cmd", cmd, "syncIntervalForNearby", syncIntervalForNearby, "syncIntervalForFar", syncIntervalForFar, "maxDistanceForNearby", maxDistanceForNearby, "maxDistanceForFar", maxDistanceForFar)
+	logger.Info("NewManager", "roomID", roomID, "ver", ver, "cmd", cmd, "syncIntervalForNearby", syncIntervalForNearby, "syncIntervalForFar", syncIntervalForFar, "maxDistanceForNearby", maxDistanceForNearby, "maxDistanceForFar", maxDistanceForFar)
 	lm := &Manager{
+		roomID:                 roomID,
 		ver:                    ver,
 		cmd:                    cmd,
 		syncIntervalForNearby:  syncIntervalForNearby,
@@ -77,7 +79,7 @@ func NewManager(ver uint8, cmd uint16, syncIntervalForNearby time.Duration, sync
 }
 
 // AddUserEntity adds or updates a user entity with position and payload data
-func (m *Manager) AddUserEntity(userID string, x int32, y int32, payload []byte) {
+func (m *Manager) AddUserEntity(userID string, roomID string, x int32, y int32, payload []byte) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if userEntity, ok := m.userEntities[userID]; ok { // update
@@ -89,7 +91,7 @@ func (m *Manager) AddUserEntity(userID string, x int32, y int32, payload []byte)
 	}
 	m.userEntities[userID] = NewUserEntity(x, y, payload)
 	// Update active users gauge
-	activeUsersGauge.Set(int64(len(m.userEntities)))
+	activeUsersGauge.WithLabelValues(m.roomID).Set(int64(len(m.userEntities)))
 }
 
 // RemoveUserEntity removes a user entity from the manager
@@ -108,7 +110,7 @@ func (m *Manager) RemoveUserEntity(userID string) {
 		userEntity.mu.Unlock()
 	}
 	// Update active users gauge
-	activeUsersGauge.Set(int64(len(m.userEntities)))
+	activeUsersGauge.WithLabelValues(m.roomID).Set(int64(len(m.userEntities)))
 }
 
 // sendWorker processes messages from sendBuffer and sends them to users
@@ -332,12 +334,6 @@ func calculateDistance(x1, y1, x2, y2 int32) int32 {
 		y = -y
 	}
 	return x + y
-}
-
-func getLastSendAt(senderUserEntity *UserEntity, receiverUserID string) time.Time {
-	senderUserEntity.mu.RLock()
-	defer senderUserEntity.mu.RUnlock()
-	return senderUserEntity.m[receiverUserID]
 }
 
 func getIntervalFromLastSend(senderUserEntity *UserEntity, receiverUserID string) time.Duration {
