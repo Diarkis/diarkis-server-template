@@ -1,20 +1,18 @@
 # Overview
 
-This project is comprised of **(3)** servers and **(1)** client.
+このプロジェクトは、サーバーとクライアントで構成されています。
 
-- **MARS** server is a standard (out-of-the-box) Diarkis template. It serves to orchestrates the
-  node mesh.
+- **MARS** ノードが構築しているメッシュネットワークをオーケストレーションします。
 
-- **HTTP** server is a standard (out-of-the-box) Diarkis template; It serves to authenticate the
-  client.
+- **HTTP** サーバーは、クライアントの認証を行います。
 
-- **UDP** server hosts the client connection and handles all incoming Room and Room LoD commands.
+- **UDP** サーバーは、クライアントの接続を管理し、すべての入力RoomとRoom LoDコマンドを処理します。
 
 このサンプルのゴールは Room 内で距離によって遠方の同期を減らすことで、クライアントの描画と通信の負荷を減らすことです。
 
 ## How to Build
 
-You can build all **(3)** servers and the client binary using the provided Mage build scripts.
+サーバーとクライアントはmageを使用してビルドします。
 
 ### To build on Linux or macOS
 
@@ -28,13 +26,11 @@ You can build all **(3)** servers and the client binary using the provided Mage 
 .\run-mage.bat build:local
 ```
 
-This will create the **MARS**, **HTTP**, and **UDP** server binaries, and client binary,
-placing them inside the `remote_bin` directory.
+これにより、**MARS**、**HTTP**、**UDP**サーバーとクライアントバイナリが作成され、`remote_bin`ディレクトリに配置されます。
 
 ## How to Run
 
-This project requires all **(3)** servers to be running before clients can test matchmaking
-behavior.
+このプロジェクトは、すべてのサーバーが動作している必要があります。
 
 ### 1. First, start the MARS server to orchestrate the node mesh
 
@@ -54,9 +50,12 @@ behavior.
 ./run-mage.sh server udp
 ```
 
+## Limt
+このサンプルのサーバーは必要最低限のモジュールだけ有効にしているので、Lod以外の機能をテストする際には、必要なモジュールを有効にすること、もしくは有効にしたサーバーに接続してください。
+
 ## Testing Room LoD
 
-User 1 connects to the UDP server and creates a room.
+ユーザー1がUDPサーバーに接続してRoomを作成します。
 
 ```sh
 ./remote_bin/cli -host=127.0.0.1:7000 -uid=user11
@@ -72,7 +71,7 @@ Enter broadcast interval (milliseconds) (uint8): (Default: 100)
 Room created. roomID:cf7b49ea1fc836d87f0000011fa5000000000000000000000000, createdAt:1764084948
 ```
 
-User 2 connects to the UDP server and joins the room.
+ユーザー2がUDPサーバーに接続してRoomに参加します。
 
 ```sh
 ./remote_bin/cli -host=127.0.0.1:7000 -uid=user12
@@ -86,14 +85,14 @@ UDP Room cf7b49ea1fc836d87f0000011fa5000000000000000000000000 joined and it was 
 New member joined Room. Message: Hello from user12!
 ```
 
-User 1 gets the LoD information of the room.
+ユーザー1がRoomのLoD情報を取得します。
 
 ```sh
 > lod getinfo
 Get LoD Info successful: MaxDistanceForFar = 40000 | MaxDistanceForNearby = 10000 | SyncIntervalForFar = 2000 | SyncIntervalForNearby = 16
 ```
 
-User 1 broadcasts the LoD information to the room.
+ユーザー1がRoomにLoD情報をブロードキャストします。
 
 ```sh
 > lod broadcast
@@ -105,15 +104,15 @@ Enter Payload (string):
 sync data
 Broadcast LoD successful:
 Broadcast LoD Push successful:  sync data
-```
+``` 
 
-User 2 receives data from User 1 at the appropriate synchronization interval.
+ユーザー2がユーザー1から適切な同期間隔でデータを受信します。
 
 ```sh
 Broadcast LoD Push successful:       sync data
 ```
 
-You can see the LoD commands by running the following command:
+LoDコマンドを表示するには、以下のコマンドを実行します。
 
 ```sh
  > help lod
@@ -412,10 +411,6 @@ Ver=2, Cmd=1002
 #### Push Notification
 
 なし
-
-#### Errors
-
-TODO: エラー定義
 
 ---
 
