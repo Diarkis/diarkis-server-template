@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"maps"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/Diarkis/diarkis/packet"
@@ -24,7 +23,6 @@ type sendMessage struct {
 // Manager manages LOD (Level of Detail) synchronization for users
 type Manager struct {
 	userEntities           map[string]*UserEntity
-	started                atomic.Bool
 	roomID                 string
 	ver                    uint8
 	cmd                    uint16
@@ -35,14 +33,15 @@ type Manager struct {
 	maxDistanceForFar      int32
 	mu                     sync.RWMutex
 	sendBuffer             chan sendMessage
-	done                   chan struct{} // channel to signal send worker to stop
+	sendDone               chan struct{} // channel to signal send worker to stop
+	lodDone                chan struct{} // channel to signal lod worker to stop
 }
 
 func (m *Manager) String() string {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	return fmt.Sprintf("Manager{started: %v, roomID: %v, ver: %v, cmd: %v, syncIntervalForNearby: %v, syncIntervalForFar: %v, syncIntervalProportion: %v, maxDistanceForNearby: %v, maxDistanceForFar: %v}",
-		m.started.Load(), m.roomID, m.ver, m.cmd, m.syncIntervalForNearby, m.syncIntervalForFar, m.syncIntervalProportion, m.maxDistanceForNearby, m.maxDistanceForFar)
+	return fmt.Sprintf("Manager{roomID: %v, ver: %v, cmd: %v, syncIntervalForNearby: %v, syncIntervalForFar: %v, syncIntervalProportion: %v, maxDistanceForNearby: %v, maxDistanceForFar: %v}",
+		m.roomID, m.ver, m.cmd, m.syncIntervalForNearby, m.syncIntervalForFar, m.syncIntervalProportion, m.maxDistanceForNearby, m.maxDistanceForFar)
 }
 
 // NewManager creates a new LOD manager with the specified configuration
@@ -58,13 +57,11 @@ func NewManager(roomID string, ver uint8, cmd uint16, syncIntervalForNearby time
 		maxDistanceForNearby:   maxDistanceForNearby,
 		maxDistanceForFar:      maxDistanceForFar,
 		userEntities:           make(map[string]*UserEntity),
-		started:                atomic.Bool{},
 		syncIntervalProportion: int64(syncIntervalForFar-syncIntervalForNearby) / int64(maxDistanceForFar-maxDistanceForNearby),
 		sendBuffer:             make(chan sendMessage, 10000), // Buffer size: 10000
-		done:                   make(chan struct{}),
+		sendDone:               make(chan struct{}),
+		lodDone:                make(chan struct{}),
 	}
-
-	lm.started.Store(true)
 
 	// Increment instance count
 	instancesGauge.Inc()
@@ -79,7 +76,7 @@ func NewManager(roomID string, ver uint8, cmd uint16, syncIntervalForNearby time
 }
 
 // AddUserEntity adds or updates a user entity with position and payload data
-func (m *Manager) AddUserEntity(userID string, roomID string, x int32, y int32, payload []byte) {
+func (m *Manager) AddUserEntity(userID string, x int32, y int32, payload []byte) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if userEntity, ok := m.userEntities[userID]; ok { // update
@@ -127,7 +124,8 @@ func (m *Manager) sendWorker() {
 				// Track errors
 				errorsCounter.WithLabelValues("user_not_found").Inc()
 			}
-		case <-m.done:
+		case <-m.sendDone:
+			logger.Info("LOD send worker stopped")
 			return
 		}
 	}
@@ -135,9 +133,9 @@ func (m *Manager) sendWorker() {
 
 // Stop stops the LOD manager and waits for send worker to finish
 func (m *Manager) Stop() {
-	logger.Info("Stop LOD manager")
-	m.started.Store(false)
-	close(m.done)
+	logger.Info("Stopping LOD manager")
+	close(m.sendDone)
+	close(m.lodDone)
 	instancesGauge.Dec()
 }
 
@@ -325,13 +323,16 @@ func (m *Manager) invokeLodLoop() {
 	tick := time.NewTicker(m.syncIntervalForNearby / 3)
 	defer tick.Stop()
 	for {
-		if !m.started.Load() {
-			break
+		select {
+		case <-m.lodDone:
+			logger.Info("LOD loop stopped")
+			close(m.sendBuffer)
+			return
+		case <-tick.C: // if tick is not received, it means that the interval is too short
+			m.processAllUsers()
 		}
-		<-tick.C // if tick is not received, it means that the interval is too short
-		m.processAllUsers()
 	}
-	close(m.sendBuffer)
+
 }
 
 // calculateDistance computes Manhattan distance between two entities

@@ -97,7 +97,7 @@ func handleRoomBroadcastLoD(ver uint8, cmd uint16, payload []byte, userData *use
 		}
 	}
 
-	manager.AddUserEntity(userData.SID, roomID, proto.X, proto.Y, proto.Payload)
+	manager.AddUserEntity(userData.SID, proto.X, proto.Y, proto.Payload)
 	logger.Verbosef("handleRoomBroadcastLoD", "userID", userData.SID, "x", proto.X, "y", proto.Y)
 	userData.ServerRespond(nil, ver, cmd, server.Ok, true)
 	next(nil)
