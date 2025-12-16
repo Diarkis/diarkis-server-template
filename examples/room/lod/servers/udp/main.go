@@ -3,6 +3,10 @@
 package main
 
 import (
+	"time"
+
+	"github.com/Diarkis/diarkis"
+	"github.com/Diarkis/diarkis/config"
 	"github.com/Diarkis/diarkis/derror"
 	"github.com/Diarkis/diarkis/diarkisexec"
 	"github.com/Diarkis/diarkis/log"
@@ -10,23 +14,49 @@ import (
 	"github.com/Diarkis/diarkis/server"
 	"github.com/Diarkis/diarkis/user"
 
+	"github.com/Diarkis/diarkis-server-template/examples/room/lod/lod"
 	proom "github.com/Diarkis/diarkis-server-template/examples/room/lod/puffer/go/room"
 )
 
-var logger = log.New("UDP")
+var ( // lod.json settings
+	SyncIntervalForNearby int32
+	SyncIntervalForFar    int32
+	MaxDistanceForNearby  int32
+	MaxDistanceForFar     int32
+)
+
+const (
+	defaultSyncIntervalForNearby = 33
+	defaultSyncIntervalForFar    = 2000
+	defaultMaxDistanceForNearby  = 10000
+	defaultMaxDistanceForFar     = 40000
+)
+
+var logger = log.New("LOD")
+
+const (
+	configPath               = "configs/shared/lod.json"
+	syncIntervalForNearbyKey = "SyncIntervalForNearby"
+	syncIntervalForFarKey    = "SyncIntervalForFar"
+	maxDistanceForNearbyKey  = "MaxDistanceForNearby"
+	maxDistanceForFarKey     = "MaxDistanceForFar"
+)
 
 func main() {
 	logConfigPath := "configs/shared/log.json"
-	meshConfigPath := ""
+	meshConfigPath := "configs/shared/mesh.json"
 
 	diarkisexec.SetupDiarkis(logConfigPath, meshConfigPath, &diarkisexec.Modules{
-		Room: &diarkisexec.Options{ConfigPath: "configs/shared/room.json", ExposeCommands: true},
-		Dive: &diarkisexec.Options{ConfigPath: "configs/shared/dive.json"},
+		Room:       &diarkisexec.Options{ConfigPath: "configs/shared/room.json", ExposeCommands: true},
+		MatchMaker: &diarkisexec.Options{ConfigPath: "configs/shared/matching.json", ExposeCommands: true},
+		Dive:       &diarkisexec.Options{ConfigPath: "configs/shared/dive.json"},
 	})
 	diarkisexec.SetupDiarkisUDPServer("configs/udp/main.json")
 	diarkisexec.SetServerCommandHandler(proom.BroadcastLoDVer, proom.BroadcastLoDCmd, handleRoomBroadcastLoD)
 	diarkisexec.SetServerCommandHandler(proom.GetLoDInfoVer, proom.GetLoDInfoCmd, handleRoomGetLoDInfo)
 
+	loadLodConfigs(configPath)
+	diarkis.OnReady(func(f func(error)) { lod.SetupLodMetrics(); f(nil) })
 	diarkisexec.StartDiarkis()
 }
 
@@ -40,27 +70,62 @@ func handleRoomBroadcastLoD(ver uint8, cmd uint16, payload []byte, userData *use
 		return
 	}
 
-	// TODO: Broadcast the LoD data
 	roomID := room.GetRoomID(userData)
 	if roomID == "" {
 		userData.ServerRespond(derror.ErrData("Not in the room", derror.NotAllowed(0)), ver, cmd, server.Bad, true)
 		return
 	}
 
-	room.Broadcast(roomID, userData, ver, cmd, proto.Payload, true)
+	manager := lod.GetRoomManager(roomID)
+	// when room is not setup for lod
+	// This if clause is executed only once when the lod broadcast command is received
+	if manager == nil {
+		manager = lod.NewManager(roomID, ver, cmd,
+			time.Duration(SyncIntervalForNearby)*time.Millisecond,
+			time.Duration(SyncIntervalForFar)*time.Millisecond,
+			MaxDistanceForNearby, MaxDistanceForFar)
+
+		if manager != nil {
+			lod.SetRoomManager(roomID, manager)
+			// set room and member cleanup handlers
+			room.SetOnRoomDiscardByID(roomID, func(roomID string) {
+				lod.RemoveRoomManager(roomID)
+			})
+			room.SetOnLeaveByID(roomID, func(roomID string, userData *user.User) {
+				manager.RemoveUserEntity(userData.SID)
+			})
+		}
+	}
+
+	manager.AddUserEntity(userData.SID, proto.X, proto.Y, proto.Payload)
+	logger.Verbosef("handleRoomBroadcastLoD", "userID", userData.SID, "x", proto.X, "y", proto.Y)
 	userData.ServerRespond(nil, ver, cmd, server.Ok, true)
 	next(nil)
 }
 
 func handleRoomGetLoDInfo(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
-
-	// TODO: Get the LoD information from configuration
 	lodInfo := proom.NewGetLoDInfoResponse()
-	lodInfo.SyncIntervalForNearby = 16
-	lodInfo.SyncIntervalForFar = 2000
-	lodInfo.MaxDistanceForNearby = 10000
-	lodInfo.MaxDistanceForFar = 40000
+	lodInfo.SyncIntervalForNearby = int32(SyncIntervalForNearby)
+	lodInfo.SyncIntervalForFar = int32(SyncIntervalForFar)
+	lodInfo.MaxDistanceForNearby = int32(MaxDistanceForNearby)
+	lodInfo.MaxDistanceForFar = int32(MaxDistanceForFar)
 
 	userData.ServerRespond(lodInfo.Pack(), ver, cmd, server.Ok, true)
 	next(nil)
+}
+
+func loadLodConfigs(confPath string) {
+	config.Load("Lod", confPath)
+
+	SyncIntervalForNearby = config.GetAsInt32("Lod", syncIntervalForNearbyKey, defaultSyncIntervalForNearby)
+	SyncIntervalForFar = config.GetAsInt32("Lod", syncIntervalForFarKey, defaultSyncIntervalForFar)
+	if SyncIntervalForFar < SyncIntervalForNearby {
+		SyncIntervalForFar = SyncIntervalForNearby
+	}
+
+	MaxDistanceForNearby = config.GetAsInt32("Lod", maxDistanceForNearbyKey, defaultMaxDistanceForNearby)
+	MaxDistanceForFar = config.GetAsInt32("Lod", maxDistanceForFarKey, defaultMaxDistanceForFar)
+	if MaxDistanceForFar < MaxDistanceForNearby {
+		MaxDistanceForFar = MaxDistanceForNearby
+	}
 }
