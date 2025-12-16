@@ -274,10 +274,6 @@ func (m *Manager) processSingleReceiver(
 	for senderUserID, senderUserEntity := range userEntities {
 		targetID := m.processSenderReceiverPair(senderUserID, senderUserEntity, receiverUserID, receiverUserEntity)
 		if targetID != "" {
-			senderUserEntity.mu.Lock()
-			senderUserEntity.m[receiverUserID] = time.Now()
-			senderUserEntity.mu.Unlock()
-
 			select {
 			case m.sendBuffer <- sendMessage{
 				receiverUserID: receiverUserID,
@@ -285,6 +281,9 @@ func (m *Manager) processSingleReceiver(
 				cmd:            m.cmd,
 				payload:        senderUserEntity.payload,
 			}:
+				senderUserEntity.mu.Lock()
+				senderUserEntity.m[receiverUserID] = time.Now()
+				senderUserEntity.mu.Unlock()
 			default:
 				logger.Warnf("sendBuffer full, dropping message", "receiverUserID", receiverUserID, "senderUserID", senderUserID)
 				bufferDropsCounter.Inc()
