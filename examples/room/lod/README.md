@@ -51,6 +51,7 @@
 ```
 
 ## Limit
+
 このサンプルのサーバーは必要最低限のモジュールだけ有効にしているので、Lod 以外の機能をテストする際には、必要なモジュールを有効にすること、もしくは有効にしたサーバーに接続してください。
 
 ## Testing Room LoD
@@ -104,7 +105,7 @@ Enter Payload (string):
 sync data
 Broadcast LoD successful:
 Broadcast LoD Push successful:  sync data
-``` 
+```
 
 ユーザー 2 がユーザー 1 から適切な同期間隔でデータを受信します。
 
