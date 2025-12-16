@@ -6,13 +6,13 @@
 
 - **HTTP** サーバーは、クライアントの認証を行います。
 
-- **UDP** サーバーは、クライアントの接続を管理し、すべての入力RoomとRoom LoDコマンドを処理します。
+- **UDP** サーバーは、クライアントの接続を管理し、すべての入力 Room と Room LoD コマンドを処理します。
 
 このサンプルのゴールは Room 内で距離によって遠方の同期を減らすことで、クライアントの描画と通信の負荷を減らすことです。
 
 ## How to Build
 
-サーバーとクライアントはmageを使用してビルドします。
+サーバーとクライアントは mage を使用してビルドします。
 
 ### To build on Linux or macOS
 
@@ -50,12 +50,12 @@
 ./run-mage.sh server udp
 ```
 
-## Limt
-このサンプルのサーバーは必要最低限のモジュールだけ有効にしているので、Lod以外の機能をテストする際には、必要なモジュールを有効にすること、もしくは有効にしたサーバーに接続してください。
+## Limit
+このサンプルのサーバーは必要最低限のモジュールだけ有効にしているので、Lod 以外の機能をテストする際には、必要なモジュールを有効にすること、もしくは有効にしたサーバーに接続してください。
 
 ## Testing Room LoD
 
-ユーザー1がUDPサーバーに接続してRoomを作成します。
+ユーザー 1 が UDP サーバーに接続して Room を作成します。
 
 ```sh
 ./remote_bin/cli -host=127.0.0.1:7000 -uid=user11
@@ -71,7 +71,7 @@ Enter broadcast interval (milliseconds) (uint8): (Default: 100)
 Room created. roomID:cf7b49ea1fc836d87f0000011fa5000000000000000000000000, createdAt:1764084948
 ```
 
-ユーザー2がUDPサーバーに接続してRoomに参加します。
+ユーザー 2 が UDP サーバーに接続して Room に参加します。
 
 ```sh
 ./remote_bin/cli -host=127.0.0.1:7000 -uid=user12
@@ -85,14 +85,14 @@ UDP Room cf7b49ea1fc836d87f0000011fa5000000000000000000000000 joined and it was 
 New member joined Room. Message: Hello from user12!
 ```
 
-ユーザー1がRoomのLoD情報を取得します。
+ユーザー 1 が Room の LoD 情報を取得します。
 
 ```sh
 > lod getinfo
 Get LoD Info successful: MaxDistanceForFar = 40000 | MaxDistanceForNearby = 10000 | SyncIntervalForFar = 2000 | SyncIntervalForNearby = 16
 ```
 
-ユーザー1がRoomにLoD情報をブロードキャストします。
+ユーザー 1 が Room に LoD 情報をブロードキャストします。
 
 ```sh
 > lod broadcast
@@ -106,13 +106,13 @@ Broadcast LoD successful:
 Broadcast LoD Push successful:  sync data
 ``` 
 
-ユーザー2がユーザー1から適切な同期間隔でデータを受信します。
+ユーザー 2 がユーザー 1 から適切な同期間隔でデータを受信します。
 
 ```sh
 Broadcast LoD Push successful:       sync data
 ```
 
-LoDコマンドを表示するには、以下のコマンドを実行します。
+LoD コマンドを表示するには、以下のコマンドを実行します。
 
 ```sh
  > help lod
@@ -131,7 +131,7 @@ lod getinfo   - Get the LoD configuration
 #### 1. 近距離ユーザー（距離 ≤ MaxDistanceForNearby）
 
 - **同期間隔**: `SyncIntervalForNearby`（デフォルト: 16ms）
-- **例**: 距離が10,000cm以下の場合、高頻度で同期
+- **例**: 距離が 10,000cm 以下の場合、高頻度で同期
 
 #### 2. 中距離ユーザー（MaxDistanceForNearby < 距離 ≤ MaxDistanceForFar）
 
@@ -143,12 +143,12 @@ lod getinfo   - Get the LoD configuration
              (距離 - MaxDistanceForNearby) /
              (MaxDistanceForFar - MaxDistanceForNearby)
   ```
-- **例**: 距離が25,000cmの場合、約1,000ms間隔で同期
+- **例**: 距離が 25,000cm の場合、約 1,000ms 間隔で同期
 
 #### 3. 遠距離ユーザー（距離 > MaxDistanceForFar）
 
 - **同期間隔**: 同期なし
-- **例**: 距離が40,000cmを超える場合、データは送信されない
+- **例**: 距離が 40,000cm を超える場合、データは送信されない
 
 > **Note**: 距離はマンハッタン距離（`|X1 - X2| + |Y1 - Y2|`）で計算されます。
 
@@ -156,7 +156,7 @@ lod getinfo   - Get the LoD configuration
 
 # 実践的な使用例 / Practical Use Cases
 
-## シナリオ1: 3人のプレイヤーによる距離ベースの同期
+## シナリオ 1: 3 人のプレイヤーによる距離ベースの同期
 
 このシナリオでは、3人のプレイヤー（Alice, Bob, Charlie）が異なる位置にいる場合の同期動作を確認します。
 
@@ -170,12 +170,12 @@ lod getinfo   - Get the LoD configuration
 ### プレイヤーの位置
 
 - **Alice**: (0, 0)
-- **Bob**: (5000, 3000) → Aliceからの距離: 8,000cm（近距離）
-- **Charlie**: (20000, 15000) → Aliceからの距離: 35,000cm（中距離）
+- **Bob**: (5000, 3000) → Alice からの距離: 8,000cm（近距離）
+- **Charlie**: (20000, 15000) → Alice からの距離: 35,000cm（中距離）
 
 ### テスト手順
 
-**1. 各プレイヤーがRoomに参加**
+**1. 各プレイヤーが Room に参加**
 
 ```sh
 # Alice (Terminal 1)
@@ -194,7 +194,7 @@ lod getinfo   - Get the LoD configuration
 # Enter Room ID from Alice
 ```
 
-**2. Aliceが位置情報をブロードキャスト**
+**2. Alice が位置情報をブロードキャスト**
 
 ```sh
 # Alice (Terminal 1)
@@ -209,10 +209,10 @@ Alice at origin
 
 **3. 期待される動作**
 
-- **Bob**: 距離8,000cm（近距離）→ 約16ms間隔で「Alice at origin」を受信
-- **Charlie**: 距離35,000cm（中距離）→ 約1,666ms間隔で「Alice at origin」を受信
+- **Bob**: 距離 8,000cm（近距離）→ 約 16ms 間隔で「Alice at origin」を受信
+- **Charlie**: 距離 35,000cm（中距離）→ 約 1,666ms 間隔で「Alice at origin」を受信
 
-**4. Bobが移動して遠距離になった場合**
+**4. Bob が移動して遠距離になった場合**
 
 ```sh
 # Bob (Terminal 2)
@@ -225,17 +225,17 @@ Enter Payload (string):
 Bob moved far away
 ```
 
-この時、BobとAliceの距離は50,000cm（遠距離超過）となり、相互に同期が停止します。
+この時、Bob と Alice の距離は 50,000cm（遠距離超過）となり、相互に同期が停止します。
 
 ---
 
-## シナリオ2: 移動するプレイヤーの連続ブロードキャスト
+## シナリオ 2: 移動するプレイヤーの連続ブロードキャスト
 
 実際のゲームでは、プレイヤーが連続的に位置を更新します。このシナリオでは、移動中のプレイヤーがどのように同期されるかを確認します。
 
 ### テスト手順
 
-**1. Player1が原点に立つ**
+**1. Player1 が原点に立つ**
 
 ```sh
 # Player1
@@ -248,10 +248,10 @@ Enter Payload (string):
 {"status": "idle", "hp": 100}
 ```
 
-**2. Player2が近づきながら複数回ブロードキャスト**
+**2. Player2 が近づきながら複数回ブロードキャスト**
 
 ```sh
-# Player2 - 位置1（遠距離）
+# Player2 - 位置 1（遠距離）
 > lod b
 Enter X (int32):
 45000
@@ -260,7 +260,7 @@ Enter Y (int32):
 Enter Payload (string):
 {"status": "walking", "direction": "west"}
 
-# Player2 - 位置2（中距離）
+# Player2 - 位置 2（中距離）
 > lod b
 Enter X (int32):
 25000
@@ -269,7 +269,7 @@ Enter Y (int32):
 Enter Payload (string):
 {"status": "walking", "direction": "west"}
 
-# Player2 - 位置3（近距離）
+# Player2 - 位置 3（近距離）
 > lod b
 Enter X (int32):
 5000
@@ -281,9 +281,9 @@ Enter Payload (string):
 
 **3. 期待される動作**
 
-- 位置1（45,000cm）: Player1には同期されない
-- 位置2（25,000cm）: Player1に約1,000ms間隔で同期
-- 位置3（5,000cm）: Player1に約33ms間隔で同期（滑らかな動き）
+- 位置 1（45,000cm）: Player1 には同期されない
+- 位置 2（25,000cm）: Player1 に約 1,000ms 間隔で同期
+- 位置 3（5,000cm）: Player1 に約 33ms 間隔で同期（滑らかな動き）
 
 ---
 
