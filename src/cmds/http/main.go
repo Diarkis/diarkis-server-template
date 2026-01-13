@@ -9,6 +9,8 @@ func Expose() {
 	http.Get("/hello", handleHello)
 	// if you do not need HTTP-based match making comment out this line
 	exposeMatchMaker()
+	// define match maker profiles
+	defineMatchMakerRules()
 	// custom room operations
 	exposeRoom()
 }
