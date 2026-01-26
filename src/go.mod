@@ -4,7 +4,7 @@ go 1.24
 
 toolchain go1.24.0
 
-require github.com/Diarkis/diarkis v1.3.0-rc1
+require github.com/Diarkis/diarkis v1.3.0
 
 require (
 	github.com/magefile/mage v1.15.0
