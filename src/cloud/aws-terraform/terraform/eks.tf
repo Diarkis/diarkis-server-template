@@ -2,7 +2,7 @@ module "eks_al2" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.0"
   cluster_name    = "${local.env.prefix}-${local.name}"
-  cluster_version = "1.31"
+  cluster_version = "1.34"
 
   cluster_endpoint_public_access  = true
   cluster_endpoint_private_access  = true
@@ -13,6 +13,9 @@ module "eks_al2" {
     eks-pod-identity-agent = {}
     kube-proxy             = {}
     vpc-cni                = {}
+    aws-ebs-csi-driver = {
+      service_account_role_arn = module.irsa-ebs-csi.iam_role_arn
+    }
   }
 
   vpc_id     = module.vpc.vpc_id
@@ -85,7 +88,7 @@ module "eks_al2" {
   eks_managed_node_groups = {
     diarkis-private = {
       use_name_prefix = false
-      ami_type       = "AL2_x86_64"
+      ami_type       = "AL2023_x86_64_STANDARD"
       instance_types = local.env.instance_types
       subnet_ids = module.vpc.private_subnets
       min_size = 1
@@ -102,7 +105,7 @@ module "eks_al2" {
     }
     diarkis-public = {
       use_name_prefix = false
-      ami_type       = "AL2_x86_64"
+      ami_type       = "AL2023_x86_64_STANDARD"
       instance_types = local.env.instance_types
       subnet_ids = module.vpc.public_subnets
 
@@ -120,4 +123,19 @@ module "eks_al2" {
 
     }
   }
+}
+
+data "aws_iam_policy" "ebs_csi_policy" {
+  arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+}
+
+module "irsa-ebs-csi" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
+  version = "5.39.0"
+
+  create_role                   = true
+  role_name                     = "AmazonEKSTFEBSCSIRole-${module.eks_al2.cluster_name}"
+  provider_url                  = module.eks_al2.oidc_provider
+  role_policy_arns              = [data.aws_iam_policy.ebs_csi_policy.arn]
+  oidc_fully_qualified_subjects = ["system:serviceaccount:kube-system:ebs-csi-controller-sa"]
 }

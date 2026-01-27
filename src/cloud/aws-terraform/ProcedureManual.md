@@ -96,6 +96,9 @@ terraform の output にもありますが、
 `aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin $(AWS_PROJECT_NUM).dkr.ecr.ap-northeast-1.amazonaws.com`
 のように認証を通すことが可能です。
 
+## manifest を適用
+`k8s/aws/overlays/dev0` に移動し、`kubectl apply -f <(kustomize build .)`
+
 ## managed prometheus を開く
 terraform によって、manafed prometheus の画面は作られている。
 アクセスして、
