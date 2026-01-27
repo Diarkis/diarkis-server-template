@@ -47,6 +47,8 @@ Only HTTP server is required in the cluster and the rest of the servers should b
    │
    ├─ k8s/        [Contains k8s manifest for Diarkis]
    │
+   ├─ fakesignal/ [Contains fake signal tool for testing on windows]
+   │
    ├─┬─ puffer/ [Contains package definition generator]
    │ │
    │ ├─ json_definitions/ [Contains packet definitions]

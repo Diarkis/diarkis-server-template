@@ -17,7 +17,6 @@ func exposeMatchMaker() {
 	http.Post("/mm/add/:mmID/:uniqueID/:ttl", addToMatchMaker)
 	http.Delete("/mm/rm/:mmID", removeFromMatchMaker)
 	http.Post("/mm/search/:mmIDs/:limit", searchMatchMaker)
-	defineMatchMakerRules()
 }
 
 func defineMatchMakerRules() {

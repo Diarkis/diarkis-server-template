@@ -23,7 +23,7 @@ make build-local
 
 #### To build on Windows
 
-```sh
+```
 .\run-mage.bat build:local
 ```
 
@@ -33,6 +33,8 @@ Develop and build DGS on the client side.
 For details, please refer to the client-side DGS development documentation.
 
 ### 3. Run mars, HTTP, UDP servers
+
+#### Run servers on Linux or macOS
 
 ```sh
 ./run-mage.sh server mars
@@ -46,6 +48,14 @@ or
 ./remote_bin/mars configs/mars/main.json
 ./remote_bin/http
 ./remote_bin/udp
+```
+
+#### Run servers on Windows
+
+```
+.\run-mage.bat server mars
+.\run-mage.bat server http
+.\run-mage.bat server udp
 ```
 
 ### 4. Run DGS
@@ -366,4 +376,4 @@ eksctl delete cluster --region=ap-northeast-1 --name=diarkis  --disable-nodegrou
 
 ---
 
-_First created on 2025-07-14. Updated on 2025-07-14._
+_First created on 2025-07-14. Updated on 2025-11-27._

@@ -10,8 +10,16 @@ corresponding **Build Token**.
 Next invoke the following command from the root of the
 `diarkis-server-template` repository:
 
+On Linux or macOS
+
 ```sh
 make examples project_id=PROJECT_ID builder_token=BUILD_TOKEN output=OUTPUT
+```
+
+On Windows
+
+```
+run-mage.bat examples:install {project id} {builder token} {path to install}
 ```
 
 Once the example installation is finished, navigate to your `OUTPUT_DIRECTORY` and explore.
@@ -33,6 +41,14 @@ Once the example installation is finished, navigate to your `OUTPUT_DIRECTORY` a
 - [Team-Based Matchmaking](./matching/team/README.md)
 - [Secure Matchmaking](./matching/secure-matching/README.md)
 
+### Room
+
+- [Room LoD](./room/lod/README.md)
+
+### DGS
+
+- [DGS](./csar/dgs/README.md)
+
 ---
 
-_First created on 2025-07-03. Updated on 2025-07-04._
+_First created on 2025-07-03. Updated on 2025-11-27._

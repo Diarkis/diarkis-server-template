@@ -1,0 +1,60 @@
+// © 2019-2024 Diarkis Inc. All rights reserved.
+
+package app
+
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"math/rand"
+	"net/http"
+	"strings"
+	"time"
+)
+
+type endpointResponse struct {
+	ServerHost       string `json:"serverHost"`
+	ServerPort       int    `json:"serverPort"`
+	Sid              string `json:"sid"`
+	EncryptionKey    string `json:"encryptionKey"`
+	EncryptionIV     string `json:"encryptionIV"`
+	EncryptionMacKey string `json:"encryptionMacKey"`
+	ServerType       string `json:"serverType"`
+}
+
+func endpoint(host, uid, serverType string) (endpointResponse, error) {
+	url := fmt.Sprintf("http://%s/endpoint/type/%v/user/%v", host, strings.ToUpper(serverType), uid)
+
+	client := &http.Client{
+		Timeout: time.Second * 10,
+	}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return endpointResponse{}, err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return endpointResponse{}, err
+	}
+	body, err := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return endpointResponse{}, err
+	}
+	endpointResp := endpointResponse{}
+	err = json.Unmarshal(body, &endpointResp)
+	if err != nil {
+		return endpointResponse{}, err
+	}
+
+	return endpointResp, nil
+}
+
+// randomInt32 returns a random int32 value between min and max (inclusive)
+func randomInt32(min, max int32) int32 {
+	if min >= max {
+		return min
+	}
+	return min + rand.Int31n(max-min+1)
+}

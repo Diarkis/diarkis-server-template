@@ -26,6 +26,7 @@ func main() {
 	newImport := os.Args[3]
 	err := processDir(targetDir, oldImport, newImport)
 	if err != nil {
+		fmt.Printf("An error occurred: %v\n", err)
 		os.Exit(1)
 	}
 }
