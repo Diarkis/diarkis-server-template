@@ -8,7 +8,7 @@ help:
 DIARKIS_VERSION = $(shell go mod edit -json | jq -r '.Require[] | select(.Path | contains("github.com/Diarkis/diarkis")).Version')
 DIARKIS_CLI = ./diarkis-cli/os/linux/bin/diarkis-cli
 BUILD_CONFIG = ./build/linux-build.yml
-AWS_ACCOUNT_NUM = __AWS_ACCOUNT_NUM__
+AWS_ACCOUNT_NUM = 354265976659
 AWS_REGION = ap-northeast-1
 AWS_CONTAINER_REGISTRY = $(AWS_ACCOUNT_NUM).dkr.ecr.$(AWS_REGION).amazonaws.com
 GCP_PROJECT_ID = __GCP_PROJECT_ID__
@@ -94,7 +94,16 @@ auth-docker-aws: ## Authenticate docker to push images to AWS
 
 .PHONY: build-container-aws
 build-container-aws: ## Build container for AWS
-	make .build-container registry=$(AWS_CONTAINER_REGISTRY) tag=dev0
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o remote_bin/http servers/http/main.go
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o remote_bin/udp servers/udp/main.go
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o remote_bin/tcp servers/tcp/main.go
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o remote_bin/health-check healthcheck/main.go
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o remote_bin/mars mars/main.go
+
+	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t 354265976659.dkr.ecr.ap-northeast-1.amazonaws.com/http:dev0
+	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t 354265976659.dkr.ecr.ap-northeast-1.amazonaws.com/udp:dev0
+	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t 354265976659.dkr.ecr.ap-northeast-1.amazonaws.com/tcp:dev0
+	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t 354265976659.dkr.ecr.ap-northeast-1.amazonaws.com/mars:dev0
 
 .PHONY: push-container-aws
 push-container-aws: auth-docker-aws ## Push container for AWS

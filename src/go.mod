@@ -10,3 +10,5 @@ require (
 	github.com/magefile/mage v1.15.0
 	golang.org/x/sys v0.33.0 // indirect
 )
+
+replace github.com/Diarkis/diarkis => /home/kairi/diarkis

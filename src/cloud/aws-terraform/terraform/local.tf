@@ -23,7 +23,7 @@ locals {
     },
     prd = {
       prefix = "prd"
-      instance_types = ["m6i.large"]
+      instance_types = ["c8i-flex.xlarge"]
       need_operation_tools = true
     },
   }
