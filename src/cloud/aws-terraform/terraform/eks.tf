@@ -2,7 +2,7 @@ module "eks_al2" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.0"
   cluster_name    = "${local.env.prefix}-${local.name}"
-  cluster_version = "1.34"
+  cluster_version = "1.35"
 
   cluster_endpoint_public_access  = true
   cluster_endpoint_private_access  = true
