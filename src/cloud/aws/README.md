@@ -1,22 +1,22 @@
-# diarkis-infra-template
+# Overview
 
 ## Overview
 
 AWS EKS 上に Diarkis クラスターを構築するための手順です。
 プリミティブな設定になっているので、適宜修正したい点があれば修正していただければと思います。
 
-## prerequisites
+# prerequisites
 
 - 課金が有効になっている aws アカウント
 - aws コマンドの認証が通っていること
 - kustomize@v4.5.7 が使用可能であること
 
-## 1. install eksctl
+# 1. install eksctl
 
 https://catalog.us-east-1.prod.workshops.aws/workshops/f5abb693-2d87-43b5-a439-77454f28e2e7/ja-JP/020-create-cluster/10-install-eksctl
 `0.211.0` で動作確認済み
 
-## 2. create ECR for diarkis images
+# 2. create ECR for diarkis images
 
 Diarkis 構成コンポーネントを push するための registry を準備
 alpine なども sample で使用しているが、それに関しては docker hub から取得
@@ -29,7 +29,7 @@ aws ecr create-repository --repository-name tcp
 aws ecr create-repository --repository-name mars
 ```
 
-## 3. Create EKS for diarkis
+# 3. Create EKS for diarkis
 
 ```
 eksctl create cluster -f cloud/aws/cluster_config.yaml # about 10 minutes
@@ -37,19 +37,19 @@ eksctl create cluster -f cloud/aws/cluster_config.yaml # about 10 minutes
 
 NAT gateway が該当の AZ で対応していない等のエラーが出た場合には、AZ で別の物を選択してください。
 
-## 4. connect to eks
+# 4. connect to eks
 
 ```
 aws eks --region ap-northeast-1 update-kubeconfig --name diarkis # get credetial for k8s
 ```
 
-## 5. Open EKS firewall
+# 5. Open EKS firewall
 
 EKS の Node に対して firewall で、0.0.0.0/0 から tcp,udp の 7000-8000 を開放します。
 
 eks-cluster-sg-diarkis-\* のようなセキュリティグループが作成されているので、それに対して設定を行ってください。
 
-## 6. tagging the server image and push
+# 6. tagging the server image and push
 
 server-template から生成した project の root から下記を実行します。
 ※ 詳細は[こちら](https://help.diarkis.io/ja/running-diarkis-server-on-local)をご覧ください。
@@ -71,7 +71,7 @@ image を push します。
 make push-container-aws
 ```
 
-## 7. apply manifest
+# 7. apply manifest
 
 ```
 kustomize build k8s/aws/overlays/dev0 | kubectl apply -f -
@@ -88,7 +88,7 @@ tcp-88dc5f97d-7sqk9     1/1     Running   0          3d14h
 udp-fdc6bbccc-dwc5w     1/1     Running   0          3d14h
 ```
 
-## 8. check diarkis cluster
+# 8. check diarkis cluster
 
 まず public endpoint を取得します。
 
@@ -111,13 +111,13 @@ curl ${EXTERNAL_IP}/auth/1
 
 抜けている項目等があれば、何かのコンポーネントに異常をきたしている可能性があるため、お問合せください。
 
-## 9. setup cluster autoscaler
+# 9. setup cluster autoscaler
 
 ```
 kubectl apply -f cluster-autoscaler-autodiscover.yaml # cluster 名 diarkis として編集済みですが、別のクラスタ名で作っていた場合、manifest 内で diarkis と書かれている部分を変更してください
 ```
 
-## 10. setup log collector
+# 10. setup log collector
 
 cloud watch logs 等で container のログを集約することが可能です。(cf. https://docs.aws.amazon.com/ja_jp/AmazonCloudWatch/latest/monitoring/Container-Insights-setup-logs-FluentBit.html)
 

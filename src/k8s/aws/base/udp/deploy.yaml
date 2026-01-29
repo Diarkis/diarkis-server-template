@@ -109,7 +109,7 @@ spec:
             - name: tmp
               mountPath: /tmp
       nodeSelector:
-        eks.amazonaws.com/nodegroup: diarkis-public
+        "diarkis.io/network": "public"
       volumes:
         - name: shared-conf
           projected:

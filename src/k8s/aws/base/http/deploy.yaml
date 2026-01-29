@@ -78,7 +78,7 @@ spec:
             - name: http
               containerPort: 7000
       nodeSelector:
-        eks.amazonaws.com/nodegroup: diarkis-private
+        "diarkis.io/network": "private"
       tolerations:
         - key: "diarkis.io/network"
           operator: "Equal"
