@@ -4,6 +4,8 @@ metadata:
   name: http
   labels:
     component: http
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
 spec:
   type: LoadBalancer
   selector:
