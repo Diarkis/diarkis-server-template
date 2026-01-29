@@ -91,7 +91,7 @@ module "eks_al2" {
       ami_type       = "AL2023_x86_64_STANDARD"
       instance_types = local.env.instance_types
       subnet_ids = module.vpc.private_subnets
-      min_size = 1
+      min_size = 0
       max_size = 10
       desired_size = 2
       labels = {
@@ -109,7 +109,7 @@ module "eks_al2" {
       instance_types = local.env.instance_types
       subnet_ids = module.vpc.public_subnets
 
-      min_size = 1
+      min_size = 0
       max_size = 10
       desired_size = 2
       labels = {
