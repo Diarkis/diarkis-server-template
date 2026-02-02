@@ -11,4 +11,5 @@ require (
 	golang.org/x/sys v0.33.0 // indirect
 )
 
-replace github.com/Diarkis/diarkis => /home/kairi/diarkis
+replace github.com/Diarkis/diarkis => /Users/kairi/diarkis-network
+//replace github.com/Diarkis/diarkis => /Users/kairi/diarkis

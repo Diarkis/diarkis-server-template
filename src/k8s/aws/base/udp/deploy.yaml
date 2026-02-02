@@ -97,6 +97,10 @@ spec:
               value: AWS
             - name: DIARKIS_SHUTDOWN_TIMEOUT
               value: "600"
+            - name: DIARKIS_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
           command:
             - /go/bin/udp
           volumeMounts:
