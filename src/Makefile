@@ -11,7 +11,7 @@ BUILD_CONFIG = ./build/linux-build.yml
 AWS_ACCOUNT_NUM = 354265976659
 AWS_REGION = ap-northeast-1
 AWS_CONTAINER_REGISTRY = $(AWS_ACCOUNT_NUM).dkr.ecr.$(AWS_REGION).amazonaws.com
-GCP_PROJECT_ID = __GCP_PROJECT_ID__
+GCP_PROJECT_ID = diarkis-development
 GCP_REGION = asia-northeast1
 GCP_CONTAINER_REGISTRY = $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/diarkis
 ACR_DOMAIN = __ACR_DOMAIN__
@@ -123,11 +123,20 @@ auth-docker-gcp: ## Authenticate docker to push images to GCP
 
 .PHONY: build-container-gcp
 build-container-gcp: ## Build container for GCP
-	make .build-container registry=$(GCP_CONTAINER_REGISTRY) tag=dev0
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o remote_bin/http servers/http/main.go
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o remote_bin/udp servers/udp/main.go
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o remote_bin/tcp servers/tcp/main.go
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o remote_bin/health-check healthcheck/main.go
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o remote_bin/mars mars/main.go
+
+	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t asia-northeast1-docker.pkg.dev/diarkis-development/diarkis/http:latest
+	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t asia-northeast1-docker.pkg.dev/diarkis-development/diarkis/udp:latest
+	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t asia-northeast1-docker.pkg.dev/diarkis-development/diarkis/tcp:latest
+	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t asia-northeast1-docker.pkg.dev/diarkis-development/diarkis/mars:latest
 
 .PHONY: push-container-gcp
 push-container-gcp: auth-docker-gcp ## Push container to GCP
-	make .push-container registry=$(GCP_CONTAINER_REGISTRY) tag=dev0
+	make .push-container registry=$(GCP_CONTAINER_REGISTRY) tag=latest
 
 ################################################################################
 ## Setup, build and push container for Azure

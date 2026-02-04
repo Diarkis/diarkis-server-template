@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: udp
+  labels:
+    component: udp
+spec:
+  containers:
+    - name: udp
+      resources:
+        limits:
+          cpu: "1"
+        requests:
+          cpu: "1"
+      securityContext:
+        runAsUser: 1000
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        allowPrivilegeEscalation: false
+        privileged: false
