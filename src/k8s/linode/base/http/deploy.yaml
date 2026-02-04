@@ -67,6 +67,10 @@ spec:
           env:
             - name: DIARKIS_CLOUD_ENV
               value: LINODE
+            - name: DIARKIS_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP              
           volumeMounts:
             - mountPath: /configs/http
               name: http-conf
