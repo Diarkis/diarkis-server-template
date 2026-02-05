@@ -1,0 +1,98 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tcp-1 
+  labels:
+    component: tcp
+  annotations:
+    autopilot.gke.io/host-port-assignment: '{"min":7000,"max":8000}'
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "true"        
+spec:
+  dnsPolicy: ClusterFirstWithHostNet
+  terminationGracePeriodSeconds: 600
+  containers:
+    - name: tcp
+      # Configure Probes: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+      startupProbe: &probe
+        exec:
+          command:
+            - sh
+            - -c
+            - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) mars /bin/tools/configs/health-check-for-startup-probe.json"
+            - "&& /go/bin/health-check $(cat /tmp/DIARKIS_PUBLIC_ADDR) out /bin/tools/configs/health-check-for-startup-probe.json"
+        initialDelaySeconds: 0
+        periodSeconds: 10
+        timeoutSeconds: 1
+        successThreshold: 1
+        failureThreshold: 3
+      livenessProbe:
+        <<: *probe
+        exec:
+          command:
+            - sh
+            - -c
+            - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) in /bin/tools/configs/health-check-for-liveness-probe.json"
+            - "&& /go/bin/health-check $(cat /tmp/DIARKIS_PUBLIC_ADDR) out /bin/tools/configs/health-check-for-liveness-probe.json"
+      readinessProbe:
+        <<: *probe
+        exec:
+          command:
+            - sh
+            - -c
+            - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) in /bin/tools/configs/health-check-for-readiness-probe.json"
+            - "&& /go/bin/health-check $(cat /tmp/DIARKIS_PUBLIC_ADDR) out /bin/tools/configs/health-check-for-readiness-probe.json"
+      securityContext:
+        runAsUser: 1000
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        allowPrivilegeEscalation: false
+        privileged: false
+      image: tcp
+      imagePullPolicy: Always
+      resources:
+        requests:
+          cpu: "50m"
+          memory: "100M"
+        limits:
+          cpu: "50m"
+          memory: "100M"      
+      ports:
+      - containerPort: 7000
+        hostPort: 7000
+        protocol: "TCP"
+      env:
+        - name: DIARKIS_CLOUD_ENV
+          value: GCP_AUTOPILOT
+        - name: DIARKIS_SHUTDOWN_TIMEOUT
+          value: "600"
+        - name: DIARKIS_AUTOPILOT_PORT
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.annotations['autopilot.gke.io/host-port-assignment']
+        - name: DIARKIS_ADVERTISE_ADDR
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP  
+      command:
+        - /go/bin/tcp
+      volumeMounts:
+        - mountPath: /configs/shared
+          name: shared-conf
+        - mountPath: /configs/tcp
+          name: tcp-conf
+        - name: hc-conf
+          mountPath: /bin/tools/configs
+        - name: tmp
+          mountPath: /tmp
+  volumes:
+    - name: shared-conf
+      configMap:
+        name: shared-conf
+    - name: tcp-conf
+      configMap:
+        name: tcp-conf
+    - name: hc-conf
+      configMap:
+        name: hc-conf
+    - name: tmp
+      emptyDir: {}

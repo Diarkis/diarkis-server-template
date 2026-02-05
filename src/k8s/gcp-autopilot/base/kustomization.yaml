@@ -7,9 +7,10 @@ namespace: base
 
 # build target
 resources:
-  - udp/pod.yaml
-  - tcp/deploy.yaml
-  - tcp/hpa.yaml
+  - udp/pod-0.yaml
+  - udp/pod-1.yaml
+  - tcp/pod-0.yaml
+  - tcp/pod-1.yaml  
   - mars/sts.yaml
   - mars/svc.yaml
   - http/deploy.yaml
@@ -43,7 +44,6 @@ configMapGenerator:
       - shared/conf/mesh.json
       - shared/conf/dive.json
       - shared/conf/room.json
-      - shared/conf/p2p.json
     name: shared-conf
   - files:
       - http/conf/main.json

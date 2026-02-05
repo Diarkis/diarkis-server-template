@@ -1,4 +1,5 @@
 {
   "connectionTTL": 120,
+  "port": "7000",
   "address": "0.0.0.0"
 }
