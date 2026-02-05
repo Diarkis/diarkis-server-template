@@ -6,7 +6,7 @@ metadata:
     component: tcp
   annotations:
     autopilot.gke.io/host-port-assignment: '{"min":7000,"max":8000}'
-    cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
 spec:
   dnsPolicy: ClusterFirstWithHostNet
   terminationGracePeriodSeconds: 600
