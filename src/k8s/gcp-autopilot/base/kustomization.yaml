@@ -10,7 +10,7 @@ resources:
   - udp/pod-0.yaml
   - udp/pod-1.yaml
   - tcp/pod-0.yaml
-  - tcp/pod-1.yaml  
+  - tcp/pod-1.yaml
   - mars/sts.yaml
   - mars/svc.yaml
   - http/deploy.yaml
@@ -22,16 +22,16 @@ resources:
 
 images:
   - name: udp
-    newName: asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/diarkis/udp
+    newName: asia-northeast1-docker.pkg.dev/diarkis-development/diarkis/udp
     newTag: latest
   - name: tcp
-    newName: asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/diarkis/tcp
+    newName: asia-northeast1-docker.pkg.dev/diarkis-development/diarkis/tcp
     newTag: latest
   - name: mars
-    newName: asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/diarkis/mars
+    newName: asia-northeast1-docker.pkg.dev/diarkis-development/diarkis/mars
     newTag: latest
   - name: http
-    newName: asia-northeast1-docker.pkg.dev/__GCP_PROJECT_ID__/diarkis/http
+    newName: asia-northeast1-docker.pkg.dev/diarkis-development/diarkis/http
     newTag: latest
 
 configMapGenerator:
