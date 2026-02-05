@@ -17,6 +17,13 @@ spec:
         - name: mars
           image: mars
           imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "100M"
+            limits:
+              cpu: "50m"
+              memory: "100M"
           livenessProbe:
             exec:
               command:

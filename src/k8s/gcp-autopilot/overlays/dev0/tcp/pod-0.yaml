@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: udp-1
+  name: tcp-0
   labels:
-    component: udp
+    component: tcp
 spec:
   containers:
-    - name: udp
+    - name: tcp
       resources:
         limits:
           cpu: "1"
