@@ -24,6 +24,7 @@ Kustomize を使用して、共通設定（base）と環境ごとの設定（ove
 ### 1. 前提条件
 
 - GKE Autopilot クラスターが起動していること。
+  - それぞれの Node が PublicIP を保持している Public ネットワークタイプを選択する
 - Google Artifact Registry 等に Diarkis の各コンポーネント（HTTP, TCP, UDP, Mars）のイメージがプッシュされていること。
 - `kubectl` および `kustomize` がローカル環境にインストールされていること。
 
