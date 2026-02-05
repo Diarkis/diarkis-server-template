@@ -102,7 +102,7 @@ spec:
               value: "true"
             - name: DIARKIS_SHUTDOWN_TIMEOUT
               value: "600"
-            - name: DIARKIS_POD_IP
+            - name: DIARKIS_ADVERTISE_ADDR
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP              

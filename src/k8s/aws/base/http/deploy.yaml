@@ -65,7 +65,7 @@ spec:
               value: AWS
             - name: DIARKIS_FIELD_MOD
               value: "true"
-            - name: DIARKIS_POD_IP
+            - name: DIARKIS_ADVERTISE_ADDR
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP              
