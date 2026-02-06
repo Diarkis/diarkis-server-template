@@ -52,7 +52,7 @@ eks-cluster-sg-diarkis-\* のようなセキュリティグループが作成さ
 # 6. tagging the server image and push
 
 server-template から生成した project の root から下記を実行します。
-※ 詳細は[こちら](https://help.diarkis.io/ja/running-diarkis-server-on-local)をご覧ください。
+※ 詳細は[こちら](https://help.diarkis.io/getting-started/tutorial/setup-local-server)をご覧ください。
 
 ```
 make build-local
