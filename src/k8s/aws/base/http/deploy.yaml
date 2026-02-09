@@ -65,10 +65,10 @@ spec:
               value: AWS
             - name: DIARKIS_FIELD_MOD
               value: "true"
-            - name: DIARKIS_POD_IP
+            - name: DIARKIS_MESH_BIND_ADDR
               valueFrom:
                 fieldRef:
-                  fieldPath: status.podIP              
+                  fieldPath: status.podIP
           volumeMounts:
             - mountPath: /configs/http
               name: http-conf

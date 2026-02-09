@@ -99,10 +99,10 @@ spec:
               value: GCP
             - name: DIARKIS_SHUTDOWN_TIMEOUT
               value: "600"
-            - name: DIARKIS_POD_IP
+            - name: DIARKIS_MESH_BIND_ADDR
               valueFrom:
                 fieldRef:
-                  fieldPath: status.podIP              
+                  fieldPath: status.podIP
           command:
             - /go/bin/tcp
           volumeMounts:
