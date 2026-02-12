@@ -7,7 +7,7 @@ patches:
   - path: http/deploy.yaml
   - path: udp/pod-0.yaml
   - path: udp/pod-1.yaml
-  - path: tcp/pod-1.yaml
+  - path: tcp/pod-0.yaml
   - path: tcp/pod-1.yaml
 
 configMapGenerator:
