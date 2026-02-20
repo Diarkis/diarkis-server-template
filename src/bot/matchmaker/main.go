@@ -126,7 +126,7 @@ func spawnUDPBot(id string, needToWait bool) {
 	bot.udp = cli
 
 	cli.SetEncryptionKeys(sid, key, iv, mkey)
-	
+
 	cli.OnConnect(func() {
 		bot.mm = matchmaker.NewMatchMakerAsUDP(cli)
 		bot.mm.OnHostMatchmakingResponse(func(status bool, roomID string) {
