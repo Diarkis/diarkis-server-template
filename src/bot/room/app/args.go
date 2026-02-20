@@ -138,7 +138,7 @@ func getParamsInt(key string) (int, bool) {
 	if ok {
 		retV, err := strconv.Atoi(v)
 		if err != nil {
-			slog.Error("Error converting env var: %v", key)
+			slog.Error("Error converting env var", "key", key)
 			os.Exit(1)
 			return 0, false
 		}

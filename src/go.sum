@@ -1,5 +1,5 @@
-github.com/Diarkis/diarkis v1.1.0-beta3.4 h1:fgUQI3kilSBzokMqdaCtjuECktzmbvVt8oAaoN/ikNs=
-github.com/Diarkis/diarkis v1.1.0-beta3.4/go.mod h1:2rS8hb7oP0GwUrld7SBPKP+4LFsTl8UN8ExdoJYMJak=
+github.com/Diarkis/diarkis v1.3.3-rc1 h1:29DwlYhBOvEa1K1+2zzffFhrogueyZNZW2ubMSZrjPA=
+github.com/Diarkis/diarkis v1.3.3-rc1/go.mod h1:jZiMnNnI7PgEDTNVApZI6wUfYARKbgc3eH3ghzUYztY=
 github.com/magefile/mage v1.15.0 h1:BvGheCMAsG3bWUDbZ8AyXXpCNwU9u5CB6sM+HNb9HYg=
 github.com/magefile/mage v1.15.0/go.mod h1:z5UZb/iS3GoOSn0JgWuiw7dxlurVYTu+/jHXqQg881A=
 golang.org/x/sys v0.33.0 h1:q3i8TbbEz+JRD9ywIRlyRAQbM0qF7hu24q3teo2hbuw=
