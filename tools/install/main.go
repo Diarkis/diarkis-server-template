@@ -151,7 +151,11 @@ func copyFile(pkg string, srcFile string, dstFile string) error {
 	if err != nil {
 		return err
 	}
-	defer out.Close()
+	defer func() {
+		if err := out.Close(); err != nil {
+			fmt.Printf("Error closing file: %v\n", err)
+		}
+	}()
 
 	data, err := os.ReadFile(srcFile)
 	if err != nil {
@@ -159,8 +163,8 @@ func copyFile(pkg string, srcFile string, dstFile string) error {
 	}
 	fileData := string(data)
 	if utf8.ValidString(string(data)) {
-		fileData = strings.Replace(fileData, "{{PROJECT_ID}}", projectID, -1)
-		fileData = strings.Replace(fileData, "{{BUILD_TOKEN}}", buildToken, -1)
+		fileData = strings.ReplaceAll(fileData, "{{PROJECT_ID}}", projectID)
+		fileData = strings.ReplaceAll(fileData, "{{BUILD_TOKEN}}", buildToken)
 	} else {
 		fmt.Printf("\x1b[38;5;220mBinary file detected, skipping the replace. %s\x1b[0m\n", srcFile)
 	}
@@ -186,7 +190,7 @@ func createIfNotExists(dir string, perm os.FileMode) error {
 		return nil
 	}
 	if err := os.MkdirAll(dir, perm); err != nil {
-		return fmt.Errorf("Failed to create directory: '%s', Error:\x1b[0;91m %v \x1b[0m", dir, err.Error())
+		return fmt.Errorf("failed to create directory: '%s', Error:\x1b[0;91m %v \x1b[0m", dir, err.Error())
 	}
 
 	return nil

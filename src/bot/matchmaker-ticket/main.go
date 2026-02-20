@@ -20,6 +20,7 @@ import (
 
 	"github.com/Diarkis/diarkis-server-template/bot/utils"
 	"github.com/Diarkis/diarkis/client/go/modules/matchmaker"
+	pmm "github.com/Diarkis/diarkis/proto/go/matchmaker"
 	"github.com/Diarkis/diarkis/util"
 	v4 "github.com/Diarkis/diarkis/uuid/v4"
 )
@@ -176,7 +177,7 @@ func spawnBot(id string) {
 	cli.OnConnect(func() {
 		botCnt++
 		mm := matchmaker.NewMatchMakerAsUDP(cli)
-		mm.OnTicketComplete(func(success bool, data []byte) {
+		mm.OnTicketComplete(func(success bool, data *pmm.TicketCompletePush) {
 			if success {
 				ticketSuccessCnt++
 			}
