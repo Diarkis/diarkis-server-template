@@ -1,4 +1,5 @@
 {
+  "nic": "ens5",
   "marsAddress": "mars.base.svc.cluster.local",
   "marsPort": "6779"
 }
