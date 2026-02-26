@@ -1,5 +1,4 @@
 {
-  "nic": "eth0",
   "address": "0.0.0.0",
   "port": "7100",
   "enableP2P": true,

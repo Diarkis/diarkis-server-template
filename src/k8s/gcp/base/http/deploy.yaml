@@ -66,6 +66,10 @@ spec:
           env:
             - name: DIARKIS_CLOUD_ENV
               value: GCP
+            - name: DIARKIS_MESH_BIND_ADDR
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
           volumeMounts:
             - mountPath: /configs/http
               name: http-conf
