@@ -20,6 +20,7 @@ func main() {
 		DM:         &diarkisexec.Options{ConfigPath: "configs/shared/dm.json", ExposeCommands: true},
 		MatchMaker: &diarkisexec.Options{ConfigPath: "configs/shared/matching.json", ExposeCommands: true},
 		Session:    &diarkisexec.Options{ConfigPath: "configs/shared/session.json", ExposeCommands: true},
+		BlockList:  &diarkisexec.Options{ExposeCommands: true},
 	})
 
 	cmds.SetupUDP()
