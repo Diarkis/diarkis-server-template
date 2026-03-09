@@ -148,7 +148,7 @@ func (Puffer) Gen() error {
 
 	pufferBin = filepath.Join(cwd, pufferBin)
 
-	cmd = exec.Command(pufferBin, ".", ".", doc.Module.Path+"/puffer/go")
+	cmd = exec.Command(pufferBin, "-definitions=.", "-output=.", "-module="+doc.Module.Path+"/puffer/go")
 	cmd.Dir = "puffer"
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

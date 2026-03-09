@@ -16,5 +16,5 @@ else
     exit 1
 fi
 
-${PUFFER_BIN} . . ${PROJECT_NAME}/puffer/go
+${PUFFER_BIN} -definitions=. -output=. -module=${PROJECT_NAME}/puffer/go
 go fmt ./go/...
