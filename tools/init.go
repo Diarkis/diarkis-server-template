@@ -99,7 +99,7 @@ func checkGoModuleName(name string) error {
 func runInstall(projectID, builderToken, outputPath string) error {
 	args := []string{
 		"run",
-		"./tools/install",
+		"./tools/installfiles",
 		projectID,
 		builderToken,
 		outputPath,
