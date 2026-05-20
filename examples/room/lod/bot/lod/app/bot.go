@@ -196,7 +196,7 @@ func (b *bot) LodBroadcast() {
 	proto.X = b.x
 	proto.Y = b.y
 	proto.Payload = message
-	b.udp.RSend(proto.Ver, proto.Cmd, proto.Pack())
+	b.udp.RSend(proto.Ver(), proto.Cmd(), proto.Pack())
 	b.broadcastSendCnt.Add(1)
 	broadcastSendCnt.Add(1)
 }

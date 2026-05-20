@@ -117,10 +117,10 @@ func (l *lod) broadcastLoD(x int32, y int32, payload []byte) {
 	proto.X = x
 	proto.Y = y
 	proto.Payload = payload
-	l.udp.RSend(proto.Ver, proto.Cmd, proto.Pack())
+	l.udp.RSend(proto.Ver(), proto.Cmd(), proto.Pack())
 }
 
 func (l *lod) getLoDInfo() {
 	proto := proom.NewGetLoDInfo()
-	l.udp.RSend(proto.Ver, proto.Cmd, proto.Pack())
+	l.udp.RSend(proto.Ver(), proto.Cmd(), proto.Pack())
 }
