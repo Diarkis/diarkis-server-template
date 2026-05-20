@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Diarkis/diarkis-server-template/examples/room/lod/puffer/go/room"
 	"github.com/Diarkis/diarkis/packet"
 	"github.com/Diarkis/diarkis/user"
 )
@@ -117,7 +118,9 @@ func (m *Manager) sendWorker() {
 		case msg := <-m.sendBuffer:
 			receiverUser := user.GetUserBySID(msg.receiverUserID)
 			if receiverUser != nil {
-				receiverUser.PushToClient(msg.ver, msg.cmd, msg.payload, packet.Unreliable)
+				data := room.NewBroadcastLoDPush()
+				data.Payload = msg.payload
+				receiverUser.PushToClient(msg.ver, msg.cmd, data.Pack(), packet.Unreliable)
 				// Track successfully sent messages
 				messagesSentCounter.Inc()
 			} else {
