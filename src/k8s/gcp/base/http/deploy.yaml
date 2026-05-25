@@ -17,10 +17,6 @@ spec:
         component: http
       annotations:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
-        ad.datadoghq.com/nginx.check_names: '["nginx"]'
-        ad.datadoghq.com/nginx.init_configs: "[{}]"
-        ad.datadoghq.com/nginx.instances: '[{"nginx_status_url": "http://%%host%%:8080/nginx_status"}]'
-        ad.datadoghq.com/nginx.logs: '[{"source": "nginx", "service": "nginx"}]'
     spec:
       terminationGracePeriodSeconds: 600
       initContainers:
