@@ -21,8 +21,6 @@ spec:
         component: udp
       annotations:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
-        ad.datadoghq.com/tuner.logs: '[{"source":"tuner","service":"udp"}]'
-        ad.datadoghq.com/udp.logs: '[{"source":"udp","service":"udp"}]'
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet

@@ -20,8 +20,6 @@ spec:
         component: tcp
       annotations:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
-        ad.datadoghq.com/tuner.logs: '[{"source":"tuner","service":"tcp"}]'
-        ad.datadoghq.com/tcp.logs: '[{"source":"tcp","service":"tcp"}]'
     spec:
       hostNetwork: true
       terminationGracePeriodSeconds: 600
