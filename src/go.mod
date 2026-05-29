@@ -1,10 +1,10 @@
 module github.com/Diarkis/diarkis-server-template
 
-go 1.24
+go 1.26
 
-toolchain go1.24.0
+toolchain go1.26.3
 
-require github.com/Diarkis/diarkis v1.3.6
+require github.com/Diarkis/diarkis v1.3.9
 
 require (
 	github.com/magefile/mage v1.15.0
