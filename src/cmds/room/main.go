@@ -58,8 +58,10 @@ func afterRandomJoin(ver uint8, cmd uint16, payload []byte, userData *user.User,
 		next(nil)
 		return
 	}
-	// first byte is a flag to tell use either create or join
-	if payload[0] != 0x00 {
+	// first byte is a flag to tell use either create or join.
+	// An empty payload (e.g. random-join into an existing room) is the join case;
+	// guard the index so an empty payload can't panic the node.
+	if len(payload) == 0 || payload[0] != 0x00 {
 		// it was join
 		next(nil)
 		return
