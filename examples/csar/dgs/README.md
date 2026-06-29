@@ -249,12 +249,11 @@ kubectl edit deploy dgs -n dev0
 
 ```yaml
 # Edit the cpu: item and save
-:
-        resources:
-          limits:
-            cpu: 800m
-          requests:
-            cpu: 800m
+: resources:
+    limits:
+      cpu: 800m
+    requests:
+      cpu: 800m
 :
 ```
 
@@ -350,12 +349,10 @@ kubectl edit scaledobject dgs -n dev0
 
 ```yaml
 # Edit items and save
-:
-  maxReplicaCount: 300
+: maxReplicaCount: 300
   minReplicaCount: 10
-:
-    scalingModifiers:
-      formula: takenCnt + 10
+: scalingModifiers:
+    formula: takenCnt + 10
 :
 ```
 
