@@ -209,7 +209,7 @@ func search(bot *botData) {
 		return
 	}
 	if bot.mm != nil {
-		bot.mm.SearchList([]string{profileID}, nil, searchProps, 10)
+		bot.mm.SearchList([]string{profileID}, nil, searchProps, 10, false, false)
 	}
 }
 
