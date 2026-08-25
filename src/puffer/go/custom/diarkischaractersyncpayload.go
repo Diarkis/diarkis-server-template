@@ -99,7 +99,7 @@ func (proto *DiarkisCharacterSyncPayload) PackedSize() int {
 	packedSize += 1
 	packedSize += 2
 	for _, v := range proto.Frames {
-		packedSize += v.PackedSize()
+		packedSize += 2 + v.PackedSize()
 	}
 	packedSize += 8
 	return packedSize

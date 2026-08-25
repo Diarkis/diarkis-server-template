@@ -97,7 +97,7 @@ func (proto *DiarkisCharacterFrameData) PackedSize() int {
 	var packedSize = 0
 	packedSize += 1
 	packedSize += 1
-	packedSize += proto.Position.PackedSize()
+	packedSize += 2 + proto.Position.PackedSize()
 	packedSize += 2
 	packedSize += 2
 	return packedSize
