@@ -4,9 +4,10 @@ go 1.26
 
 toolchain go1.26.3
 
-require github.com/Diarkis/diarkis v1.4.1
+require github.com/Diarkis/diarkis v1.4.3
 
 require (
 	github.com/magefile/mage v1.15.0
-	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/net v0.55.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
 )
