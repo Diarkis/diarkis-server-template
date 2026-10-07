@@ -91,28 +91,13 @@ Linode では Metadata Service API が使用可能な Region を選択する必�
 
 ## インフラ構築手順5 - Diarkis CLIを使ってイメージをビルド
 
-まずlinux用にクロスコンパイルを行う準備をする。
-
-```
-cp build.yml build.linux.yml
-```
-
-とし、build.linux.yml を下記のように設定する。
-
-```
-  env:
-    GOOS: linux
-    GOARCH: amd64
-    CGO_ENABLED: 0
-```
-
 server-templateから生成した project の root から下記を実行します。
 
 ```
-./diarkis-cli/bin/diarkis-cli build --host builder.diarkis.io -c build.linux.yml
+make build-linux-amd64
 ```
 
-remote_bin にサーバーの実行ファイル郡が生成されます。
+remote_bin/linux/amd64 にサーバーの実行ファイル郡が生成されます。
 
 ## インフラ構築手順6 - Container イメージを作成
 
@@ -120,10 +105,10 @@ remote_bin にサーバーの実行ファイル郡が生成されます。
 
 ```
 export DOCKER_REPOSITORY=__YOUR_DOCKER_REPOSITORY_NAME__
-docker build -t $DOCKER_REPOSITORY/udp ./remote_bin -f docker/udp/Dockerfile
-docker build -t $DOCKER_REPOSITORY/tcp ./remote_bin -f docker/tcp/Dockerfile
-docker build -t $DOCKER_REPOSITORY/http ./remote_bin -f docker/http/Dockerfile
-docker build -t $DOCKER_REPOSITORY/mars ./remote_bin -f docker/mars/Dockerfile
+docker build --platform linux/amd64 -t $DOCKER_REPOSITORY/udp ./remote_bin/linux -f docker/udp/Dockerfile
+docker build --platform linux/amd64 -t $DOCKER_REPOSITORY/tcp ./remote_bin/linux -f docker/tcp/Dockerfile
+docker build --platform linux/amd64 -t $DOCKER_REPOSITORY/http ./remote_bin/linux -f docker/http/Dockerfile
+docker build --platform linux/amd64 -t $DOCKER_REPOSITORY/mars ./remote_bin/linux -f docker/mars/Dockerfile
 ```
 
 image を作成した dockerhub に push します。

@@ -1,6 +1,6 @@
 FROM alpine:latest
+ARG TARGETARCH
 
-COPY udp /go/bin/
-COPY health-check /go/bin/
-RUN chmod +x /go/bin/udp && chmod +x /go/bin/health-check
+COPY --chmod=755 ${TARGETARCH}/udp /go/bin/
+COPY --chmod=755 ${TARGETARCH}/health-check /go/bin/
 CMD ["/go/bin/udp"]
