@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1 ## for debug public endpoint
+kind: Ingress
+metadata:
+  name: http
+  labels:
+    component: http
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: http
+                port:
+                  number: 80

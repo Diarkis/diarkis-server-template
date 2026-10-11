@@ -1,0 +1,12 @@
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: prom-monitoring
+spec:
+  selector:
+    matchLabels:
+      component: http
+  endpoints:
+    - port: http
+      path: /metrics/prometheus/v/3
+      interval: 5s

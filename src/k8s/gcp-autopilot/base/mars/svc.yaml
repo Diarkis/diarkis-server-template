@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mars
+  labels:
+    component: mars
+spec:
+  selector:
+    component: mars
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - port: 6779
+      targetPort: 6779
+      name: mars
+      protocol: UDP

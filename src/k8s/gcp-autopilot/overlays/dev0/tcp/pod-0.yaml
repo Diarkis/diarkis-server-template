@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tcp-0
+  labels:
+    component: tcp
+spec:
+  containers:
+    - name: tcp
+      resources:
+        limits:
+          cpu: "1"
+        requests:
+          cpu: "1"
+      securityContext:
+        runAsUser: 1000
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        allowPrivilegeEscalation: false
+        privileged: false
