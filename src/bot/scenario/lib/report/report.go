@@ -341,17 +341,17 @@ func (cm *CustomMetrics) add(name, key string, value float64) {
 	cm.Unlock()
 }
 
-// IncrementCustomMetrics は全体の custom metrics にだけ 1 を加える。ユーザーごとの値は持たない。
+// IncrementCustomMetrics adds 1 to the total custom metrics only. It does not keep a value for each user.
 func IncrementCustomMetrics(name, key string) {
 	customMetrics.add(name, key, 1.0)
 }
 
-// AddCustomMetrics は全体の custom metrics にだけ value を加える。ユーザーごとの値は持たない。
+// AddCustomMetrics adds value to the total custom metrics only. It does not keep a value for each user.
 func AddCustomMetrics(name, key string, value float64) {
 	customMetrics.add(name, key, value)
 }
 
-// SetCustomMetricsAsHistogram は全体の custom metrics の name をヒストグラムとして出力する。
+// SetCustomMetricsAsHistogram sets the total custom metrics to show name as a histogram.
 func SetCustomMetricsAsHistogram(name string, buckets []float64) {
 	customMetrics.SetAsHistogram(name, buckets)
 }

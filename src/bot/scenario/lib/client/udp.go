@@ -128,12 +128,12 @@ func (c *UDPClient) RSend(ver uint8, cmd uint16, payload []byte) {
 	c.setLastActivity("Send", ver, cmd)
 }
 
-// OnConnect は接続の完了時に callback を呼ぶ。Connect の前に登録する。
+// OnConnect adds a callback. The client calls it when the connection is complete. Add it before you call Connect.
 func (c *UDPClient) OnConnect(callback func()) {
 	c.client.OnConnect(callback)
 }
 
-// OnDisconnect は切断時に callback を呼ぶ。
+// OnDisconnect adds a callback. The client calls it when the client disconnects.
 func (c *UDPClient) OnDisconnect(callback func()) {
 	c.client.OnDisconnect(callback)
 }
