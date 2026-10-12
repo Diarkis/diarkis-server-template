@@ -162,31 +162,29 @@ func (m *metrics) GetHistogram(buckets []float64) (sortedKeys []string, data map
 
 	sortedKeys = make([]string, len(sortedBuckets))
 	data = make(map[string]int, len(sortedBuckets))
-
-	// initialize the data map
-	for i, bucket := range sortedBuckets {
-		key := fmt.Sprint(bucket)
-		sortedKeys[i] = key
-		data[key] = 0
-	}
+	counts := make([]int, len(sortedBuckets))
 
 	m.RLock()
-	defer m.RUnlock()
-
 	for _, value := range m.values {
 		sum += value
 
 		// loop through the buckets in reverse order to break early
 		for i := len(sortedBuckets) - 1; i >= 0; i-- {
-			bucket := sortedBuckets[i]
-			if bucket <= value {
+			if sortedBuckets[i] <= value {
 				break
 			}
 			// value is less than the bucket.
-			data[fmt.Sprint(bucket)]++
+			counts[i]++
 		}
 	}
 	count = len(m.values)
+	m.RUnlock()
+
+	for i, bucket := range sortedBuckets {
+		key := fmt.Sprint(bucket)
+		sortedKeys[i] = key
+		data[key] = counts[i]
+	}
 	return
 }
 
@@ -318,45 +316,44 @@ func init() {
 
 // Increment adds 1 to a metrics value to the specified name and key.
 // It will be collected and calculated for total, average and subtotal for a specific period.
-func (cm_ *CustomMetrics) Increment(name, key string) {
-	increment := func(cm *CustomMetrics) {
-		cm.Lock()
-		if _, ok := cm.m[name]; !ok {
-			cm.m[name] = map[string]*metrics{}
-		}
-		if _, ok := cm.m[name][key]; !ok {
-			cm.m[name][key] = NewMetrics(fmt.Sprintf("custom-%s-%s", name, key))
-		}
-		// cm.m[name][key].counter.Add(1)
-		cm.m[name][key].Add(1.0)
-		cm.Unlock()
-	}
-
-	// individual
-	increment(cm_)
-	// total
-	increment(customMetrics)
+func (cm *CustomMetrics) Increment(name, key string) {
+	cm.Add(name, key, 1.0)
 }
 
 // Add adds a metrics value to the specified name and key.
 // It will be collected and calculated for total, average and subtotal for a specific period.
 func (cm *CustomMetrics) Add(name, key string, value float64) {
-	increment := func(cm *CustomMetrics) {
-		cm.Lock()
-		if _, ok := cm.m[name]; !ok {
-			cm.m[name] = map[string]*metrics{}
-		}
-		if _, ok := cm.m[name][key]; !ok {
-			cm.m[name][key] = NewMetrics(fmt.Sprintf("custom-%s-%s", name, key))
-		}
-		cm.m[name][key].Add(value)
-		cm.Unlock()
-	}
-
 	// individual
-	increment(cm)
+	cm.add(name, key, value)
 	// total
-	increment(customMetrics)
+	customMetrics.add(name, key, value)
+}
+
+func (cm *CustomMetrics) add(name, key string, value float64) {
+	cm.Lock()
+	if _, ok := cm.m[name]; !ok {
+		cm.m[name] = map[string]*metrics{}
+	}
+	if _, ok := cm.m[name][key]; !ok {
+		cm.m[name][key] = NewMetrics(fmt.Sprintf("custom-%s-%s", name, key))
+	}
+	cm.m[name][key].Add(value)
+	cm.Unlock()
+}
+
+// IncrementCustomMetrics は全体の custom metrics にだけ 1 を加える。ユーザーごとの値は持たない。
+func IncrementCustomMetrics(name, key string) {
+	customMetrics.add(name, key, 1.0)
+}
+
+// AddCustomMetrics は全体の custom metrics にだけ value を加える。ユーザーごとの値は持たない。
+func AddCustomMetrics(name, key string, value float64) {
+	customMetrics.add(name, key, value)
+}
+
+// SetCustomMetricsAsHistogram は全体の custom metrics の name をヒストグラムとして出力する。
+func SetCustomMetricsAsHistogram(name string, buckets []float64) {
+	customMetrics.SetAsHistogram(name, buckets)
 }
 
 // Print outputs metrics to the log
