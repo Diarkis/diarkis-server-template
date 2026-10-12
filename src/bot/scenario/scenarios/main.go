@@ -84,6 +84,7 @@ var ScenarioFactoryList map[string]func() Scenario = map[string]func() Scenario{
 	"Connect": NewConnectScenario,
 	"Ticket":  NewTicketScenario,
 	"Session": NewSessionScenario,
+	"DM":      NewDMScenario,
 }
 
 type ApiParamAttributes struct {
