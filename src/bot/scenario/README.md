@@ -104,7 +104,7 @@ The `DM` scenario puts the users in pairs. The two users in a pair send direct m
 
 - Set `userID` to sequential numbers. The users at index 2n and 2n+1 are a pair. Set `howmany` to an even number.
 - `messageSize` is the size of one message in bytes. The first 8 bytes contain the send time. The minimum value is 8.
-- `sendInterval` is the time between two messages from one user, in milliseconds.
+- `sendInterval` is the time between two messages from one user, in milliseconds. If the value is 0 or less, the user connects but does not send messages.
 - A user does not send messages until the other user in the pair connects.
 
 If you use more than one bot at the same time, give each bot a different start value for `userID`.
