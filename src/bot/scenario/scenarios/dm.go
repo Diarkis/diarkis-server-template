@@ -32,6 +32,7 @@ type DMScenarioParams struct {
 	// The size of one message in bytes. The first 8 bytes contain the send time.
 	MessageSize int `json:"messageSize"`
 	// The time between two messages from one user, in milliseconds.
+	// If the value is 0 or less, the user connects but does not send messages.
 	SendInterval int `json:"sendInterval"`
 }
 
@@ -63,9 +64,6 @@ func (s *DMScenario) ParseParam(index int, params []byte) error {
 	}
 	if dmParams.MessageSize < 8 {
 		dmParams.MessageSize = 8
-	}
-	if dmParams.SendInterval <= 0 {
-		dmParams.SendInterval = 1000
 	}
 	s.params = dmParams
 
@@ -147,6 +145,9 @@ func (s *DMScenario) isPeerReady() bool {
 }
 
 func (s *DMScenario) sendLoop() {
+	if s.params.SendInterval <= 0 {
+		return
+	}
 	// Do not send until the other user in the pair connects.
 	for !s.isPeerReady() {
 		if s.stopped.Load() {
