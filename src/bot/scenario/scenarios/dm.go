@@ -18,7 +18,7 @@ import (
 
 const StateDMReady = "DMReady"
 
-// DM_LATENCY の単位は秒。
+// The unit of DM_LATENCY is seconds.
 var dmLatencyBuckets = []float64{0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10}
 
 func init() {
@@ -27,11 +27,11 @@ func init() {
 
 type DMScenarioParams struct {
 	ServerType string `json:"serverType"`
-	// userID は連番の数値にする。index が 2n と 2n+1 のユーザーがペアになる。
+	// userID must be a sequential number. The users at index 2n and 2n+1 are a pair.
 	UID string `json:"userID"`
-	// メッセージのバイト数。先頭 8 バイトに送信時刻を入れる。
+	// The size of one message in bytes. The first 8 bytes contain the send time.
 	MessageSize int `json:"messageSize"`
-	// 1 ユーザーの送信間隔 (ミリ秒)。
+	// The time between two messages from one user, in milliseconds.
 	SendInterval int `json:"sendInterval"`
 }
 
@@ -104,7 +104,7 @@ func (s *DMScenario) OnIdle() {
 
 func (s *DMScenario) OnScenarioEnd() error {
 	s.stopped.Store(true)
-	// Disconnect は送信ループの終了を待つ。全ユーザーを同時に止めるため、切断は並行で行う。
+	// Disconnect waits for the send loop to stop. The users disconnect in parallel, so all users stop at the same time.
 	go s.client.Disconnect()
 	return nil
 }
@@ -129,7 +129,7 @@ func (s *DMScenario) registerHandlers() {
 	s.client.RegisterOnPush(util.CmdBuiltInVer, util.CmdDMSend, s.handleMessage)
 }
 
-// handleMessage は受信した DM の先頭 8 バイトから遅延を計算する。送信者は同じ bot プロセスにいる。
+// handleMessage calculates the latency from the first 8 bytes of the received DM. The sender is in the same bot process.
 func (s *DMScenario) handleMessage(payload []byte) {
 	list := packet.BytesToBytesList(payload)
 	if len(list) != 2 || len(list[1]) < 8 {
@@ -147,7 +147,7 @@ func (s *DMScenario) isPeerReady() bool {
 }
 
 func (s *DMScenario) sendLoop() {
-	// ペアの相手が接続するまで送らない。
+	// Do not send until the other user in the pair connects.
 	for !s.isPeerReady() {
 		if s.stopped.Load() {
 			return
@@ -156,7 +156,7 @@ func (s *DMScenario) sendLoop() {
 	}
 
 	interval := time.Duration(s.params.SendInterval) * time.Millisecond
-	// ユーザーごとに送信時刻をずらす。
+	// Use a different send time for each user.
 	time.Sleep(rand.N(interval))
 
 	ticker := time.NewTicker(interval)
@@ -169,7 +169,7 @@ func (s *DMScenario) sendLoop() {
 	}
 }
 
-// send はクライアントの dm モジュールと同じ形式で送る。先頭 1 バイトは互換用のフラグ。
+// send uses the same payload format as the dm module of the client. The first byte is a flag for compatibility.
 func (s *DMScenario) send(message []byte) {
 	payload := append([]byte{0}, packet.BytesListToBytes([][]byte{[]byte(s.peerUID), message})...)
 	s.client.RSend(util.CmdBuiltInVer, util.CmdDMSend, payload)

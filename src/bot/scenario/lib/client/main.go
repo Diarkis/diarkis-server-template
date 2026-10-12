@@ -23,7 +23,7 @@ func NewAndConnect(host string, userID string, serverType string, httpRequestBod
 	return httpClient, udpClient, nil
 }
 
-// New は endpoint を取得して UDP クライアントを作る。接続はしない。
+// New gets an endpoint and makes a UDP client. It does not connect the client.
 func New(host string, userID string, serverType string, httpRequestBody any, rcvMaxSize int, interval int64) (*HTTPClient, *UDPClient, error) {
 
 	httpClient := NewHTTPClient(host, userID)

@@ -13,7 +13,7 @@ var deliveredCnt *metrics.Counter
 var deliveredBytes *metrics.Counter
 
 func Setup() {
-	// metrics は mesh.Setup の後でないと登録できない。
+	// Create the metrics after mesh.Setup. If you create them before mesh.Setup, Diarkis does not register them.
 	diarkis.OnReady(func(next func(error)) {
 		deliveredCnt = metrics.NewCounter(metrics.CounterOpts{
 			Name:      "dm_delivered_total",
