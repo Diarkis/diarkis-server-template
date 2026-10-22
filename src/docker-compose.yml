@@ -3,8 +3,8 @@ name: diarkis
 services:
   mars:
     build:
-      context: ./remote_bin
-      dockerfile: ../docker/mars/Dockerfile
+      context: ./remote_bin/linux
+      dockerfile: ../../docker/mars/Dockerfile
     image: "${AWS_ACCOUNT_NUM:-diarkis-local}.dkr.ecr.ap-northeast-1.amazonaws.com/mars"
     platform: linux/amd64
     ports:
@@ -17,8 +17,8 @@ services:
         target: /bin/mars/default.conf.json
   http:
     build:
-      context: ./remote_bin
-      dockerfile: ../docker/http/Dockerfile
+      context: ./remote_bin/linux
+      dockerfile: ../../docker/http/Dockerfile
     image: "${AWS_ACCOUNT_NUM:-diarkis-local}.dkr.ecr.ap-northeast-1.amazonaws.com/http"
     platform: linux/amd64
     depends_on:
@@ -39,8 +39,8 @@ services:
       interval: "10s"
   udp:
     build:
-      context: ./remote_bin
-      dockerfile: ../docker/udp/Dockerfile
+      context: ./remote_bin/linux
+      dockerfile: ../../docker/udp/Dockerfile
     image: "${AWS_ACCOUNT_NUM:-diarkis-local}.dkr.ecr.ap-northeast-1.amazonaws.com/udp"
     platform: linux/amd64
     depends_on:
@@ -68,8 +68,8 @@ services:
     depends_on:
       - mars
     build:
-      context: ./remote_bin
-      dockerfile: ../docker/tcp/Dockerfile
+      context: ./remote_bin/linux
+      dockerfile: ../../docker/tcp/Dockerfile
     image: "${AWS_ACCOUNT_NUM:-diarkis-local}.dkr.ecr.ap-northeast-1.amazonaws.com/tcp"
     platform: linux/amd64
     ports:

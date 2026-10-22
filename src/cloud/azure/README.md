@@ -41,28 +41,7 @@ az aks get-credentials --resource-group ${RESOURCE_GROUP} --name ${CLUSTER_NAME}
 
 ## インフラ構築手順3 - Diarkis CLIを使ってイメージをビルド
 
-まずlinux用にクロスコンパイルを行う準備をする。
-
-```
-cp build.yml build.linux.yml
-```
-
-とし。build.linux.yml内でGOOSとGOARCHを下記のように設定する。
-
-```
-  env:
-    GOOS: linux
-    GOARCH: amd64
-    CGO_ENABLED: 0
-```
-
-server-templateから生成した project の root から下記を実行します。
-
-```
-./diarkis-cli/bin/diarkis-cli build --host v3.builder.diarkis.io -c build.linux.yml
-```
-
-remote_bin にサーバーの実行ファイル郡が生成されます。
+手順5 の `make build-container-azure` が、Diarkis CLI でサーバーバイナリをビルドします。
 
 ## インフラ構築手順4 - Container Registry の作成
 
@@ -94,11 +73,23 @@ dockerイメージを作成します。
 make build-container-azure
 ```
 
-image を作成したgcrにpushします。
+image を作成した Container Registry に push します。
+`push-container-azure` は `az acr login` で Container Registry に認証します。
 
 ```
 make push-container-azure
 ```
+
+`build-container-azure` は linux/amd64 と linux/arm64 のサーバーバイナリをビルドします。
+次に、両方のアーキテクチャを含むコンテナイメージを作成します。
+この手順には Docker Buildx が必要です。
+
+作成したイメージは buildx のビルドキャッシュに保存されます。
+このイメージは `docker images` には表示されません。
+`push-container-azure` は、このイメージをレジストリに push します。
+
+Kubernetes のノードは、ノードの CPU アーキテクチャに合ったイメージを使います。
+arm64 のバイナリは ARMv8.2 以降の CPU で動作します。
 
 ## インフラ構築手順5 - AKS Network Security Group の設定
 

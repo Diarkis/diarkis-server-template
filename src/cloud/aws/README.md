@@ -54,16 +54,23 @@ eks-cluster-sg-diarkis-\* のようなセキュリティグループが作成さ
 server-template から生成した project の root から下記を実行します。
 ※ 詳細は[こちら](https://help.diarkis.io/getting-started/tutorial/setup-local-server)をご覧ください。
 
-```
-make build-local
-```
-
-./remote_bin にサーバーの実行ファイル郡(udp, tcp, http, mars)が生成された後、コンテナイメージをビルドします。
+コンテナイメージをビルドします。
 
 ```
 make setup-aws
 make build-container-aws
 ```
+
+`build-container-aws` は linux/amd64 と linux/arm64 のサーバーバイナリをビルドします。
+次に、両方のアーキテクチャを含むコンテナイメージを作成します。
+この手順には Docker Buildx が必要です。
+
+作成したイメージは buildx のビルドキャッシュに保存されます。
+このイメージは `docker images` には表示されません。
+`push-container-aws` は、このイメージをレジストリに push します。
+
+Kubernetes のノードは、ノードの CPU アーキテクチャに合ったイメージを使います。
+arm64 のバイナリは ARMv8.2 以降の CPU で動作します。
 
 image を push します。
 

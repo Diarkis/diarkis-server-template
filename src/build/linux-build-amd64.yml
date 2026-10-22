@@ -1,0 +1,30 @@
+buildSettings:
+  root: ..
+  version: "2"
+  goVersion: 1.26.3
+  env:
+    CGO_ENABLED: 0
+    CGO_CFLAGS: -I${PROJECT_DIR}
+    CGO_LDFLAGS: -L${PROJECT_DIR} -Wl,-rpath,${PROJECT_DIR}
+    GOFLAGS: -trimpath -ldflags=-w -ldflags=-s
+    GOOS: linux
+    GOARCH: amd64
+  projects:
+    http:
+      target: ./servers/http
+      output: remote_bin/linux/amd64/http
+    udp:
+      target: ./servers/udp
+      output: remote_bin/linux/amd64/udp
+    tcp:
+      target: ./servers/tcp
+      output: remote_bin/linux/amd64/tcp
+    mars:
+      target: ./mars
+      output: remote_bin/linux/amd64/mars
+    health-check:
+      target: ./healthcheck
+      output: remote_bin/linux/amd64/health-check
+diarkis:
+  project_id: "{{PROJECT_ID}}"
+  builder_token: "{{BUILD_TOKEN}}"

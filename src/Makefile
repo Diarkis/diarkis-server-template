@@ -1,6 +1,6 @@
 .PHONY: help
 help:
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 ## Set default command of make to help, so that running make will output help texts
 .DEFAULT_GOAL := help
@@ -8,6 +8,9 @@ help:
 DIARKIS_VERSION = $(shell go mod edit -json | jq -r '.Require[] | select(.Path | contains("github.com/Diarkis/diarkis")).Version')
 DIARKIS_CLI = ./diarkis-cli/os/linux/bin/diarkis-cli
 BUILD_CONFIG = ./build/linux-build.yml
+BUILD_CONFIG_AMD64 = ./build/linux-build-amd64.yml
+BUILD_CONFIG_ARM64 = ./build/linux-build-arm64.yml
+DIARKIS_CLI_HOST = v3.builder.diarkis.io
 AWS_ACCOUNT_NUM = __AWS_ACCOUNT_NUM__
 AWS_REGION = ap-northeast-1
 AWS_CONTAINER_REGISTRY = $(AWS_ACCOUNT_NUM).dkr.ecr.$(AWS_REGION).amazonaws.com
@@ -28,22 +31,39 @@ init: ## Initialize project
 .PHONY: build-local
 build-local: gen ## Build server binary for local use
 	echo "Build server binaries for local use"
-	rm -rfv remote_bin/*
-	$(DIARKIS_CLI) build -c $(BUILD_CONFIG) --host v3.builder.diarkis.io
+	mkdir -p remote_bin
+	find remote_bin -maxdepth 1 -type f -print -delete
+	$(DIARKIS_CLI) build -c $(BUILD_CONFIG) --host $(DIARKIS_CLI_HOST)
 	chmod -R 700 remote_bin/
 
 .PHONY: build-linux
-build-linux: gen ## Build server binary for linux or container environment
+build-linux: gen ## Build server binary for linux
 	echo "Build server binaries"
-	rm -rfv remote_bin/*
-	$(DIARKIS_CLI) build -c ./build/linux-build.yml --host v3.builder.diarkis.io
+	mkdir -p remote_bin
+	find remote_bin -maxdepth 1 -type f -print -delete
+	$(DIARKIS_CLI) build -c ./build/linux-build.yml --host $(DIARKIS_CLI_HOST)
 	chmod -R 700 remote_bin/
+
+.PHONY: build-linux-amd64
+build-linux-amd64: gen ## Build server binary for linux/amd64 container images (output: remote_bin/linux/amd64/)
+	echo "Build server binaries for linux/amd64"
+	rm -rfv remote_bin/linux/amd64
+	$(DIARKIS_CLI) build -c $(BUILD_CONFIG_AMD64) --host $(DIARKIS_CLI_HOST)
+	chmod -R 700 remote_bin/linux/amd64/
+
+.PHONY: build-linux-arm64
+build-linux-arm64: gen ## Build server binary for linux/arm64 container images (output: remote_bin/linux/arm64/)
+	echo "Build server binaries for linux/arm64"
+	rm -rfv remote_bin/linux/arm64
+	$(DIARKIS_CLI) build -c $(BUILD_CONFIG_ARM64) --host $(DIARKIS_CLI_HOST)
+	chmod -R 700 remote_bin/linux/arm64/
 
 .PHONY: build-mac
 build-mac: gen ## Build server binary for mac use
 	echo "Build server binaries"
-	rm -rfv remote_bin/*
-	$(DIARKIS_CLI) build -c ./build/mac-build.yml --host v3.builder.diarkis.io
+	mkdir -p remote_bin
+	find remote_bin -maxdepth 1 -type f -print -delete
+	$(DIARKIS_CLI) build -c ./build/mac-build.yml --host $(DIARKIS_CLI_HOST)
 	chmod -R 700 remote_bin/
 
 .PHONY: server
@@ -73,8 +93,8 @@ go-cli: ## Starts Go test client: host=<HTTP address> uid=<client user ID> clien
 	./remote_bin/testcli --host=$(host) --uid=$(uid) --clientKey=$(clientKey) --puffer=$(puffer)
 
 .PHONY: run-docker
-run-docker: build-linux ## Run Diarkis locally with docker compose
-	docker compose up -d
+run-docker: build-linux-amd64 ## Run Diarkis locally with docker compose
+	docker compose up -d --build
 
 .PHONY: stop-docker
 stop-docker: ## Stop Diarkis
@@ -128,28 +148,43 @@ push-container-gcp: auth-docker-gcp ## Push container to GCP
 setup-azure: ## Set up Azure
 	./script/setup_azure.sh
 
+.PHONY: auth-docker-azure
+auth-docker-azure: ## Authenticate docker to push images to Azure
+	az acr login --name $(ACR_DOMAIN)
+
 .PHONY: build-container-azure
 build-container-azure: ## Build container for azure
 	make .build-container registry=$(ACR_DOMAIN) tag=dev0
 
 .PHONY: push-container-azure
-push-container-azure: ## Push container to azure
+push-container-azure: auth-docker-azure ## Push container to azure
 	make .push-container registry=$(ACR_DOMAIN) tag=dev0
 
 ################################################################################
 ## Build and push container internal
 ################################################################################
 
+CONTAINER_PLATFORMS = linux/amd64,linux/arm64
+BUILDX_BUILDER = diarkis-multiarch-builder
+BUILDX_ARGS = --builder $(BUILDX_BUILDER) --platform $(CONTAINER_PLATFORMS) --provenance=false
+
+.PHONY: setup-buildx
+setup-buildx: ## Create the buildx builder for multi-platform container images
+	docker buildx inspect $(BUILDX_BUILDER) >/dev/null 2>&1 || \
+		docker buildx create --name $(BUILDX_BUILDER) --driver docker-container
+
 .PHONY: .build-container
-.build-container: build-linux ## Build container internal
-	docker build --platform=linux/amd64 -f docker/http/Dockerfile remote_bin -t $(registry)/http:$(tag)
-	docker build --platform=linux/amd64 -f docker/udp/Dockerfile remote_bin -t $(registry)/udp:$(tag)
-	docker build --platform=linux/amd64 -f docker/tcp/Dockerfile remote_bin -t $(registry)/tcp:$(tag)
-	docker build --platform=linux/amd64 -f docker/mars/Dockerfile remote_bin -t $(registry)/mars:$(tag)
+.build-container: setup-buildx build-linux-amd64 build-linux-arm64 ## Build multi-platform container images into the buildx cache
+	docker buildx build $(BUILDX_ARGS) --output type=cacheonly -f docker/http/Dockerfile remote_bin/linux -t $(registry)/http:$(tag)
+	docker buildx build $(BUILDX_ARGS) --output type=cacheonly -f docker/udp/Dockerfile remote_bin/linux -t $(registry)/udp:$(tag)
+	docker buildx build $(BUILDX_ARGS) --output type=cacheonly -f docker/tcp/Dockerfile remote_bin/linux -t $(registry)/tcp:$(tag)
+	docker buildx build $(BUILDX_ARGS) --output type=cacheonly -f docker/mars/Dockerfile remote_bin/linux -t $(registry)/mars:$(tag)
 
 .PHONY: .push-container
-.push-container: ## Push container internal
-	docker push $(registry)/http:$(tag)
-	docker push $(registry)/udp:$(tag)
-	docker push $(registry)/tcp:$(tag)
-	docker push $(registry)/mars:$(tag)
+.push-container: setup-buildx ## Push multi-platform container images built by .build-container
+	@test -d remote_bin/linux/amd64 && test -d remote_bin/linux/arm64 || \
+		{ echo "remote_bin/linux/amd64 or remote_bin/linux/arm64 does not exist. Run \"make build-container-<cloud>\" first." >&2; exit 1; }
+	docker buildx build $(BUILDX_ARGS) --push -f docker/http/Dockerfile remote_bin/linux -t $(registry)/http:$(tag)
+	docker buildx build $(BUILDX_ARGS) --push -f docker/udp/Dockerfile remote_bin/linux -t $(registry)/udp:$(tag)
+	docker buildx build $(BUILDX_ARGS) --push -f docker/tcp/Dockerfile remote_bin/linux -t $(registry)/tcp:$(tag)
+	docker buildx build $(BUILDX_ARGS) --push -f docker/mars/Dockerfile remote_bin/linux -t $(registry)/mars:$(tag)
