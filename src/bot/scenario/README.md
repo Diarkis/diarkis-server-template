@@ -98,6 +98,34 @@ Then you can issue the same query as [Run on Server](#run-on-server)
 curl -X POST http://x.x.x.x:9500/run/ -d '{"type":"Ticket","run":"OneTicket","howmany":10,"duration":10}'
 ```
 
+### DM Scenario
+
+The `DM` scenario puts the users in pairs. The two users in a pair send direct messages (DMs) to each other. The configuration is in `bot/scenario/config/dm.json`.
+
+- Set `userID` to sequential numbers. The users at index 2n and 2n+1 are a pair. Set `howmany` to an even number.
+- `messageSize` is the size of one message in bytes. The first 8 bytes contain the send time. The minimum value is 8.
+- `sendInterval` is the time between two messages from one user, in milliseconds. If the value is 0 or less, the user connects but does not send messages.
+- A user does not send messages until the other user in the pair connects.
+
+If you use more than one bot at the same time, give each bot a different start value for `userID`.
+
+```
+curl -X POST http://x.x.x.x:9500/run/ -d '{"type":"DM","run":"DM","howmany":2000,"duration":300,"host":"http.dev0.svc.cluster.local","userID":{"defaultValue":"1000000000100000","isSequential":true}}'
+```
+
+The bot makes these metrics available to Prometheus.
+
+| Metric                                           | Description                                                 |
+| ------------------------------------------------ | ----------------------------------------------------------- |
+| `Bot_Custom_Metrics_DM_SENT_total`               | The number of DMs that the bot sent                         |
+| `Bot_Custom_Metrics_DM_RECEIVED_total`           | The number of DMs that the bot received                     |
+| `Bot_Custom_Metrics_DM_SEND_OK_total`            | The number of OK responses for sent DMs                     |
+| `Bot_Custom_Metrics_DM_SEND_ERROR_total`         | The number of error responses for sent DMs                  |
+| `Bot_Custom_Metrics_DM_CONNECT_ERROR_total`      | The number of failures in HTTP authentication or connection |
+| `Bot_Custom_Metrics_DM_LATENCY_duration_seconds` | The time from send to receipt, in seconds (histogram)       |
+
+The server makes `diarkis_dm_delivered_total` and `diarkis_dm_delivered_bytes_total` available. These metrics show the number of DMs and the number of bytes that the server sent to its users.
+
 ## How to get Result
 
 ### CSV File
