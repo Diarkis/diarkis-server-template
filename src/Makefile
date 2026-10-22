@@ -31,14 +31,16 @@ init: ## Initialize project
 .PHONY: build-local
 build-local: gen ## Build server binary for local use
 	echo "Build server binaries for local use"
-	rm -rfv remote_bin/*
+	mkdir -p remote_bin
+	find remote_bin -maxdepth 1 -type f -print -delete
 	$(DIARKIS_CLI) build -c $(BUILD_CONFIG) --host $(DIARKIS_CLI_HOST)
 	chmod -R 700 remote_bin/
 
 .PHONY: build-linux
 build-linux: gen ## Build server binary for linux
 	echo "Build server binaries"
-	rm -rfv remote_bin/*
+	mkdir -p remote_bin
+	find remote_bin -maxdepth 1 -type f -print -delete
 	$(DIARKIS_CLI) build -c ./build/linux-build.yml --host $(DIARKIS_CLI_HOST)
 	chmod -R 700 remote_bin/
 
@@ -59,7 +61,8 @@ build-linux-arm64: gen ## Build server binary for linux/arm64 container images (
 .PHONY: build-mac
 build-mac: gen ## Build server binary for mac use
 	echo "Build server binaries"
-	rm -rfv remote_bin/*
+	mkdir -p remote_bin
+	find remote_bin -maxdepth 1 -type f -print -delete
 	$(DIARKIS_CLI) build -c ./build/mac-build.yml --host $(DIARKIS_CLI_HOST)
 	chmod -R 700 remote_bin/
 
@@ -179,6 +182,8 @@ setup-buildx: ## Create the buildx builder for multi-platform container images
 
 .PHONY: .push-container
 .push-container: setup-buildx ## Push multi-platform container images built by .build-container
+	@test -d remote_bin/linux/amd64 && test -d remote_bin/linux/arm64 || \
+		{ echo "remote_bin/linux/amd64 or remote_bin/linux/arm64 does not exist. Run \"make build-container-<cloud>\" first." >&2; exit 1; }
 	docker buildx build $(BUILDX_ARGS) --push -f docker/http/Dockerfile remote_bin/linux -t $(registry)/http:$(tag)
 	docker buildx build $(BUILDX_ARGS) --push -f docker/udp/Dockerfile remote_bin/linux -t $(registry)/udp:$(tag)
 	docker buildx build $(BUILDX_ARGS) --push -f docker/tcp/Dockerfile remote_bin/linux -t $(registry)/tcp:$(tag)
