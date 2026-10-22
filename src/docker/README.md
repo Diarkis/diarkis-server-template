@@ -10,9 +10,9 @@ If you want to try your images that are built for public clouds, change `diarkis
 
 # Run Diarkis locally with Docker Compose
 
+`run-docker` builds the linux/amd64 binaries into `remote_bin/linux/amd64/`. Then it starts the containers.
+
 ```
-# build must be linux arch
-make build-local
 make run-docker
 ```
 

@@ -1,0 +1,31 @@
+buildSettings:
+  root: ..
+  version: "2"
+  goVersion: 1.26.3
+  env:
+    CGO_ENABLED: 0
+    CGO_CFLAGS: -I${PROJECT_DIR}
+    CGO_LDFLAGS: -L${PROJECT_DIR} -Wl,-rpath,${PROJECT_DIR}
+    GOFLAGS: -trimpath -ldflags=-w -ldflags=-s
+    GOOS: linux
+    GOARCH: arm64
+    GOARM64: v8.2,crypto # if all your nodes are ARMv9.0 or later (e.g. GCP C4A), you can replace v8.2 with v9.0
+  projects:
+    http:
+      target: ./servers/http
+      output: remote_bin/linux/arm64/http
+    udp:
+      target: ./servers/udp
+      output: remote_bin/linux/arm64/udp
+    tcp:
+      target: ./servers/tcp
+      output: remote_bin/linux/arm64/tcp
+    mars:
+      target: ./mars
+      output: remote_bin/linux/arm64/mars
+    health-check:
+      target: ./healthcheck
+      output: remote_bin/linux/arm64/health-check
+diarkis:
+  project_id: "{{PROJECT_ID}}"
+  builder_token: "{{BUILD_TOKEN}}"

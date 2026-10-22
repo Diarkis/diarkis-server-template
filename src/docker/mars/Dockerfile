@@ -1,7 +1,7 @@
 FROM alpine:latest
+ARG TARGETARCH
 
-COPY mars /go/bin/
-COPY health-check /go/bin/
-RUN chmod +x /go/bin/mars && chmod +x /go/bin/health-check
+COPY --chmod=755 ${TARGETARCH}/mars /go/bin/
+COPY --chmod=755 ${TARGETARCH}/health-check /go/bin/
 
 CMD ["/go/bin/mars"]

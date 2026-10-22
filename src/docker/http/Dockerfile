@@ -1,6 +1,6 @@
 FROM alpine:latest
+ARG TARGETARCH
 
-COPY http /go/bin/
-COPY health-check /go/bin/
-RUN chmod +x /go/bin/http && chmod +x /go/bin/health-check
+COPY --chmod=755 ${TARGETARCH}/http /go/bin/
+COPY --chmod=755 ${TARGETARCH}/health-check /go/bin/
 CMD ["/go/bin/http"]

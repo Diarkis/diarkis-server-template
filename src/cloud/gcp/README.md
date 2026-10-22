@@ -158,6 +158,17 @@ make build-container-gcp
 make push-container-gcp
 ```
 
+`build-container-gcp` は linux/amd64 と linux/arm64 のサーバーバイナリをビルドします。
+次に、両方のアーキテクチャを含むコンテナイメージを作成します。
+この手順には Docker Buildx が必要です。
+
+作成したイメージは buildx のビルドキャッシュに保存されます。
+このイメージは `docker images` には表示されません。
+`push-container-gcp` は、このイメージをレジストリに push します。
+
+Kubernetes のノードは、ノードの CPU アーキテクチャに合ったイメージを使います。
+arm64 のバイナリは ARMv8.2 以降の CPU で動作します。
+
 ## インフラ構築手順 6 - GKE クラスタへのマニフェスト反映
 
 kustomize を使用し、GKE クラスタにマニフェストの反映をします
