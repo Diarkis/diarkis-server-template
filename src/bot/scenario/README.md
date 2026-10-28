@@ -124,6 +124,15 @@ The bot makes these metrics available to Prometheus.
 | `Bot_Custom_Metrics_DM_CONNECT_ERROR_total`      | The number of failures in HTTP authentication or connection |
 | `Bot_Custom_Metrics_DM_LATENCY_duration_seconds` | The time from send to receipt, in seconds (histogram)       |
 
+`DM_LATENCY` includes these wait times. The values in parentheses are the default values.
+
+- The send loop of the sender bot: up to the `udpSendInterval` of the bot (100 ms)
+- The RUDP loop of the UDP server: up to `handleRUDPInterval` (100 ms)
+- The send queue of the UDP server: up to `sendUDPInterval` (50 ms)
+- The receive loop of the receiver bot: up to the `udpSendInterval` of the bot (100 ms)
+
+With the default values, the sum of these wait times is 350 ms or less. A value of more than 350 ms shows a delay in the server or a packet that the bot or the server sent again.
+
 The server makes `diarkis_dm_delivered_total` and `diarkis_dm_delivered_bytes_total` available. These metrics show the number of DMs and the number of bytes that the server sent to its users.
 
 ## How to get Result
