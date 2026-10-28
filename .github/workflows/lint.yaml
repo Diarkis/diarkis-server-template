@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout latest code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v7
         with:
           go-version-file: "go.mod"
 
@@ -23,11 +23,13 @@ jobs:
         run: make init project_id=PROJECT_ID builder_token=BUILDER_TOKEN output=/tmp/init-test
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: "1.12.2"
 
       - name: Install kustomize
+        env:
+          GOTOOLCHAIN: auto
         run: go install sigs.k8s.io/kustomize/kustomize/v5@latest
 
       - name: Build kustomize overlays
