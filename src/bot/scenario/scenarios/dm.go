@@ -59,7 +59,7 @@ func (s *DMScenario) ParseParam(index int, params []byte) error {
 	var dmParams *DMScenarioParams
 	err := json.Unmarshal(params, &dmParams)
 	if err != nil {
-		logger.Error("Failed to unmarshal scenario params.", err.Error())
+		logger.Error("Failed to unmarshal scenario params. %s", err.Error())
 		return err
 	}
 	if dmParams.MessageSize < 8 {
