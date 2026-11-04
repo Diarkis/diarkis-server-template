@@ -1,8 +1,6 @@
 module github.com/Diarkis/diarkis-server-template
 
-go 1.26.0
-
-toolchain go1.26.10
+go 1.26.10
 
 require github.com/Diarkis/diarkis v1.5.2
 
