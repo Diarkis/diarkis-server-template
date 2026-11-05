@@ -128,6 +128,16 @@ func (c *UDPClient) RSend(ver uint8, cmd uint16, payload []byte) {
 	c.setLastActivity("Send", ver, cmd)
 }
 
+// OnConnect adds a callback. The client calls it when the connection is complete. Add it before you call Connect.
+func (c *UDPClient) OnConnect(callback func()) {
+	c.client.OnConnect(callback)
+}
+
+// OnDisconnect adds a callback. The client calls it when the client disconnects.
+func (c *UDPClient) OnDisconnect(callback func()) {
+	c.client.OnDisconnect(callback)
+}
+
 func (c *UDPClient) OnPush(callback func(uint8, uint16, []byte)) {
 	c.client.OnPush(callback)
 }
