@@ -133,7 +133,7 @@ The bot makes these metrics available to Prometheus.
 
 With the default values, the sum of these wait times is 350 ms or less. A value of more than 350 ms shows a delay in the server or a packet that the bot or the server sent again.
 
-The server makes `diarkis_dm_delivered_total` and `diarkis_dm_delivered_bytes_total` available. These metrics show the number of DMs and the number of bytes that the server sent to its users.
+The server makes `diarkis_dm_delivered_total` and `diarkis_dm_delivered_bytes_total` available. These metrics show the number of DMs and the number of bytes that the server sent to its users. The metrics do not include the disconnect messages (`CmdDMDisconn`).
 
 ## How to get Result
 

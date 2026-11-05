@@ -7,6 +7,7 @@ import (
 	"github.com/Diarkis/diarkis/dm"
 	"github.com/Diarkis/diarkis/metrics"
 	"github.com/Diarkis/diarkis/user"
+	"github.com/Diarkis/diarkis/util"
 )
 
 var deliveredCnt *metrics.Counter
@@ -17,17 +18,21 @@ func Setup() {
 	diarkis.OnReady(func(next func(error)) {
 		deliveredCnt = metrics.NewCounter(metrics.CounterOpts{
 			Name:      "dm_delivered_total",
-			Help:      "Represents the number of direct messages delivered to the users on a server (node).",
+			Help:      "Represents the number of direct messages delivered to the users on a server (node). Disconnect messages are not included.",
 			NodeRoles: []diarkis.NodeRole{diarkis.UDP, diarkis.TCP},
 		})
 		deliveredBytes = metrics.NewCounter(metrics.CounterOpts{
 			Name:      "dm_delivered_bytes_total",
-			Help:      "Represents the total size of direct messages delivered to the users on a server (node).",
+			Help:      "Represents the total size of direct messages delivered to the users on a server (node). Disconnect messages are not included.",
 			NodeRoles: []diarkis.NodeRole{diarkis.UDP, diarkis.TCP},
 		})
 		next(nil)
 	})
-	dm.SetOnReceiveMessage(func(_ uint8, _ uint16, message []byte, _ string, _ *user.User) bool {
+	dm.SetOnReceiveMessage(func(ver uint8, cmd uint16, message []byte, _ string, _ *user.User) bool {
+		// Do not count the disconnect messages.
+		if ver == util.CmdBuiltInVer && cmd == util.CmdDMDisconn {
+			return true
+		}
 		deliveredCnt.Inc()
 		deliveredBytes.Add(uint64(len(message)))
 		return true
