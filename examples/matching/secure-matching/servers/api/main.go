@@ -55,7 +55,7 @@ func StartServer() {
 	mux.HandleFunc("/", rootHandler)
 
 	// This endpoint is used to get authentication information from Diarkis UDP endpoint via API
-	mux.HandleFunc("GET /endpoint/type/UDP/user/{uid}", authHandler)
+	mux.HandleFunc("/endpoint/type/UDP/user/{uid}", authHandler)
 
 	// This endpoint is used to get user rank
 	mux.HandleFunc("GET /users/{uid}", userRankHandler)

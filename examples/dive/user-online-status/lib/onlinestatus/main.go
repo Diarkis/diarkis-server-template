@@ -3,6 +3,7 @@
 package onlinestatus
 
 import (
+	"fmt"
 	"sync/atomic"
 
 	"github.com/Diarkis/diarkis"
@@ -144,7 +145,7 @@ func updateUserStatus(userData *user.User, next func(error)) {
 //	Name: "Online" Type: td.Bool - GetAsBool("Online")
 func GetUserStatus(uid string) (*UserStatusData, error) {
 	if getStorage() == nil {
-		return nil, util.NewError("Storage must be setup")
+		return nil, fmt.Errorf("Storage must be setup")
 	}
 
 	res := getStorage().Get(uid)
@@ -200,13 +201,13 @@ func getUserStatus(data []byte) *UserStatusData {
 //	Name: "Online" Type: td.Bool - GetAsBool("Online")
 func GetUserStatusList(uids []string) ([]*UserStatusData, error) {
 	if getStorage() == nil {
-		return nil, util.NewError("Storage must be setup")
+		return nil, fmt.Errorf("Storage must be setup")
 	}
 
 	// check the limit
 	if len(uids) > returnLimit {
 		logger.Debug("Number UIDs exceeds the limit of %v and the array is trucated", returnLimit)
-		return nil, util.NewError("User status list retrieval is up to %v, but %v given", returnLimit, len(uids))
+		return nil, fmt.Errorf("User status list retrieval is up to %v, but %v given", returnLimit, len(uids))
 	}
 
 	// first, we group UIDs that resolve to the same mesh address
@@ -231,7 +232,7 @@ func GetUserStatusList(uids []string) ([]*UserStatusData, error) {
 		resp, err := mesh.SendRPC(meshCmds.GetOnlineStatusListCmd, addr, list.Pack())
 
 		if err != nil {
-			return nil, util.StackError(util.NewError("Failed to get user status list -> UIDs:%v", uids), err)
+			return nil, util.StackError(fmt.Errorf("Failed to get user status list -> UIDs:%v", uids), err)
 		}
 
 		uslist := userStatusList.New()

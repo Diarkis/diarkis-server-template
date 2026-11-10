@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	cli.RegisterCommands("ticket", cli.TicketCommands)
+	cli.SetupBuiltInTicketCommands()
 	cli.Connect()
 	cli.Run()
 }
