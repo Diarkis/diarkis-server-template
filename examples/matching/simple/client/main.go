@@ -4,7 +4,6 @@ package main
 
 import (
 	"context"
-	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -20,6 +19,7 @@ import (
 	"github.com/Diarkis/diarkis-server-template/examples/matching/simple/common"
 	"github.com/Diarkis/diarkis/client/go/udp"
 	"github.com/Diarkis/diarkis/log"
+	pmatchmaker "github.com/Diarkis/diarkis/proto/go/matchmaker"
 	"github.com/Diarkis/diarkis/server"
 	"github.com/Diarkis/diarkis/util"
 )
@@ -30,6 +30,7 @@ const rcvByteSize = 8000
 const udpSendInterval int64 = 200
 
 func main() {
+	log.Setup("configs/shared/log.json")
 	os.Exit(run())
 }
 
@@ -230,10 +231,15 @@ func (c *client) handleResponse(ver uint8, cmd uint16, status uint8, payload []b
 }
 
 func (c *client) handleTicketComplete(payload []byte) {
+	push := pmatchmaker.NewTicketCompletePush()
+	if err := push.Unpack(payload); err != nil {
+		logger.Error("fail to unpack matching complete payload. %v (%#v)", err, payload)
+		return
+	}
 	var e common.MatchingComplete
-	err := json.Unmarshal(payload, &e)
+	err := json.Unmarshal(push.Payload, &e)
 	if err != nil {
-		logger.Error("fail to parse matching complete payload. %v (%#v)", err, payload)
+		logger.Error("fail to parse matching complete payload. %v (%#v)", err, push.Payload)
 		return
 	}
 
@@ -247,8 +253,13 @@ func (c *client) handleTicketComplete(payload []byte) {
 }
 
 func (c *client) handleTicketError(payload []byte) {
-	code := binary.BigEndian.Uint16(payload[:2])
-	message := string(payload[2:])
+	push := pmatchmaker.NewTicketErrorPush()
+	if err := push.Unpack(payload); err != nil {
+		logger.Error("fail to unpack matching ticket error payload. %v (%#v)", err, payload)
+		return
+	}
+	code := push.Code
+	message := push.Message
 	logger.Info("matching ticket error code %d message %s", code, message)
 	if code == 4009 {
 		// timeout
@@ -260,8 +271,12 @@ func (c *client) handleTicketError(payload []byte) {
 }
 
 func (c *client) handleTicketBroadcast(payload []byte) {
-	_ = payload
-	logger.Info("received matching ticket broadcast %s", payload)
+	push := pmatchmaker.NewBroadcastPush()
+	if err := push.Unpack(payload); err != nil {
+		logger.Error("fail to unpack matching ticket broadcast payload. %v (%#v)", err, payload)
+		return
+	}
+	logger.Info("received matching ticket broadcast %s", push.Message)
 	logger.Info("test is finished, disconnect")
 	c.uc.Disconnect()
 }
