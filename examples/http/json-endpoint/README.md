@@ -34,7 +34,7 @@ Then you can start the http server.
 In the http server log you should search for the following log
 
 ```
-<HTTP>         INFO Server starting -> PublicEndpoint:127.0.0.1:7000
+<HTTP>          INFO    HTTP|127.0.0.1:8100  Server starting -> PublicEndpoint:127.0.0.1:7000
 ```
 
 You can test the endpoint by using either curl or the provided test client.
