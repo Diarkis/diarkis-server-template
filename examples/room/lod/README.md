@@ -359,7 +359,7 @@ LoD (Level of Detail) は、距離によって同期の頻度を変えること�
 
 ```json
 {
-  "SyncIntervalForNearby":33,
+  "SyncIntervalForNearby": 33,
   "SyncIntervalForFar": 2000,
   "MaxDistanceForNearby": 10000,
   "MaxDistanceForFar": 40000
