@@ -90,7 +90,7 @@ New member joined Room. Message: Hello from user12!
 
 ```sh
 > lod getinfo
-Get LoD Info successful: MaxDistanceForFar = 40000 | MaxDistanceForNearby = 10000 | SyncIntervalForFar = 2000 | SyncIntervalForNearby = 16
+Get LoD Info successful: MaxDistanceForFar = 40000 | MaxDistanceForNearby = 10000 | SyncIntervalForFar = 2000 | SyncIntervalForNearby = 33
 ```
 
 ユーザー 1 が Room に LoD 情報をブロードキャストします。
@@ -107,7 +107,24 @@ Broadcast LoD successful:
 Broadcast LoD Push successful:  sync data
 ```
 
-ユーザー 2 がユーザー 1 から適切な同期間隔でデータを受信します。
+ユーザー 2 が LoD に位置情報を登録します。
+
+> LoD のデータは、`lod broadcast` で位置情報を登録したユーザー同士の間でのみ送信されます。
+> データを受信する側も、事前に一度 `lod broadcast` を実行して位置情報を登録してください。
+
+```sh
+> lod broadcast
+Enter X (int32):
+0
+Enter Y (int32):
+0
+Enter Payload (string):
+sync data
+Broadcast LoD successful:
+Broadcast LoD Push successful:  sync data
+```
+
+ユーザー 1 とユーザー 2 が適切な同期間隔でデータを受信します。
 
 ```sh
 Broadcast LoD Push successful:       sync data
@@ -119,6 +136,7 @@ LoD コマンドを表示するには、以下のコマンドを実行します�
  > help lod
 ================ Command List ================
 lod broadcast - Broadcast the LoD
+lod b         - Alias for `lod broadcast`
 lod getinfo   - Get the LoD configuration
 =============================================
 ```
@@ -131,7 +149,7 @@ lod getinfo   - Get the LoD configuration
 
 #### 1. 近距離ユーザー（距離 ≤ MaxDistanceForNearby）
 
-- **同期間隔**: `SyncIntervalForNearby`（デフォルト: 16ms）
+- **同期間隔**: `SyncIntervalForNearby`（デフォルト: 33ms）
 - **例**: 距離が 10,000cm 以下の場合、高頻度で同期
 
 #### 2. 中距離ユーザー（MaxDistanceForNearby < 距離 ≤ MaxDistanceForFar）
@@ -208,12 +226,34 @@ Enter Payload (string):
 Alice at origin
 ```
 
-**3. 期待される動作**
+**3. Bob と Charlie が位置情報を登録**
 
-- **Bob**: 距離 8,000cm（近距離）→ 約 16ms 間隔で「Alice at origin」を受信
+```sh
+# Bob (Terminal 2)
+> lod b
+Enter X (int32):
+5000
+Enter Y (int32):
+3000
+Enter Payload (string):
+Bob here
+
+# Charlie (Terminal 3)
+> lod b
+Enter X (int32):
+20000
+Enter Y (int32):
+15000
+Enter Payload (string):
+Charlie here
+```
+
+**4. 期待される動作**
+
+- **Bob**: 距離 8,000cm（近距離）→ 約 33ms 間隔で「Alice at origin」を受信
 - **Charlie**: 距離 35,000cm（中距離）→ 約 1,666ms 間隔で「Alice at origin」を受信
 
-**4. Bob が移動して遠距離になった場合**
+**5. Bob が移動して遠距離になった場合**
 
 ```sh
 # Bob (Terminal 2)
@@ -315,23 +355,23 @@ LoD (Level of Detail) は、距離によって同期の頻度を変えること�
 
 ## 設定
 
-./configs/shared/room.json で以下の設定を行うことができます。
+./configs/shared/lod.json で以下の設定を行うことができます。
 
 ```json
 {
-  "syncIntervalForNearby": 16,
-  "syncIntervalForFar": 2000,
-  "maxDistanceForNearby": 1000,
-  "maxDistanceForFar": 40000
+  "SyncIntervalForNearby": 33,
+  "SyncIntervalForFar": 2000,
+  "MaxDistanceForNearby": 10000,
+  "MaxDistanceForFar": 40000
 }
 ```
 
 | key                   | description                       | default value |
 | --------------------- | --------------------------------- | ------------- |
-| syncIntervalForNearby | 近距離の同期間隔 (millisecond)    | 16            |
-| syncIntervalForFar    | 遠距離の同期間隔 (millisecond)    | 2000          |
-| maxDistanceForNearby  | 近距離の最大同期距離 (centimeter) | 10000         |
-| maxDistanceForFar     | 遠距離の最大同期距離 (centimeter) | 40000         |
+| SyncIntervalForNearby | 近距離の同期間隔 (millisecond)    | 33            |
+| SyncIntervalForFar    | 遠距離の同期間隔 (millisecond)    | 2000          |
+| MaxDistanceForNearby  | 近距離の最大同期距離 (centimeter) | 10000         |
+| MaxDistanceForFar     | 遠距離の最大同期距離 (centimeter) | 40000         |
 
 ---
 
@@ -343,9 +383,9 @@ Room に、自分のキャラクターの x, y 座標と同期したいデータ
 
 自キャラクターの座標を元に、以下の条件で相手にデータを送信します。
 
-- 近い位置の相手 ( `maxDistanceForNearby` 以下 ) には頻繁に送信 ( `syncIntervalForNearby` )
-- 遠い位置の相手 ( `maxDistanceForFar` 以下 ) には低頻度で送信 ( `syncIntervalForFar` )
-- それ以外の相手 ( `maxDistanceForFar` 以上 ) には送信しません
+- 近い位置の相手 ( `MaxDistanceForNearby` 以下 ) には頻繁に送信 ( `SyncIntervalForNearby` )
+- 遠い位置の相手 ( `MaxDistanceForFar` 以下 ) には低頻度で送信 ( `SyncIntervalForFar` )
+- それ以外の相手 ( `MaxDistanceForFar` 以上 ) には送信しません
 
 #### Command
 
@@ -404,10 +444,10 @@ Ver=2, Cmd=1002
 
 | parameter             | type   | description                       |
 | --------------------- | ------ | --------------------------------- |
-| syncIntervalForNearby | uint32 | 近距離の同期間隔 (millisecond)    |
-| syncIntervalForFar    | uint32 | 遠距離の同期間隔 (millisecond)    |
-| maxDistanceForNearby  | uint32 | 近距離の最大同期距離 (centimeter) |
-| maxDistanceForFar     | uint32 | 遠距離の最大同期距離 (centimeter) |
+| SyncIntervalForNearby | uint32 | 近距離の同期間隔 (millisecond)    |
+| SyncIntervalForFar    | uint32 | 遠距離の同期間隔 (millisecond)    |
+| MaxDistanceForNearby  | uint32 | 近距離の最大同期距離 (centimeter) |
+| MaxDistanceForFar     | uint32 | 遠距離の最大同期距離 (centimeter) |
 
 #### Push Notification
 
