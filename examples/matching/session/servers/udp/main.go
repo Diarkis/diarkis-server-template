@@ -3,7 +3,12 @@
 package main
 
 import (
+	"encoding/json"
+	"sort"
+	"sync"
 	"time"
+
+	"github.com/Diarkis/diarkis-server-template/examples/matching/session/protocol"
 
 	"github.com/Diarkis/diarkis"
 	"github.com/Diarkis/diarkis/diarkisexec"
@@ -27,6 +32,14 @@ const (
 	kickedKeyPrefix = "kicked:"
 )
 
+// sessionList このサーバーで作られた Session の一覧(Session ID → Session type)。
+// コマンドの処理と OnDeleted(別 goroutine)から同時に触られるので、Mutex で守る。
+// このサンプルは UDP サーバーが1台なので、このサーバーの一覧だけを返す。
+var (
+	sessionListMu sync.Mutex
+	sessionList   = map[string]uint8{}
+)
+
 func main() {
 	logConfigPath := "configs/shared/log.json"
 	meshConfigPath := "configs/shared/mesh.json"
@@ -45,6 +58,9 @@ func main() {
 			panic(err)
 		}
 		if err := server.HandleCommand(builtInVer, kickCmd, handleAfterKick); err != nil {
+			panic(err)
+		}
+		if err := server.HandleCommand(protocol.CustomVer, protocol.ShowSessionsCmd, handleShowSessions); err != nil {
 			panic(err)
 		}
 	})
@@ -133,7 +149,54 @@ func registerCallbacks(s *session.Session) {
 
 	s.SetOnDeleted(func(id string) {
 		logger.Infof("OnDeleted", "sessionID", id)
+		removeFromSessionList(id)
 	})
 
+	addToSessionList(s.GetID(), s.GetType())
+
 	logger.Infof("callbacks registered", "sessionID", s.GetID())
+}
+
+func addToSessionList(id string, sessionType uint8) {
+	sessionListMu.Lock()
+	defer sessionListMu.Unlock()
+	sessionList[id] = sessionType
+}
+
+func removeFromSessionList(id string) {
+	sessionListMu.Lock()
+	defer sessionListMu.Unlock()
+	delete(sessionList, id)
+}
+
+// handleShowSessions 独自コマンド session show。Session の一覧を JSON で返す。
+func handleShowSessions(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
+	// Mutex を持っている時間を短くするため、まず一覧をコピーする
+	sessionListMu.Lock()
+	copied := make(map[string]uint8, len(sessionList))
+	for id, sessionType := range sessionList {
+		copied[id] = sessionType
+	}
+	sessionListMu.Unlock()
+
+	list := make([]protocol.SessionInfo, 0, len(copied))
+	for id, sessionType := range copied {
+		info := protocol.SessionInfo{ID: id, Type: sessionType, MemberIDs: []string{}}
+		if s, ok := session.GetSessionByID(id); ok {
+			info.MemberIDs = s.GetMemberIDs()
+		}
+		list = append(list, info)
+	}
+	// 表示の順番が毎回変わらないように並べる
+	sort.Slice(list, func(i, j int) bool { return list[i].ID < list[j].ID })
+
+	res, err := json.Marshal(list)
+	if err != nil {
+		userData.ServerRespond([]byte(err.Error()), ver, cmd, server.Err, true)
+		next(err)
+		return
+	}
+	logger.Infof("session show", "uid", userData.ID, "count", len(list))
+	userData.ServerRespond(res, ver, cmd, server.Ok, true)
+	next(nil)
 }
