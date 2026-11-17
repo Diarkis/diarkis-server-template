@@ -3,14 +3,15 @@
 package main
 
 import (
+	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"sort"
 	"sync"
 	"time"
 
-	"github.com/Diarkis/diarkis-server-template/examples/matching/session/protocol"
-
 	"github.com/Diarkis/diarkis"
+	"github.com/Diarkis/diarkis-server-template/examples/matching/session/protocol"
 	"github.com/Diarkis/diarkis/diarkisexec"
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/server"
@@ -22,19 +23,15 @@ import (
 var logger = log.New("SESSION-EXAMPLE")
 
 const (
-	builtInVer       uint8  = 1
-	createSessionCmd uint16 = 801
-	kickCmd          uint16 = 806
-
-	// kick された人が再参加できるようになるまでの秒数
-	rejoinBlockSeconds int64 = 60
-	// kick した時刻を Session のプロパティに保存するときのキーの頭につける文字
-	kickedKeyPrefix = "kicked:"
+	builtInVer         uint8  = 1
+	createSessionCmd   uint16 = 801
+	inviteCmd          uint16 = 802
+	kickCmd            uint16 = 806
+	rejoinBlockSeconds int64  = 60
+	kickedKeyPrefix           = "kicked:"
+	invitedByKeyPrefix        = "invitedBy:"
 )
 
-// sessionList このサーバーで作られた Session の一覧(Session ID → Session type)。
-// コマンドの処理と OnDeleted(別 goroutine)から同時に触られるので、Mutex で守る。
-// このサンプルは UDP サーバーが1台なので、このサーバーの一覧だけを返す。
 var (
 	sessionListMu sync.Mutex
 	sessionList   = map[string]uint8{}
@@ -57,10 +54,16 @@ func main() {
 		if err := server.HandleCommand(builtInVer, createSessionCmd, handleAfterCreateSession); err != nil {
 			panic(err)
 		}
+		if err := server.HandleCommand(builtInVer, inviteCmd, handleAfterInvite); err != nil {
+			panic(err)
+		}
 		if err := server.HandleCommand(builtInVer, kickCmd, handleAfterKick); err != nil {
 			panic(err)
 		}
 		if err := server.HandleCommand(protocol.CustomVer, protocol.ShowSessionsCmd, handleShowSessions); err != nil {
+			panic(err)
+		}
+		if err := server.HandleCommand(protocol.CustomVer, protocol.InviteReplyCmd, handleInviteReply); err != nil {
 			panic(err)
 		}
 	})
@@ -86,13 +89,9 @@ func handleAfterCreateSession(ver uint8, cmd uint16, payload []byte, userData *u
 	next(nil)
 }
 
-// handleAfterKick 標準の session kick が成功したあとに呼ばれる。
-// kick された人と時刻を Session のプロパティに保存する。
 func handleAfterKick(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
 	logger.Infof("handleAfterKick called", "uid", userData.ID)
 
-	// payload は「1バイト目が Session type、残りが kick された人の UID」
-	// (例: user2 を kick すると 00 75 73 65 72 32 になることをログで確認済み)
 	if len(payload) < 2 {
 		logger.Warnf("kick payload is too short", "uid", userData.ID)
 		next(nil)
@@ -113,7 +112,67 @@ func handleAfterKick(ver uint8, cmd uint16, payload []byte, userData *user.User,
 	})
 }
 
-// isRejoinBlocked kick されてから rejoinBlockSeconds 秒たっていなければ true を返す。
+func handleAfterInvite(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
+	sessionType, targetUIDs, err := parseInvitePayload(payload)
+	if err != nil {
+		logger.Warnf("failed to read invite payload", "uid", userData.ID, "error", err)
+		next(nil)
+		return
+	}
+
+	kvList := make([]*session.PropertyKeyValue, 0, len(targetUIDs))
+	for _, targetUID := range targetUIDs {
+		kvList = append(kvList, &session.PropertyKeyValue{Key: invitedByKeyPrefix + targetUID, Value: userData.ID})
+	}
+	session.SetProperties(sessionType, userData, kvList, func(err error) {
+		if err != nil {
+			logger.Warnf("failed to save inviter", "inviterUID", userData.ID, "error", err)
+		} else {
+			logger.Infof("inviter saved", "inviterUID", userData.ID, "targetUIDs", targetUIDs)
+		}
+		next(nil)
+	})
+}
+
+// parseInvitePayload 標準の session invite の payload を読む。
+// 形(ログで確認):
+//
+//	[1バイト: Session type]
+//	[4バイト: UID 一覧の部分の長さ]
+//	UID 一覧の部分 = [4バイト: UID の長さ][UID] の繰り返し
+//	(その後ろにメッセージが続くが、ここでは使わない)
+//
+// 例: user2 を招待すると 00 | 00000009 | 00000005 7573657232
+//
+// 注意: この形は Diarkis v1.5.2 の標準 invite に合わせたもの。
+// Diarkis 側で形が変わると読めなくなるが、その場合は warning ログが出て
+// 拒否の通知が届かないだけで、招待や参加そのものには影響しない。
+func parseInvitePayload(payload []byte) (uint8, []string, error) {
+	if len(payload) < 5 {
+		return 0, nil, errors.New("payload is too short")
+	}
+	sessionType := payload[0]
+	listSize := int(binary.BigEndian.Uint32(payload[1:5]))
+	if len(payload) < 5+listSize {
+		return 0, nil, errors.New("invalid UID list size")
+	}
+	list := payload[5 : 5+listSize]
+
+	var uids []string
+	for len(list) > 0 {
+		if len(list) < 4 {
+			return 0, nil, errors.New("invalid UID size")
+		}
+		size := int(binary.BigEndian.Uint32(list[0:4]))
+		if len(list) < 4+size {
+			return 0, nil, errors.New("invalid UID")
+		}
+		uids = append(uids, string(list[4:4+size]))
+		list = list[4+size:]
+	}
+	return sessionType, uids, nil
+}
+
 func isRejoinBlocked(s *session.Session, uid string) bool {
 	v, ok := s.GetProperty(kickedKeyPrefix + uid)
 	if !ok {
@@ -169,11 +228,9 @@ func removeFromSessionList(id string) {
 	delete(sessionList, id)
 }
 
-// handleShowSessions 独自コマンド session show。Session の一覧を JSON で返す。
 func handleShowSessions(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
-	// Mutex を持っている時間を短くするため、まず一覧をコピーする
 	sessionListMu.Lock()
-	copied := make(map[string]uint8, len(sessionList))
+	copied := make(map[string]uint8)
 	for id, sessionType := range sessionList {
 		copied[id] = sessionType
 	}
@@ -187,7 +244,6 @@ func handleShowSessions(ver uint8, cmd uint16, payload []byte, userData *user.Us
 		}
 		list = append(list, info)
 	}
-	// 表示の順番が毎回変わらないように並べる
 	sort.Slice(list, func(i, j int) bool { return list[i].ID < list[j].ID })
 
 	res, err := json.Marshal(list)
@@ -199,4 +255,60 @@ func handleShowSessions(ver uint8, cmd uint16, payload []byte, userData *user.Us
 	logger.Infof("session show", "uid", userData.ID, "count", len(list))
 	userData.ServerRespond(res, ver, cmd, server.Ok, true)
 	next(nil)
+}
+
+func handleInviteReply(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
+	var reply protocol.InviteReply
+	if err := json.Unmarshal(payload, &reply); err != nil || reply.SessionID == "" {
+		userData.ServerRespond([]byte("invalid invite reply"), ver, cmd, server.Bad, true)
+		next(nil)
+		return
+	}
+
+	if !reply.Accept {
+		logger.Infof("invite declined", "sessionID", reply.SessionID, "uid", userData.ID)
+		notifyInviter(reply, userData)
+		userData.ServerRespond([]byte("declined"), ver, cmd, server.Ok, true)
+		next(nil)
+		return
+	}
+
+	logger.Infof("invite accepted", "sessionID", reply.SessionID, "uid", userData.ID)
+	session.JoinSessionByID(reply.SessionType, reply.SessionID, userData, func(err error) {
+		if err != nil {
+			logger.Infof("join by invite failed", "sessionID", reply.SessionID, "uid", userData.ID, "error", err)
+			userData.ServerRespond([]byte(err.Error()), ver, cmd, server.Bad, true)
+			next(nil)
+			return
+		}
+		userData.ServerRespond([]byte("joined"), ver, cmd, server.Ok, true)
+		next(nil)
+	})
+}
+
+// GetSessionByID は Session があるサーバーでしか使えないので、このサンプル(UDP サーバー1台)が前提。
+func notifyInviter(reply protocol.InviteReply, userData *user.User) {
+	s, ok := session.GetSessionByID(reply.SessionID)
+	if !ok {
+		logger.Warnf("session not found to notify inviter", "sessionID", reply.SessionID)
+		return
+	}
+	v, ok := s.GetProperty(invitedByKeyPrefix + userData.ID)
+	if !ok {
+		logger.Warnf("inviter not found", "sessionID", reply.SessionID, "uid", userData.ID)
+		return
+	}
+	inviterUID, ok := util.ToString(v)
+	if !ok {
+		logger.Warnf("invalid inviter", "sessionID", reply.SessionID, "uid", userData.ID)
+		return
+	}
+
+	msg, _ := json.Marshal(protocol.InviteDeclined{SessionID: reply.SessionID, UID: userData.ID})
+	err := session.MessageTo(reply.SessionType, reply.SessionID, userData.ID, []string{inviterUID}, protocol.CustomVer, protocol.InviteDeclinedPushCmd, msg)
+	if err != nil {
+		logger.Warnf("failed to notify inviter", "inviterUID", inviterUID, "error", err)
+		return
+	}
+	logger.Infof("inviter notified", "inviterUID", inviterUID, "uid", userData.ID)
 }
