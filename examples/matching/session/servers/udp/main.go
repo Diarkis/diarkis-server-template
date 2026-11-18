@@ -231,12 +231,14 @@ func handleInviteReply(ver uint8, cmd uint16, payload []byte, userData *user.Use
 	if !reply.Accept {
 		logger.Infof("invite declined", "sessionID", reply.SessionID, "uid", userData.ID)
 		notifyInviter(reply, userData)
+		clearInviter(reply.SessionID, userData.ID)
 		userData.ServerRespond([]byte("declined"), ver, cmd, server.Ok, true)
 		next(nil)
 		return
 	}
 
 	logger.Infof("invite accepted", "sessionID", reply.SessionID, "uid", userData.ID)
+	clearInviter(reply.SessionID, userData.ID)
 	session.JoinSessionByID(reply.SessionType, reply.SessionID, userData, func(err error) {
 		if err != nil {
 			logger.Infof("join by invite failed", "sessionID", reply.SessionID, "uid", userData.ID, "error", err)
@@ -247,6 +249,19 @@ func handleInviteReply(ver uint8, cmd uint16, payload []byte, userData *user.Use
 		userData.ServerRespond([]byte("joined"), ver, cmd, server.Ok, true)
 		next(nil)
 	})
+}
+
+// clearInviter 招待への返事 (yes / no) が来たら、保存しておいた招待者 (invitedBy:<UID>) を消す。
+// Session のプロパティを削除する API はないので、空文字で上書きする (notifyInviter は空文字を「招待者なし」として扱う)。
+// 招待を断ったユーザーは Session のメンバーではないため、メンバー用の session.SetProperty は使えない。
+// そのため Session があるサーバーで *Session を直接書き換える (UDP サーバー1台が前提)。
+func clearInviter(sessionID string, uid string) {
+	s, ok := session.GetSessionByID(sessionID)
+	if !ok {
+		return
+	}
+	s.SetProperty(invitedByKeyPrefix+uid, "")
+	logger.Infof("inviter cleared", "sessionID", sessionID, "uid", uid)
 }
 
 // GetSessionByID は Session があるサーバーでしか使えないので、このサンプル(UDP サーバー1台)が前提。
@@ -262,7 +277,7 @@ func notifyInviter(reply protocol.InviteReply, userData *user.User) {
 		return
 	}
 	inviterUID, ok := util.ToString(v)
-	if !ok {
+	if !ok || inviterUID == "" {
 		logger.Warnf("invalid inviter", "sessionID", reply.SessionID, "uid", userData.ID)
 		return
 	}
