@@ -17,7 +17,8 @@ func SetupUDP() {
 	matchmakercmds.Setup()
 	roomcmds.Setup()
 	customcmds.Expose()
-	exposeDebugCommands()
+	// Uncomment the line below to expose the debug commands.
+	// exposeDebugCommands()
 }
 
 func SetupTCP() {
@@ -25,7 +26,8 @@ func SetupTCP() {
 	matchmakercmds.Setup()
 	roomcmds.Setup()
 	customcmds.Expose()
-	exposeDebugCommands()
+	// Uncomment the line below to expose the debug commands.
+	// exposeDebugCommands()
 }
 
 func SetupHTTP() {
