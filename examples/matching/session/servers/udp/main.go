@@ -3,9 +3,7 @@
 package main
 
 import (
-	"encoding/binary"
 	"encoding/json"
-	"errors"
 	"sort"
 	"sync"
 	"time"
@@ -14,6 +12,7 @@ import (
 	"github.com/Diarkis/diarkis-server-template/examples/matching/session/protocol"
 	"github.com/Diarkis/diarkis/diarkisexec"
 	"github.com/Diarkis/diarkis/log"
+	psession "github.com/Diarkis/diarkis/proto/go/session"
 	"github.com/Diarkis/diarkis/server"
 	"github.com/Diarkis/diarkis/session"
 	"github.com/Diarkis/diarkis/user"
@@ -49,7 +48,7 @@ func main() {
 	diarkisexec.SetupDiarkisUDPServer("configs/udp/main.json")
 
 	diarkis.OnStart(func() {
-		session.ExposeCommands()
+		session.ExposePufferCommands()
 
 		if err := server.HandleCommand(builtInVer, createSessionCmd, handleAfterCreateSession); err != nil {
 			panic(err)
@@ -92,13 +91,14 @@ func handleAfterCreateSession(ver uint8, cmd uint16, payload []byte, userData *u
 func handleAfterKick(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
 	logger.Infof("handleAfterKick called", "uid", userData.ID)
 
-	if len(payload) < 2 {
-		logger.Warnf("kick payload is too short", "uid", userData.ID)
+	kick := psession.NewKick()
+	if err := kick.Unpack(payload); err != nil {
+		logger.Warnf("failed to read kick payload", "uid", userData.ID, "error", err)
 		next(nil)
 		return
 	}
-	sessionType := payload[0]
-	targetUID := string(payload[1:])
+	sessionType := kick.SessionType
+	targetUID := kick.TargetUID
 
 	key := kickedKeyPrefix + targetUID
 	now := time.Now().Unix()
@@ -113,12 +113,14 @@ func handleAfterKick(ver uint8, cmd uint16, payload []byte, userData *user.User,
 }
 
 func handleAfterInvite(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
-	sessionType, targetUIDs, err := parseInvitePayload(payload)
-	if err != nil {
+	invite := psession.NewInvite()
+	if err := invite.Unpack(payload); err != nil {
 		logger.Warnf("failed to read invite payload", "uid", userData.ID, "error", err)
 		next(nil)
 		return
 	}
+	sessionType := invite.SessionType
+	targetUIDs := invite.TargetUIDs
 
 	kvList := make([]*session.PropertyKeyValue, 0, len(targetUIDs))
 	for _, targetUID := range targetUIDs {
@@ -132,45 +134,6 @@ func handleAfterInvite(ver uint8, cmd uint16, payload []byte, userData *user.Use
 		}
 		next(nil)
 	})
-}
-
-// parseInvitePayload 標準の session invite の payload を読む。
-// 形(ログで確認):
-//
-//	[1バイト: Session type]
-//	[4バイト: UID 一覧の部分の長さ]
-//	UID 一覧の部分 = [4バイト: UID の長さ][UID] の繰り返し
-//	(その後ろにメッセージが続くが、ここでは使わない)
-//
-// 例: user2 を招待すると 00 | 00000009 | 00000005 7573657232
-//
-// 注意: この形は Diarkis v1.5.2 の標準 invite に合わせたもの。
-// Diarkis 側で形が変わると読めなくなるが、その場合は warning ログが出て
-// 拒否の通知が届かないだけで、招待や参加そのものには影響しない。
-func parseInvitePayload(payload []byte) (uint8, []string, error) {
-	if len(payload) < 5 {
-		return 0, nil, errors.New("payload is too short")
-	}
-	sessionType := payload[0]
-	listSize := int(binary.BigEndian.Uint32(payload[1:5]))
-	if len(payload) < 5+listSize {
-		return 0, nil, errors.New("invalid UID list size")
-	}
-	list := payload[5 : 5+listSize]
-
-	var uids []string
-	for len(list) > 0 {
-		if len(list) < 4 {
-			return 0, nil, errors.New("invalid UID size")
-		}
-		size := int(binary.BigEndian.Uint32(list[0:4]))
-		if len(list) < 4+size {
-			return 0, nil, errors.New("invalid UID")
-		}
-		uids = append(uids, string(list[4:4+size]))
-		list = list[4+size:]
-	}
-	return sessionType, uids, nil
 }
 
 func isRejoinBlocked(s *session.Session, uid string) bool {

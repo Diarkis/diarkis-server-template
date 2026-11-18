@@ -24,7 +24,7 @@ func main() {
 	})
 	cli.RegisterCommands("invite", []cli.Command{
 		{CmdName: "yes", Desc: "Accept the last invitation and join the Session", CmdFunc: acceptInvite},
-		{CmdName: "no", Desc: "Decline the last invitation and notify the Session members", CmdFunc: declineInvite},
+		{CmdName: "no", Desc: "Decline the last invitation and notify the user who sent it", CmdFunc: declineInvite},
 	})
 	cli.Connect()
 	cli.UDPClient.OnResponse(onResponse)

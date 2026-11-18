@@ -25,24 +25,24 @@ Session は、ユーザーをひとつのグループにまとめる機能です
 
 ### Room との違い
 
-|                    | Session                                              | Room                                                       |
-|--------------------|------------------------------------------------------|------------------------------------------------------------|
-| メンバーの接続先    | 別々のサーバーのままでよい                         　  | Room があるサーバーに集まる (必要なら自動で接続し直す)          |
-| 参加のしかた       | 招待を受ける、または Session ID を指定して参加          | Room ID を指定して参加                                     |
-| メッセージ         | 全員への broadcast、特定のメンバーへの message         | broadcast、message、relay など。まとめて送る間隔を設定できる.  |
-| 状態の同期         | プロパティを共有できる                                | プロパティに加えて、状態の自動同期 (State Sync) がある          |
+|                  | Session                                        | Room                                                         |
+| ---------------- | ---------------------------------------------- | ------------------------------------------------------------ |
+| メンバーの接続先 | 別々のサーバーのままでよい                     | Room があるサーバーに集まる (必要なら自動で接続し直す)       |
+| 参加のしかた     | 招待を受ける、または Session ID を指定して参加 | Room ID を指定して参加                                       |
+| メッセージ       | 全員への broadcast、特定のメンバーへの message | broadcast、message、relay など。まとめて送る間隔を設定できる |
+| 状態の同期       | プロパティを共有できる                         | プロパティに加えて、状態の自動同期 (State Sync) がある       |
 
 ## Session のコールバック
 
 サーバー側では、Session ごとに次のコールバックを登録できます。
 このサンプルでは、どのコールバックも UDP サーバーのログに出力するようにしています。
 
-| コールバック | 呼ばれるタイミング                                                      |
-|--------------|-----------------------------------------------------------------------|
-| `OnJoin`     | ユーザーが Session に入る **前**。                            　       |
-| `OnJoined`   | ユーザーが Session に入った **後**。                                   |
-| `OnLeft`     | ユーザーが Session から抜けた後。kick されたときも呼ばれます。         　　 |
-| `OnDeleted`  | Session が削除された後。                                              |
+| コールバック | 呼ばれるタイミング                                             |
+| ------------ | -------------------------------------------------------------- |
+| `OnJoin`     | ユーザーが Session に入る **前**。                             |
+| `OnJoined`   | ユーザーが Session に入った **後**。                           |
+| `OnLeft`     | ユーザーが Session から抜けた後。kick されたときも呼ばれます。 |
+| `OnDeleted`  | Session が削除された後。                                       |
 
 このサンプルでは、kick されてから 60 秒以内のユーザーを拒否しています。
 
@@ -91,15 +91,15 @@ Session は、ユーザーをひとつのグループにまとめる機能です
 サーバーがすべて起動したら、別々のターミナルでクライアントを **(3)** つ起動します。
 
 ```sh
-./remote_bin/cli -uid user1
+./remote_bin/cli -uid user1 -puffer true
 ```
 
 ```sh
-./remote_bin/cli -uid user2
+./remote_bin/cli -uid user2 -puffer true
 ```
 
 ```sh
-./remote_bin/cli -uid user3
+./remote_bin/cli -uid user3 -puffer true
 ```
 
 各コマンドで聞かれる項目 (TCP/UDP、Session type など) は、
@@ -257,7 +257,7 @@ Session info: {sessionType: 0, sessionID: bcda3bac44a34341b33f930c8c33cf547f0000
 
 > `ownerID` は user2 と user3 のどちらになるかわかりません。
 
-**10. オーナーがもう一人を　kick**
+**10. オーナーがもう一人を kick**
 
 ```sh
 > session kick
@@ -284,7 +284,8 @@ OnLeft {"sessionID":"bcda3bac44a34341b33f930c8c33cf547f0000011fa5c8a0e6be","uid"
 Enter for which protocol to join a Session (TCP/UDP): (Default: UDP)
 Enter Session type [0 - 255] (uint8): (Default: 0)
 Enter Session ID (string): bcda3bac44a34341b33f930c8c33cf547f0000011fa5c8a0e6be
-# 参加は拒否される
+Command failed: SessionJoinError
+Failed to join -> Type:0 SessionID:bcda3bac44a34341b33f930c8c33cf547f0000011fa5c8a0e6be UserID:user3
 ```
 
 UDP サーバーのログ:
