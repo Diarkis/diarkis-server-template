@@ -4,6 +4,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"sort"
 	"sync"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"github.com/Diarkis/diarkis-server-template/examples/matching/session/protocol"
 	"github.com/Diarkis/diarkis/diarkisexec"
 	"github.com/Diarkis/diarkis/log"
+	"github.com/Diarkis/diarkis/mesh"
 	psession "github.com/Diarkis/diarkis/proto/go/session"
 	"github.com/Diarkis/diarkis/server"
 	"github.com/Diarkis/diarkis/session"
@@ -22,13 +24,15 @@ import (
 var logger = log.New("SESSION-EXAMPLE")
 
 const (
-	builtInVer         uint8  = 1
-	createSessionCmd   uint16 = 801
-	inviteCmd          uint16 = 802
-	kickCmd            uint16 = 806
-	rejoinBlockSeconds int64  = 60
-	kickedKeyPrefix           = "kicked:"
-	invitedByKeyPrefix        = "invitedBy:"
+	builtInVer          uint8  = 1
+	createSessionCmd    uint16 = 801
+	inviteCmd           uint16 = 802
+	kickCmd             uint16 = 806
+	rejoinBlockSeconds  int64  = 60
+	kickedKeyPrefix            = "kicked:"
+	invitedByKeyPrefix         = "invitedBy:"
+	meshInviteReplyCmd  uint16 = 10001
+	meshListSessionsCmd uint16 = 10002
 )
 
 var (
@@ -46,6 +50,8 @@ func main() {
 		DM:      &diarkisexec.Options{ConfigPath: "configs/shared/dm.json"},
 	})
 	diarkisexec.SetupDiarkisUDPServer("configs/udp/main.json")
+	diarkisexec.SetMeshCommandHandler(meshInviteReplyCmd, handleMeshInviteReply)
+	diarkisexec.SetMeshCommandHandler(meshListSessionsCmd, handleMeshListSessions)
 
 	diarkis.OnStart(func() {
 		session.ExposePufferCommands()
@@ -191,7 +197,51 @@ func removeFromSessionList(id string) {
 	delete(sessionList, id)
 }
 
+// NOTE: UDPサーバーの台数が増えると、そのぶんmeshの通信も増える。
+// 実際のアプリでは、呼ぶ頻度を抑えるか、問い合わせるサーバー数に上限を設けるなどが必要。
 func handleShowSessions(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
+	addrs := mesh.GetNodeAddressesByType(mesh.GetNodeType())
+
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+	list := []protocol.SessionInfo{}
+
+	for _, addr := range addrs {
+		wg.Add(1)
+		mesh.SendRequest(meshListSessionsCmd, addr, map[string]any{"uid": userData.ID}, func(err error, res map[string]any) {
+			defer wg.Done()
+			if err != nil {
+				logger.Warnf("failed to get sessions from a server", "addr", addr, "error", err)
+				return
+			}
+			var part []protocol.SessionInfo
+			if err := json.Unmarshal(mesh.GetBytes(res, "sessions"), &part); err != nil {
+				logger.Warnf("invalid sessions from a server", "addr", addr, "error", err)
+				return
+			}
+			mu.Lock()
+			list = append(list, part...)
+			mu.Unlock()
+		})
+	}
+
+	go func() {
+		wg.Wait()
+		sort.Slice(list, func(i, j int) bool { return list[i].ID < list[j].ID })
+
+		res, err := json.Marshal(list)
+		if err != nil {
+			userData.ServerRespond([]byte(err.Error()), ver, cmd, server.Err, true)
+			next(err)
+			return
+		}
+		logger.Infof("session show", "uid", userData.ID, "servers", len(addrs), "count", len(list))
+		userData.ServerRespond(res, ver, cmd, server.Ok, true)
+		next(nil)
+	}()
+}
+
+func handleMeshListSessions(req map[string]any) ([]byte, error) {
 	sessionListMu.Lock()
 	copied := make(map[string]uint8)
 	for id, sessionType := range sessionList {
@@ -207,17 +257,12 @@ func handleShowSessions(ver uint8, cmd uint16, payload []byte, userData *user.Us
 		}
 		list = append(list, info)
 	}
-	sort.Slice(list, func(i, j int) bool { return list[i].ID < list[j].ID })
 
-	res, err := json.Marshal(list)
+	b, err := json.Marshal(list)
 	if err != nil {
-		userData.ServerRespond([]byte(err.Error()), ver, cmd, server.Err, true)
-		next(err)
-		return
+		return nil, err
 	}
-	logger.Infof("session show", "uid", userData.ID, "count", len(list))
-	userData.ServerRespond(res, ver, cmd, server.Ok, true)
-	next(nil)
+	return mesh.CreateReturnBytes(map[string]any{"sessions": b})
 }
 
 func handleInviteReply(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
@@ -230,15 +275,14 @@ func handleInviteReply(ver uint8, cmd uint16, payload []byte, userData *user.Use
 
 	if !reply.Accept {
 		logger.Infof("invite declined", "sessionID", reply.SessionID, "uid", userData.ID)
-		notifyInviter(reply, userData)
-		clearInviter(reply.SessionID, userData.ID)
+		requestInviteReply(reply, userData.ID)
 		userData.ServerRespond([]byte("declined"), ver, cmd, server.Ok, true)
 		next(nil)
 		return
 	}
 
 	logger.Infof("invite accepted", "sessionID", reply.SessionID, "uid", userData.ID)
-	clearInviter(reply.SessionID, userData.ID)
+	requestInviteReply(reply, userData.ID)
 	session.JoinSessionByID(reply.SessionType, reply.SessionID, userData, func(err error) {
 		if err != nil {
 			logger.Infof("join by invite failed", "sessionID", reply.SessionID, "uid", userData.ID, "error", err)
@@ -251,42 +295,56 @@ func handleInviteReply(ver uint8, cmd uint16, payload []byte, userData *user.Use
 	})
 }
 
-// clearInviter 招待への返事 (yes / no) が来たら、保存しておいた招待者 (invitedBy:<UID>) を消す。
-// Session のプロパティを削除する API はないので、空文字で上書きする (notifyInviter は空文字を「招待者なし」として扱う)。
-// 招待を断ったユーザーは Session のメンバーではないため、メンバー用の session.SetProperty は使えない。
-// そのため Session があるサーバーで *Session を直接書き換える (UDP サーバー1台が前提)。
-func clearInviter(sessionID string, uid string) {
-	s, ok := session.GetSessionByID(sessionID)
-	if !ok {
+func requestInviteReply(reply protocol.InviteReply, uid string) {
+	addr, err := util.GetAddressFromAddressID(reply.SessionID)
+	if err != nil {
+		logger.Warnf("invalid session ID", "sessionID", reply.SessionID, "error", err)
 		return
 	}
-	s.SetProperty(invitedByKeyPrefix+uid, "")
-	logger.Infof("inviter cleared", "sessionID", sessionID, "uid", uid)
+	req := map[string]any{
+		"sessionType": reply.SessionType,
+		"sessionID":   reply.SessionID,
+		"uid":         uid,
+		"accept":      reply.Accept,
+	}
+	mesh.SendRequest(meshInviteReplyCmd, addr, req, func(err error, res map[string]any) {
+		if err != nil {
+			logger.Warnf("failed to handle invite reply on the session server", "sessionID", reply.SessionID, "uid", uid, "error", err)
+		}
+	})
 }
 
-// GetSessionByID は Session があるサーバーでしか使えないので、このサンプル(UDP サーバー1台)が前提。
-func notifyInviter(reply protocol.InviteReply, userData *user.User) {
-	s, ok := session.GetSessionByID(reply.SessionID)
+func handleMeshInviteReply(req map[string]any) ([]byte, error) {
+	sessionType := mesh.GetUint8(req, "sessionType")
+	sessionID := mesh.GetString(req, "sessionID")
+	uid := mesh.GetString(req, "uid")
+	accept := mesh.GetBool(req, "accept")
+	s, ok := session.GetSessionByID(sessionID)
 	if !ok {
-		logger.Warnf("session not found to notify inviter", "sessionID", reply.SessionID)
-		return
-	}
-	v, ok := s.GetProperty(invitedByKeyPrefix + userData.ID)
-	if !ok {
-		logger.Warnf("inviter not found", "sessionID", reply.SessionID, "uid", userData.ID)
-		return
-	}
-	inviterUID, ok := util.ToString(v)
-	if !ok || inviterUID == "" {
-		logger.Warnf("invalid inviter", "sessionID", reply.SessionID, "uid", userData.ID)
-		return
+		return nil, errors.New("session not found")
 	}
 
-	msg, _ := json.Marshal(protocol.InviteDeclined{SessionID: reply.SessionID, UID: userData.ID})
-	err := session.MessageTo(reply.SessionType, reply.SessionID, userData.ID, []string{inviterUID}, protocol.CustomVer, protocol.InviteDeclinedPushCmd, msg)
-	if err != nil {
-		logger.Warnf("failed to notify inviter", "inviterUID", inviterUID, "error", err)
-		return
+	key := invitedByKeyPrefix + uid
+	inviterUID := ""
+	if v, ok := s.GetProperty(key); ok {
+		inviterUID, _ = util.ToString(v)
 	}
-	logger.Infof("inviter notified", "inviterUID", inviterUID, "uid", userData.ID)
+
+	s.SetProperty(key, "")
+	logger.Infof("inviter cleared", "sessionID", sessionID, "uid", uid)
+
+	if !accept {
+		if inviterUID == "" {
+			logger.Warnf("inviter not found", "sessionID", sessionID, "uid", uid)
+		} else {
+			msg, _ := json.Marshal(protocol.InviteDeclined{SessionID: sessionID, UID: uid})
+			if err := session.MessageTo(sessionType, sessionID, uid, []string{inviterUID}, protocol.CustomVer, protocol.InviteDeclinedPushCmd, msg); err != nil {
+				logger.Warnf("failed to notify inviter", "inviterUID", inviterUID, "error", err)
+			} else {
+				logger.Infof("inviter notified", "inviterUID", inviterUID, "uid", uid)
+			}
+		}
+	}
+
+	return mesh.CreateReturnBytes(map[string]any{})
 }

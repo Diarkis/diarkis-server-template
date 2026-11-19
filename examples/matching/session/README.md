@@ -1,6 +1,6 @@
 # 概要
 
-このサンプルは **(3)** つのサーバーと **(1)** つのクライアントで構成されています。
+このサンプルは **(4)** つのサーバーと **(1)** つのクライアントで構成されています。
 
 - **MARS** サーバー: サーバー同士をつなぎ、全体をまとめます。
 - **HTTP** サーバー: ユーザーの認証を行います。
@@ -21,7 +21,7 @@ Session は、ユーザーをひとつのグループにまとめる機能です
 - オーナーが抜けると、残ったメンバーからランダムで新しいオーナーが選ばれます。
 - メンバーがいなくなった Session は、TTL (秒) がたつと自動で削除されます。
 
-**NOTE**: このサンプルは、わかりやすさのため UDP サーバー **(1)** 台で動かしています。
+**NOTE**: このサンプルは UDP サーバーが **(1)** 台でも複数台でも動きます。手順では、UDP サーバーを **(2)** 台起動します。
 
 ### Room との違い
 
@@ -50,7 +50,7 @@ Session は、ユーザーをひとつのグループにまとめる機能です
 
 ## ビルド方法
 
-付属の Mage スクリプトで、**(3)** つのサーバーとクライアントをまとめてビルドできます。
+付属の Mage スクリプトで、**(4)** つのサーバーとクライアントをまとめてビルドできます。
 
 ### Linux / macOS
 
@@ -82,10 +82,25 @@ Session は、ユーザーをひとつのグループにまとめる機能です
 ./run-mage.sh server http
 ```
 
-### 3. UDP サーバーを起動する
+### 3. UDP サーバーを 2 台起動する
+
+別々のターミナルで、同じコマンドを **(2)** 回実行します。2 台目は空いているポートを自動で使います。
 
 ```sh
 ./run-mage.sh server udp
+```
+
+```sh
+./run-mage.sh server udp
+```
+
+> UDP サーバーが 1 台でも、以下のシナリオはすべて動きます。
+
+2 台ともクラスタに参加できているかは、HTTP サーバーの endpoint API を何回か呼んで確認できます。
+`serverPort` に `7100` と `7101` の両方が返ってくれば OK です。
+
+```sh
+curl http://127.0.0.1:7000/endpoint/type/UDP/user/test1
 ```
 
 サーバーがすべて起動したら、別々のターミナルでクライアントを **(3)** つ起動します。
@@ -104,6 +119,14 @@ Session は、ユーザーをひとつのグループにまとめる機能です
 
 各コマンドで聞かれる項目 (TCP/UDP、Session type など) は、
 特に書いていなければ何も入力せず Enter (デフォルト) で進めます。
+
+クライアントの接続先は HTTP サーバーがランダムに決めます。起動時に表示される `UDP address` で、どちらの UDP サーバーにつながったか確認できます。
+UDP サーバーが 2 台のときは、どの処理がどちらのサーバーで動いたかがログに表れます。
+
+```sh
+==== Auth Info ====
+UDP address       = 127.0.0.1:7100 or 127.0.0.1:7101
+```
 
 ## シナリオ 1: 招待・参加・退出・kick
 
@@ -169,6 +192,14 @@ Invite reply sent: declined
 ```sh
 # user1 (Terminal 1)
 user3 declined the invitation. SessionID: bcda3bac44a34341b33f930c8c33cf547f0000011fa5c8a0e6be
+```
+
+UDP サーバーのログ:
+
+```sh
+invite declined {"sessionID":"bcda3bac44a34341b33f930c8c33cf547f0000011fa5c8a0e6be","uid":"user3"}
+inviter cleared {"sessionID":"bcda3bac44a34341b33f930c8c33cf547f0000011fa5c8a0e6be","uid":"user3"}
+inviter notified {"inviterUID":"user1","uid":"user3"}
 ```
 
 > 断られたことは、招待した user1 にだけ通知されます (user2 には届きません)。
@@ -275,6 +306,7 @@ UDP サーバーのログ:
 
 ```sh
 OnLeft {"sessionID":"bcda3bac44a34341b33f930c8c33cf547f0000011fa5c8a0e6be","uid":"user2 or user3"}
+kicked time saved {"targetUID":"user2 or user3","kickedAt":1795075423}
 ```
 
 **11. kick されたユーザーが60秒以内にもう一度参加**
@@ -330,7 +362,12 @@ Session created. Created: {sessionType: 0, sessionID: bcda3bac44a34341b33f930c8c
 Session created. Created: {sessionType: 0, sessionID: 2be6ecd74e044c8d93466877ce7ae5ce7f0000011fa58cd04e87}
 ```
 
-UDP サーバーのログに、Session ごとに `callbacks registered` が出ます。
+UDP サーバーのログ:
+
+```sh
+callbacks registered {"sessionID":"bcda3bac44a34341b33f930c8c33cf547f0000011fa5c8a0e6be"}
+callbacks registered {"sessionID":"2be6ecd74e044c8d93466877ce7ae5ce7f0000011fa58cd04e87"}
+```
 
 **2. user3 が一覧を見る**
 
@@ -340,6 +377,12 @@ UDP サーバーのログに、Session ごとに `callbacks registered` が出�
 Sessions (2):
   type: 0, id: 2be6ecd74e044c8d93466877ce7ae5ce7f0000011fa58cd04e87, members: [user2]
   type: 0, id: bcda3bac44a34341b33f930c8c33cf547f0000011fa5c8a0e6be, members: [user1]
+```
+
+UDP サーバーのログ:
+
+```sh
+session show {"uid":"user3","servers":1,"count":2}
 ```
 
 **3. user3 が片方の Session に参加**
@@ -383,6 +426,8 @@ Sessions (2):
 
 TTL 秒ほど待つと、UDP サーバーのログに Session ごとに `OnDeleted` が出ます。
 
+UDP サーバーのログ:
+
 ```sh
 OnDeleted {"sessionID":"bcda3bac44a34341b33f930c8c33cf547f0000011fa5c8a0e6be"}
 OnDeleted {"sessionID":"2be6ecd74e044c8d93466877ce7ae5ce7f0000011fa58cd04e87"}
@@ -392,4 +437,103 @@ OnDeleted {"sessionID":"2be6ecd74e044c8d93466877ce7ae5ce7f0000011fa58cd04e87"}
 # user3 (Terminal 3)
 > custom show
 Sessions (0):
+```
+
+---
+
+## UDP サーバーが 2 台のときのログの違い
+
+UDP サーバーが 2 台のときも、クライアントの表示とログの中身は 1 台のときと同じです。
+違うのは、**どちらの UDP サーバーにログが出るか** です。
+
+Session のデータ (メンバーやプロパティ) は、Session を作った UDP サーバーだけが持っています。
+そのため `OnJoin` / `OnJoined` / `OnLeft` / `OnDeleted` などのコールバックは、ユーザーがどちらにつながっていても、Session がある UDP サーバーで呼ばれます。
+そのため、出る場所が分かれるログだけを、1 台のときと 2 台のときの両方で載せます。
+
+以下は、user1 が UDP サーバー 1 (7100)、user2 と user3 が UDP サーバー 2 (7101) につながった場合の例です。
+
+### シナリオ 1 の 4: 招待を断る (`invite no`)
+
+1 台のとき:
+
+```sh
+invite declined {"sessionID":"bcda3bac44a34341b33f930c8c33cf547f0000011fa5c8a0e6be","uid":"user3"}
+inviter cleared {"sessionID":"bcda3bac44a34341b33f930c8c33cf547f0000011fa5c8a0e6be","uid":"user3"}
+inviter notified {"inviterUID":"user1","uid":"user3"}
+```
+
+2 台のとき:
+
+```sh
+# UDP サーバー 2 (127.0.0.1:7101)
+invite declined {"sessionID":"bcda3bac44a34341b33f930c8c33cf547f0000011fa5c8a0e6be","uid":"user3"}
+
+# UDP サーバー 1 (127.0.0.1:7100)
+inviter cleared {"sessionID":"bcda3bac44a34341b33f930c8c33cf547f0000011fa5c8a0e6be","uid":"user3"}
+inviter notified {"inviterUID":"user1","uid":"user3"}
+```
+
+### シナリオ 1 の 10: kick
+
+kick された時刻は、kick したユーザーがいる UDP サーバー 2 から保存されます。`OnLeft` は Session がある UDP サーバー 1 で呼ばれます。
+
+1 台のとき:
+
+```sh
+kicked time saved {"targetUID":"user2 or user3","kickedAt":1795075423}
+OnLeft {"sessionID":"bcda3bac44a34341b33f930c8c33cf547f0000011fa5c8a0e6be","uid":"user2 or user3"}
+```
+
+2 台のとき:
+
+```sh
+# UDP サーバー 2 (127.0.0.1:7101)
+kicked time saved {"targetUID":"user2 or user3","kickedAt":1795075423}
+
+# UDP サーバー 1 (127.0.0.1:7100)
+OnLeft {"sessionID":"bcda3bac44a34341b33f930c8c33cf547f0000011fa5c8a0e6be","uid":"user2 or user3"}
+```
+
+### シナリオ 2 の 1 と 5: Session の作成と削除
+
+Session は、作ったユーザーがつながっている UDP サーバーにできます。
+user1 の Session は UDP サーバー 1 に、user2 の Session は UDP サーバー 2 にできるので、`callbacks registered` と `OnDeleted` もそれぞれのサーバーに出ます。
+
+1 台のとき:
+
+```sh
+callbacks registered {"sessionID":"bcda3bac44a34341b33f930c8c33cf547f0000011fa5c8a0e6be"}
+callbacks registered {"sessionID":"2be6ecd74e044c8d93466877ce7ae5ce7f0000011fa58cd04e87"}
+OnDeleted {"sessionID":"bcda3bac44a34341b33f930c8c33cf547f0000011fa5c8a0e6be"}
+OnDeleted {"sessionID":"2be6ecd74e044c8d93466877ce7ae5ce7f0000011fa58cd04e87"}
+```
+
+2 台のとき:
+
+```sh
+# UDP サーバー 1 (127.0.0.1:7100)
+callbacks registered {"sessionID":"bcda3bac44a34341b33f930c8c33cf547f0000011fa5c8a0e6be"}
+OnDeleted {"sessionID":"bcda3bac44a34341b33f930c8c33cf547f0000011fa5c8a0e6be"}
+
+# UDP サーバー 2 (127.0.0.1:7101)
+callbacks registered {"sessionID":"2be6ecd74e044c8d93466877ce7ae5ce7f0000011fa58cd04e87"}
+OnDeleted {"sessionID":"2be6ecd74e044c8d93466877ce7ae5ce7f0000011fa58cd04e87"}
+```
+
+### シナリオ 2 の 2: Session の一覧 (`custom show`)
+
+`custom show` を実行した UDP サーバーが、2 台すべてに問い合わせます。`servers` が 2 になります。
+どちらの UDP サーバーで実行しても、同じ一覧が表示されます。
+
+1 台のとき:
+
+```sh
+session show {"uid":"user3","servers":1,"count":2}
+```
+
+2 台のとき:
+
+```sh
+# UDP サーバー 2 (127.0.0.1:7101)
+session show {"uid":"user3","servers":2,"count":2}
 ```
