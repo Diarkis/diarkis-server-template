@@ -1,0 +1,15 @@
+{
+  "DM": {
+    "serverType": "UDP",
+    "userID": {
+      "defaultValue": "1000000000000000",
+      "isSequential": true
+    },
+    "messageSize": 100,
+    "sendInterval": 1000,
+    "interval": 10,
+    "duration": 300,
+    "idleDuration": 60,
+    "logLevel": 60
+  }
+}

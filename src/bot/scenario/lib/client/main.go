@@ -14,6 +14,17 @@ var logger = log.New("BOT/CLI")
 
 // NewAndConnect gets an endpoint for the transport and connect it.
 func NewAndConnect(host string, userID string, serverType string, httpRequestBody any, rcvMaxSize int, interval int64) (*HTTPClient, *UDPClient, error) {
+	httpClient, udpClient, err := New(host, userID, serverType, httpRequestBody, rcvMaxSize, interval)
+	if err != nil {
+		return httpClient, udpClient, err
+	}
+
+	udpClient.Connect()
+	return httpClient, udpClient, nil
+}
+
+// New gets an endpoint and makes a UDP client. It does not connect the client.
+func New(host string, userID string, serverType string, httpRequestBody any, rcvMaxSize int, interval int64) (*HTTPClient, *UDPClient, error) {
 
 	httpClient := NewHTTPClient(host, userID)
 	logger.Infou(userID, "HTTP client created %#v", httpClient)
@@ -38,7 +49,5 @@ func NewAndConnect(host string, userID string, serverType string, httpRequestBod
 	}
 	logger.Infou(userID, "UDP client created %#v", udpClient.client)
 
-	udpClient.Connect()
 	return httpClient, udpClient, nil
-
 }
