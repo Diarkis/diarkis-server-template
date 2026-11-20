@@ -61,8 +61,7 @@ spec:
               command:
                 - sh
                 - -c
-                - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) mars /bin/tools/configs/health-check-for-startup-probe.json"
-                - "&& /go/bin/health-check $(cat /tmp/DIARKIS_PUBLIC_ADDR) out /bin/tools/configs/health-check-for-startup-probe.json"
+                - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) mars /bin/tools/configs/health-check-for-startup-probe.json && /go/bin/health-check $(cat /tmp/DIARKIS_PUBLIC_ADDR) out /bin/tools/configs/health-check-for-startup-probe.json"
             initialDelaySeconds: 0
             periodSeconds: 10
             timeoutSeconds: 1
@@ -74,16 +73,14 @@ spec:
               command:
                 - sh
                 - -c
-                - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) in /bin/tools/configs/health-check-for-liveness-probe.json"
-                - "&& /go/bin/health-check $(cat /tmp/DIARKIS_PUBLIC_ADDR) out /bin/tools/configs/health-check-for-liveness-probe.json"
+                - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) in /bin/tools/configs/health-check-for-liveness-probe.json && /go/bin/health-check $(cat /tmp/DIARKIS_PUBLIC_ADDR) out /bin/tools/configs/health-check-for-liveness-probe.json"
           readinessProbe:
             <<: *probe
             exec:
               command:
                 - sh
                 - -c
-                - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) in /bin/tools/configs/health-check-for-readiness-probe.json"
-                - "&& /go/bin/health-check $(cat /tmp/DIARKIS_PUBLIC_ADDR) out /bin/tools/configs/health-check-for-readiness-probe.json"
+                - "/go/bin/health-check $(cat /tmp/DIARKIS_MESH_ADDR) in /bin/tools/configs/health-check-for-readiness-probe.json && /go/bin/health-check $(cat /tmp/DIARKIS_PUBLIC_ADDR) out /bin/tools/configs/health-check-for-readiness-probe.json"
           securityContext:
             runAsUser: 1000
             readOnlyRootFilesystem: true
