@@ -275,41 +275,43 @@ func handleInviteReply(ver uint8, cmd uint16, payload []byte, userData *user.Use
 
 	if !reply.Accept {
 		logger.Infof("invite declined", "sessionID", reply.SessionID, "uid", userData.ID)
-		requestInviteReply(reply, userData.ID)
+		requestInviteReply(reply.SessionType, reply.SessionID, userData.ID, false, false)
 		userData.ServerRespond([]byte("declined"), ver, cmd, server.Ok, true)
 		next(nil)
 		return
 	}
 
 	logger.Infof("invite accepted", "sessionID", reply.SessionID, "uid", userData.ID)
-	requestInviteReply(reply, userData.ID)
 	session.JoinSessionByID(reply.SessionType, reply.SessionID, userData, func(err error) {
 		if err != nil {
 			logger.Infof("join by invite failed", "sessionID", reply.SessionID, "uid", userData.ID, "error", err)
-			userData.ServerRespond([]byte(err.Error()), ver, cmd, server.Bad, true)
+			requestInviteReply(reply.SessionType, reply.SessionID, userData.ID, false, true)
+			userData.ServerRespond([]byte("could not join the session"), ver, cmd, server.Bad, true)
 			next(nil)
 			return
 		}
+		requestInviteReply(reply.SessionType, reply.SessionID, userData.ID, true, false)
 		userData.ServerRespond([]byte("joined"), ver, cmd, server.Ok, true)
 		next(nil)
 	})
 }
 
-func requestInviteReply(reply protocol.InviteReply, uid string) {
-	addr, err := util.GetAddressFromAddressID(reply.SessionID)
+func requestInviteReply(sessionType uint8, sessionID string, uid string, joined bool, joinFailed bool) {
+	addr, err := util.GetAddressFromAddressID(sessionID)
 	if err != nil {
-		logger.Warnf("invalid session ID", "sessionID", reply.SessionID, "error", err)
+		logger.Warnf("invalid session ID", "sessionID", sessionID, "error", err)
 		return
 	}
 	req := map[string]any{
-		"sessionType": reply.SessionType,
-		"sessionID":   reply.SessionID,
+		"sessionType": sessionType,
+		"sessionID":   sessionID,
 		"uid":         uid,
-		"accept":      reply.Accept,
+		"accept":      joined,
+		"joinFailed":  joinFailed,
 	}
 	mesh.SendRequest(meshInviteReplyCmd, addr, req, func(err error, res map[string]any) {
 		if err != nil {
-			logger.Warnf("failed to handle invite reply on the session server", "sessionID", reply.SessionID, "uid", uid, "error", err)
+			logger.Warnf("failed to handle invite reply on the session server", "sessionID", sessionID, "uid", uid, "error", err)
 		}
 	})
 }
@@ -319,6 +321,7 @@ func handleMeshInviteReply(req map[string]any) ([]byte, error) {
 	sessionID := mesh.GetString(req, "sessionID")
 	uid := mesh.GetString(req, "uid")
 	accept := mesh.GetBool(req, "accept")
+	joinFailed := mesh.GetBool(req, "joinFailed")
 	s, ok := session.GetSessionByID(sessionID)
 	if !ok {
 		return nil, errors.New("session not found")
@@ -337,9 +340,11 @@ func handleMeshInviteReply(req map[string]any) ([]byte, error) {
 		if inviterUID == "" {
 			logger.Warnf("inviter not found", "sessionID", sessionID, "uid", uid)
 		} else {
-			msg, _ := json.Marshal(protocol.InviteDeclined{SessionID: sessionID, UID: uid})
+			msg, _ := json.Marshal(protocol.InviteDeclined{SessionID: sessionID, UID: uid, JoinFailed: joinFailed})
 			if err := session.MessageTo(sessionType, sessionID, uid, []string{inviterUID}, protocol.CustomVer, protocol.InviteDeclinedPushCmd, msg); err != nil {
 				logger.Warnf("failed to notify inviter", "inviterUID", inviterUID, "error", err)
+			} else if joinFailed {
+				logger.Infof("inviter notified", "inviterUID", inviterUID, "uid", uid, "joinFailed", true)
 			} else {
 				logger.Infof("inviter notified", "inviterUID", inviterUID, "uid", uid)
 			}

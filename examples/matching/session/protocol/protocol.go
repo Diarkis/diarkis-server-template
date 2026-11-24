@@ -23,6 +23,7 @@ type InviteReply struct {
 }
 
 type InviteDeclined struct {
-	SessionID string `json:"sessionID"`
-	UID       string `json:"uid"`
+	SessionID  string `json:"sessionID"`
+	UID        string `json:"uid"`
+	JoinFailed bool   `json:"joinFailed,omitempty"`
 }

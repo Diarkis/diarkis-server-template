@@ -113,5 +113,9 @@ func onPush(ver uint8, cmd uint16, payload []byte) {
 		fmt.Printf("Failed to read invite declined notification: %v\n", err)
 		return
 	}
+	if declined.JoinFailed {
+		fmt.Printf("%s accepted the invitation but could not join the session. SessionID: %s\n", declined.UID, declined.SessionID)
+		return
+	}
 	fmt.Printf("%s declined the invitation. SessionID: %s\n", declined.UID, declined.SessionID)
 }
