@@ -13,6 +13,7 @@ import (
 	"github.com/Diarkis/diarkis/diarkisexec"
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/matching"
+	"github.com/Diarkis/diarkis/mesh"
 	"github.com/Diarkis/diarkis/server"
 	"github.com/Diarkis/diarkis/user"
 )
@@ -24,11 +25,32 @@ var logger = log.New("UDP")
 
 const (
 	teamVsTeamSize                   = 2
-	teamMaxMembers                   = 2
+	teamMaxMembers                   = 3
 	ticketDuration                   = 15 // 15 seconds
 	meshGetTicketMembers      uint16 = 10001
 	meshRemoteTicketBroadcast uint16 = 10002
 )
+
+var hardcodedParties = map[string][]string{
+	"user-1": {"user-2", "user-3"},
+	"user-4": {"user-5"},
+}
+
+func isPartyMember(uid string) bool {
+	for _, members := range hardcodedParties {
+		if slices.Contains(members, uid) {
+			return true
+		}
+	}
+	return false
+}
+
+func getTeamMembers(owner *user.User) []string {
+	if ids, _ := matching.GetTicketMemberIDs(common.TeamTicketType, owner); len(ids) > 0 {
+		return ids
+	}
+	return append([]string{owner.ID}, hardcodedParties[owner.ID]...) // TEMP: use Session members later
+}
 
 func main() {
 	logConfigPath := "configs/shared/log.json"
@@ -80,54 +102,24 @@ func setupMatching() {
 	}
 
 	matching.SetOnTicketCompleteWithProfileID(common.TeamTicketType, func(ticketProps *matching.TicketProperties, owner *user.User, tag []string, profileID string) []byte {
-		candidates := ticketProps.GetAllCandidates()
-		candidateIDs := make([]string, 0, len(candidates)+1)
-
-		candidateIDs = append(candidateIDs, owner.ID)
-		for uid := range candidates {
-			candidateIDs = append(candidateIDs, uid)
-		}
-
-		slices.Sort(candidateIDs)
+		memberIDs, _ := matching.GetTicketMemberIDs(common.TeamTicketType, owner)
+		slices.Sort(memberIDs)
+		logger.Infof("team ticket complete", "owner", owner.ID, "members", memberIDs)
 
 		setOnLeaveTicketRoom(common.TeamTicketType, owner)
 
 		// Generate a payload to be sent to all ticket members.
 		b, _ := json.Marshal(common.MatchingComplete{
 			OwnerID:      owner.ID,
-			CandidateIDs: candidateIDs,
+			CandidateIDs: memberIDs,
 			TicketType:   common.TeamTicketType,
 		})
 
-		{
-			// In case you want to match another team based on some criteria.
-			// For example the average level of the team, you could store that information
-			// in the owner and use them to adjust the battle criteria.
-
-			// Once the team has been created, the owner starts a new ticket to match
-			// against another team.
-
-			searchTries := rand.Intn(10-1) + 1
-			emptySearches := rand.Intn(searchTries) + 1
-			ticketParams := &matching.TicketParams{
-				ProfileIDs:     []string{"battle"},
-				MaxMembers:     teamVsTeamSize,
-				SearchInterval: 100, // 100ms
-				SearchTries:    uint8(searchTries),
-				EmptySearches:  uint8(emptySearches),
-				TicketDuration: ticketDuration,
-				HowMany:        20,
-				// Change here as you see fit according to your application needs.
-				Tags: nil,
-				// The profile we use has no criteria because we focus on implementing
-				// a custom check.
-				AddProperties:    map[string]int{"level": 1},
-				SearchProperties: map[string][]int{"level": {1}},
-			}
-
-			if err := matching.StartTicketWithTicketParams(common.BattleTicketType, owner, ticketParams); err != nil {
-				logger.Error("failed to start battle ticket. %v", err)
-			}
+		// Once the team has been created, the owner starts a new ticket to match
+		// against another team. The other team members join the battle ticket with the owner.
+		others := slices.DeleteFunc(slices.Clone(memberIDs), func(id string) bool { return id == owner.ID })
+		if err := startBattleTicket(owner, others); err != nil {
+			logger.Error("failed to start battle ticket. %v", err)
 		}
 
 		return b
@@ -149,31 +141,16 @@ func setupMatching() {
 	})
 
 	matching.SetOnTicketCompleteWithProfileID(common.BattleTicketType, func(ticketProps *matching.TicketProperties, owner *user.User, tag []string, profileID string) []byte {
-		teams := [][]string{}
-		// Owner team:
-		ownerTeam, _ := matching.GetTicketMemberIDs(common.TeamTicketType, owner)
+		// All members of both teams are in the battle ticket.
+		battleMembers, _ := matching.GetTicketMemberIDs(common.BattleTicketType, owner)
+
+		// Owner team, and the other team = everyone else in the battle ticket.
+		ownerTeam := getTeamMembers(owner)
+		otherTeam := slices.DeleteFunc(slices.Clone(battleMembers), func(id string) bool { return slices.Contains(ownerTeam, id) })
 		slices.Sort(ownerTeam)
-		teams = append(teams, ownerTeam)
-
-		// Candidate team:
-		for uid, ticketHolder := range ticketProps.GetAllCandidates() {
-			meshAddr := ticketHolder.MeshEndPoint
-			req := getTicketMembersReq{
-				TicketType: common.TeamTicketType,
-				OwnerID:    uid,
-			}
-			data, _ := json.Marshal(req)
-			responseData, err := diarkisexec.SendMeshRPC(meshGetTicketMembers, meshAddr, data)
-			if err != nil {
-				logger.Error("rpc get ticket members failed. %v", err)
-			} else {
-				var resp getTicketMembersResponse
-				_ = json.Unmarshal(responseData, &resp)
-
-				slices.Sort(resp.MemberIDs)
-				teams = append(teams, resp.MemberIDs)
-			}
-		}
+		slices.Sort(otherTeam)
+		teams := [][]string{ownerTeam, otherTeam}
+		logger.Infof("battle ticket complete", "owner", owner.ID, "battleMembers", battleMembers, "teams", teams)
 
 		// Generate the payload to be sent to the ticket members.
 		b, _ := json.Marshal(common.MatchingComplete{
@@ -182,8 +159,10 @@ func setupMatching() {
 			Teams:      teams,
 		})
 
-		// Notify owner's team ticket members a team has been found.
-		matching.TicketMultibroadcast([]uint8{common.BattleTicketType, common.TeamTicketType}, owner, common.AppVersion, common.MatchingTicketBattleBroadcastCmd, b)
+		// Notify all battle members (both teams) the battle has been found.
+		if err := matching.TicketBroadcast(common.BattleTicketType, owner, common.AppVersion, common.MatchingTicketBattleBroadcastCmd, b); err != nil {
+			logger.Error("failed to broadcast battle result. %v", err)
+		}
 
 		return b
 	})
@@ -205,27 +184,22 @@ func handleStartMatching(ver uint8, cmd uint16, payload []byte, userData *user.U
 		return
 	}
 
-	// Randomize searchTries and emptySearches to not move to the wait mode at the same time
-	// considering all clients issue tickets at the same time.
-	searchTries := rand.Intn(10-1) + 1
-	emptySearches := rand.Intn(searchTries) + 1
-	ticketParams := &matching.TicketParams{
-		ProfileIDs:     []string{"team"},
-		MaxMembers:     teamMaxMembers,
-		SearchInterval: 100, // 100ms
-		SearchTries:    uint8(searchTries),
-		EmptySearches:  uint8(emptySearches),
-		TicketDuration: ticketDuration,
-		HowMany:        20,
-		// Change here as you see fit according to your application needs.
-		Tags: nil,
-		// The profile we use has no criteria because we focus on implementing
-		// a two steps matching.
-		AddProperties:    map[string]int{"level": 1},
-		SearchProperties: map[string][]int{"level": {1}},
+	// Party members do not start a ticket. The party owner adds them to its ticket.
+	if isPartyMember(userData.ID) {
+		logger.Infof("waiting for the party owner to start a ticket", "uid", userData.ID)
+		userData.ServerRespond(nil, ver, cmd, server.Ok, true)
+		next(nil)
+		return
 	}
+	partyMembers := hardcodedParties[userData.ID] // nil for solo users
 
-	err = matching.StartTicketWithTicketParams(common.TeamTicketType, userData, ticketParams)
+	if 1+len(partyMembers) >= teamMaxMembers {
+		// The party already fills a team: skip the team ticket and go straight to battle.
+		logger.Infof("party is full, skip team ticket", "owner", userData.ID, "members", partyMembers)
+		err = startBattleTicket(userData, partyMembers)
+	} else {
+		err = startTeamTicket(userData, partyMembers)
+	}
 	if err != nil {
 		err = fmt.Errorf("fail to start matching ticket. %w", err)
 		b, _ := json.Marshal(common.CommandResponse{
@@ -240,6 +214,59 @@ func handleStartMatching(ver uint8, cmd uint16, payload []byte, userData *user.U
 
 	userData.ServerRespond(nil, ver, cmd, server.Ok, true)
 	next(nil)
+}
+
+func newTicketMembers(memberIDs []string) *matching.TicketMembers {
+	if len(memberIDs) == 0 {
+		return nil
+	}
+	meshAddrs := make([]string, len(memberIDs))
+	for i := range memberIDs {
+		meshAddrs[i] = mesh.GetMyEndPoint()
+	}
+	return &matching.TicketMembers{IDs: memberIDs, MeshAddrs: meshAddrs}
+}
+
+func startTeamTicket(owner *user.User, memberIDs []string) error {
+	searchTries := rand.Intn(10-1) + 1
+	emptySearches := rand.Intn(searchTries) + 1
+	options := &matching.TicketOptions{
+		TicketParams: &matching.TicketParams{
+			ProfileIDs:       []string{"team"},
+			MaxMembers:       teamMaxMembers,
+			SearchInterval:   100, // 100ms
+			SearchTries:      uint8(searchTries),
+			EmptySearches:    uint8(emptySearches),
+			TicketDuration:   ticketDuration,
+			HowMany:          20,
+			AddProperties:    map[string]int{"level": 1},
+			SearchProperties: map[string][]int{"level": {1}},
+		},
+		TicketMembers: newTicketMembers(memberIDs),
+	}
+	logger.Infof("start team ticket", "owner", owner.ID, "members", memberIDs)
+	return matching.StartTicketWithOptions(common.TeamTicketType, owner, options)
+}
+
+func startBattleTicket(owner *user.User, memberIDs []string) error {
+	searchTries := rand.Intn(10-1) + 1
+	emptySearches := rand.Intn(searchTries) + 1
+	options := &matching.TicketOptions{
+		TicketParams: &matching.TicketParams{
+			ProfileIDs:       []string{"battle"},
+			MaxMembers:       teamMaxMembers * teamVsTeamSize, // all members of all teams
+			SearchInterval:   100,                             // 100ms
+			SearchTries:      uint8(searchTries),
+			EmptySearches:    uint8(emptySearches),
+			TicketDuration:   ticketDuration,
+			HowMany:          20,
+			AddProperties:    map[string]int{"level": 1},
+			SearchProperties: map[string][]int{"level": {1}},
+		},
+		TicketMembers: newTicketMembers(memberIDs),
+	}
+	logger.Infof("start battle ticket", "owner", owner.ID, "members", memberIDs)
+	return matching.StartTicketWithOptions(common.BattleTicketType, owner, options)
 }
 
 // handleGetTicketMembers Returns the members of a matching ticket.
