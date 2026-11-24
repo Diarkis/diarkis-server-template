@@ -326,7 +326,42 @@ UDP サーバーのログ:
 OnJoin rejected: kicked recently {"sessionID":"bcda3bac44a34341b33f930c8c33cf547f0000011fa5c8a0e6be","uid":"user2 or user3"}
 ```
 
-**12. 60 秒たってから kick されたユーザーがもう一度参加**
+**12. オーナーが kick したユーザーを 60 秒以内に招待**
+
+```sh
+# オーナー
+> session invite
+Enter for which protocol send a Session invitation(s) (TCP/UDP): (Default: UDP)
+Enter Session type [0 - 255] (uint8): (Default: 0)
+Enter invitee UIDs (',' for multiple entries) ([]string): (Example: 0000,0001,0002) user2 or user3
+Enter message (string): hi
+```
+
+```sh
+# kick されたユーザー
+You have been invited to join a Session. Invitation: {sessionType: 0, sessionID: bcda3bac44a34341b33f930c8c33cf547f0000011fa5c8a0e6be, msg: hi}
+Reply with `invite yes` or `invite no`
+> invite yes
+Command failed: could not join the session
+Invite reply failed: could not join the session
+```
+
+```sh
+# オーナー
+user2 or user3 accepted the invitation but could not join the session. SessionID: bcda3bac44a34341b33f930c8c33cf547f0000011fa5c8a0e6be
+```
+
+UDP サーバーのログ:
+
+```sh
+OnJoin rejected: kicked recently {"sessionID":"bcda3bac44a34341b33f930c8c33cf547f0000011fa5c8a0e6be","uid":"user2 or user3"}
+inviter cleared {"sessionID":"bcda3bac44a34341b33f930c8c33cf547f0000011fa5c8a0e6be","uid":"user2 or user3"}
+inviter notified {"inviterUID":"user2 or user3","uid":"user2 or user3","joinFailed":true}
+```
+
+> 招待を受けても、`OnJoin` で拒否されると参加できません。そのときは、招待した人に参加できなかったことが通知されます。
+
+**13. 60 秒たってから kick されたユーザーがもう一度参加**
 
 ```sh
 > session join
