@@ -11,10 +11,10 @@ func main() {
 	logConfigPath := "configs/shared/log.json"
 	meshConfigPath := "configs/shared/mesh.json"
 
-	// For this example we do not need to configure any of the Diarkis modules.
-	// We solely rely on the base-HTTP server itself.
 	diarkisexec.SetupDiarkis(logConfigPath, meshConfigPath, &diarkisexec.Modules{
 		MatchMaker: &diarkisexec.Options{ConfigPath: "configs/shared/matching.json"},
+		Dive:       &diarkisexec.Options{ConfigPath: "configs/shared/dive.json"},
+		DM:         &diarkisexec.Options{ConfigPath: "configs/shared/dm.json"},
 	})
 
 	exposeMatching()

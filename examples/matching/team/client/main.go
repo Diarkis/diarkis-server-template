@@ -13,10 +13,14 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"slices"
+	"strings"
+	"sync"
 	"syscall"
 	"time"
 
 	"github.com/Diarkis/diarkis-server-template/examples/matching/custom-criteria/common"
+	clientsession "github.com/Diarkis/diarkis/client/go/modules/session"
 	"github.com/Diarkis/diarkis/client/go/udp"
 	"github.com/Diarkis/diarkis/log"
 	pmatchmaker "github.com/Diarkis/diarkis/proto/go/matchmaker"
@@ -28,6 +32,7 @@ var logger = log.New("CLI")
 
 const rcvByteSize = 8000
 const udpSendInterval int64 = 200
+const inviteWaitTimeout = 30 * time.Second
 
 func main() {
 	log.Setup("configs/shared/log.json")
@@ -39,6 +44,8 @@ func run() int {
 		flagHost      = flag.String("host", "127.0.0.1:7000", "the address of the HTTP server")
 		flagUID       = flag.String("uid", "", "the unique identifier of the client like user ID")
 		flagClientKey = flag.String("clientKey", "", "the client key to authenticate with the server")
+		flagInvite    = flag.String("invite", "", "create a party and invite the given user IDs (comma separated). Matching starts when all of them join")
+		flagSolo      = flag.Bool("solo", false, "start matching alone")
 	)
 	context, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
@@ -52,6 +59,14 @@ func run() int {
 
 	cli := new(client)
 	cli.uid = *flagUID
+	cli.solo = *flagSolo
+	if *flagInvite != "" {
+		cli.invitees = strings.Split(*flagInvite, ",")
+	}
+	if cli.solo && len(cli.invitees) > 0 {
+		fmt.Println("-invite and -solo cannot be used together")
+		return 1
+	}
 
 	done := make(chan struct{})
 	go func() {
@@ -71,7 +86,13 @@ func run() int {
 
 type client struct {
 	uc  *udp.Client
+	ss  *clientsession.Session
 	uid string
+	solo     bool     // -solo: start matching alone
+	invitees []string // -invite: create a party, invite them, and start matching when all of them join
+	mu          sync.Mutex
+	joinedIDs   []string
+	joinedParty bool
 }
 
 func (c *client) connect(host string, clientKey string) {
@@ -154,6 +175,11 @@ func (c *client) connectUDP(addr string, sid []byte, key []byte, iv []byte, mack
 	c.uc.OnPush(c.handleOnPushUDP)
 	c.uc.OnConnect(c.handleOnConnectUDP)
 
+	c.ss = clientsession.NewSessionAsUDP(c.uc)
+	c.ss.OnSessionCreate(c.handleSessionCreate)
+	c.ss.OnSessionInvite(c.handleSessionInvite)
+	c.ss.OnMemberJoin(c.handleMemberJoin)
+
 	done := make(chan struct{})
 	c.uc.OnDisconnect(func() {
 		close(done)
@@ -165,7 +191,58 @@ func (c *client) connectUDP(addr string, sid []byte, key []byte, iv []byte, mack
 
 func (c *client) handleOnConnectUDP() {
 	logger.Info("Connected UDP")
-	c.startMatching()
+	switch {
+	case c.solo:
+		c.startMatching()
+	case len(c.invitees) > 0:
+		logger.Info("create a party")
+		c.ss.CreateSession(common.PartySessionType, uint8(len(c.invitees)+1), 60)
+	default:
+		logger.Infof("waiting for an invitation", "timeout", inviteWaitTimeout.String())
+		time.AfterFunc(inviteWaitTimeout, func() {
+			c.mu.Lock()
+			joined := c.joinedParty
+			c.mu.Unlock()
+			if !joined {
+				logger.Info("no invitation received, disconnect")
+				c.uc.Disconnect()
+			}
+		})
+	}
+}
+
+func (c *client) handleSessionCreate(sessionType uint8, sessionID string) {
+	logger.Infof("party created", "sessionID", sessionID, "invitees", c.invitees)
+	c.ss.InviteToSession(sessionType, c.invitees, []byte("party"))
+}
+
+func (c *client) handleSessionInvite(sessionType uint8, sessionID string, message []byte) {
+	if c.solo || len(c.invitees) > 0 {
+		return
+	}
+	logger.Infof("invited to a party, join", "sessionID", sessionID)
+	c.ss.JoinSession(sessionType, sessionID)
+}
+
+func (c *client) handleMemberJoin(sessionType uint8, memberID string) {
+	logger.Infof("party member joined", "memberID", memberID)
+
+	c.mu.Lock()
+	if memberID == c.uid {
+		c.joinedParty = true
+	}
+	if len(c.invitees) == 0 || slices.Contains(c.joinedIDs, memberID) {
+		c.mu.Unlock()
+		return
+	}
+	c.joinedIDs = append(c.joinedIDs, memberID)
+	allJoined := len(c.joinedIDs) == len(c.invitees)
+	c.mu.Unlock()
+
+	if allJoined {
+		logger.Info("all party members joined")
+		c.startMatching()
+	}
 }
 
 func (c *client) handleOnResponseUDP(ver uint8, cmd uint16, status uint8, payload []byte) {

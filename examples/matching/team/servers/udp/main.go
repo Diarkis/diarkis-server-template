@@ -4,7 +4,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math/rand"
 	"slices"
@@ -15,6 +14,7 @@ import (
 	"github.com/Diarkis/diarkis/matching"
 	"github.com/Diarkis/diarkis/mesh"
 	"github.com/Diarkis/diarkis/server"
+	"github.com/Diarkis/diarkis/session"
 	"github.com/Diarkis/diarkis/user"
 )
 
@@ -24,51 +24,34 @@ var logger = log.New("UDP")
 // 3 for $teamMaxMembers vs $teamMaxMembers vs $teamMaxMembers
 
 const (
-	teamVsTeamSize                   = 2
-	teamMaxMembers                   = 3
-	ticketDuration                   = 15 // 15 seconds
-	meshGetTicketMembers      uint16 = 10001
-	meshRemoteTicketBroadcast uint16 = 10002
+	teamVsTeamSize = 2
+	teamMaxMembers = 3
+	ticketDuration = 15 // 15 seconds
+	meshAddrKey = "meshAddr"
+	teamMembersKey = "teamMembers"
 )
-
-var hardcodedParties = map[string][]string{
-	"user-1": {"user-2", "user-3"},
-	"user-4": {"user-5"},
-}
-
-func isPartyMember(uid string) bool {
-	for _, members := range hardcodedParties {
-		if slices.Contains(members, uid) {
-			return true
-		}
-	}
-	return false
-}
-
-func getTeamMembers(owner *user.User) []string {
-	if ids, _ := matching.GetTicketMemberIDs(common.TeamTicketType, owner); len(ids) > 0 {
-		return ids
-	}
-	return append([]string{owner.ID}, hardcodedParties[owner.ID]...) // TEMP: use Session members later
-}
 
 func main() {
 	logConfigPath := "configs/shared/log.json"
-	meshConfigPath := ""
+	meshConfigPath := "configs/shared/mesh.json"
 
 	diarkisexec.SetupDiarkis(logConfigPath, meshConfigPath, &diarkisexec.Modules{
 		MatchMaker: &diarkisexec.Options{ConfigPath: "configs/shared/matching.json", ExposeCommands: true},
+		Session:    &diarkisexec.Options{ConfigPath: "configs/shared/session.json", ExposeCommands: true},
+		Dive:       &diarkisexec.Options{ConfigPath: "configs/shared/dive.json"},
+		DM:         &diarkisexec.Options{ConfigPath: "configs/shared/dm.json"},
 	})
 	diarkisexec.SetupDiarkisUDPServer("configs/udp/main.json")
 
 	diarkisexec.SetServerCommandHandler(common.AppVersion, common.MatchingStartCmd, handleStartMatching)
-	diarkisexec.SetMeshRPCHandler(meshGetTicketMembers, handleGetTicketMembers)
-	diarkisexec.SetMeshRPCHandler(meshRemoteTicketBroadcast, handleRemoteTicketBroadcast)
+
+	user.OnNewConnection(func(userData *user.User) {
+		userData.SetAsString(meshAddrKey, mesh.GetMyEndPoint())
+	})
 
 	setupMatching()
 
 	diarkisexec.StartDiarkis()
-
 }
 
 func setupMatching() {
@@ -102,9 +85,22 @@ func setupMatching() {
 	}
 
 	matching.SetOnTicketCompleteWithProfileID(common.TeamTicketType, func(ticketProps *matching.TicketProperties, owner *user.User, tag []string, profileID string) []byte {
-		memberIDs, _ := matching.GetTicketMemberIDs(common.TeamTicketType, owner)
+		clients, _ := matching.GetTicketMemberClients(common.TeamTicketType, owner)
+		memberIDs := make([]string, 0, len(clients))
+		otherIDs := []string{}
+		otherAddrs := []string{}
+		for _, c := range clients {
+			memberIDs = append(memberIDs, c.ID)
+			if c.ID == owner.ID {
+				continue
+			}
+			addr, _ := c.UserData[meshAddrKey].(string)
+			otherIDs = append(otherIDs, c.ID)
+			otherAddrs = append(otherAddrs, addr)
+		}
 		slices.Sort(memberIDs)
 		logger.Infof("team ticket complete", "owner", owner.ID, "members", memberIDs)
+		setTeamMembers(owner, memberIDs)
 
 		setOnLeaveTicketRoom(common.TeamTicketType, owner)
 
@@ -117,8 +113,7 @@ func setupMatching() {
 
 		// Once the team has been created, the owner starts a new ticket to match
 		// against another team. The other team members join the battle ticket with the owner.
-		others := slices.DeleteFunc(slices.Clone(memberIDs), func(id string) bool { return id == owner.ID })
-		if err := startBattleTicket(owner, others); err != nil {
+		if err := startBattleTicket(owner, otherIDs, otherAddrs); err != nil {
 			logger.Error("failed to start battle ticket. %v", err)
 		}
 
@@ -171,63 +166,82 @@ func setupMatching() {
 func handleStartMatching(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
 	var params common.MatchingParams
 
-	err := json.Unmarshal(payload, &params)
-	if err != nil {
-		err = fmt.Errorf("fail to parse payload. %w", err)
-		b, _ := json.Marshal(common.CommandResponse{
-			Error: &common.CommandError{
-				Message: err.Error(),
-			},
-		})
-		userData.ServerRespond(b, ver, cmd, server.Bad, true)
-		next(err)
+	if err := json.Unmarshal(payload, &params); err != nil {
+		respondError(userData, ver, cmd, fmt.Errorf("fail to parse payload. %w", err), next)
 		return
 	}
 
-	// Party members do not start a ticket. The party owner adds them to its ticket.
-	if isPartyMember(userData.ID) {
-		logger.Infof("waiting for the party owner to start a ticket", "uid", userData.ID)
-		userData.ServerRespond(nil, ver, cmd, server.Ok, true)
-		next(nil)
+	if session.GetSessionID(common.PartySessionType, userData) == "" {
+		startMatching(userData, nil, nil, ver, cmd, next)
 		return
 	}
-	partyMembers := hardcodedParties[userData.ID] // nil for solo users
 
-	if 1+len(partyMembers) >= teamMaxMembers {
-		// The party already fills a team: skip the team ticket and go straight to battle.
-		logger.Infof("party is full, skip team ticket", "owner", userData.ID, "members", partyMembers)
-		err = startBattleTicket(userData, partyMembers)
+	session.GetAllSessionMemberData(common.PartySessionType, userData, func(err error, members []*session.UserData) {
+		if err != nil {
+			respondError(userData, ver, cmd, fmt.Errorf("fail to get party members. %w", err), next)
+			return
+		}
+		memberIDs := []string{}
+		meshAddrs := []string{}
+		for _, m := range members {
+			if m.UserID == userData.ID {
+				continue
+			}
+			memberIDs = append(memberIDs, m.UserID)
+			meshAddrs = append(meshAddrs, m.MeshAddr)
+		}
+		startMatching(userData, memberIDs, meshAddrs, ver, cmd, next)
+	})
+}
+
+func startMatching(owner *user.User, memberIDs []string, meshAddrs []string, ver uint8, cmd uint16, next func(error)) {
+	var err error
+	if 1+len(memberIDs) >= teamMaxMembers {
+		logger.Infof("party is full, skip team ticket", "owner", owner.ID, "members", memberIDs)
+		setTeamMembers(owner, append([]string{owner.ID}, memberIDs...))
+		err = startBattleTicket(owner, memberIDs, meshAddrs)
 	} else {
-		err = startTeamTicket(userData, partyMembers)
+		err = startTeamTicket(owner, memberIDs, meshAddrs)
 	}
 	if err != nil {
-		err = fmt.Errorf("fail to start matching ticket. %w", err)
-		b, _ := json.Marshal(common.CommandResponse{
-			Error: &common.CommandError{
-				Message: err.Error(),
-			},
-		})
-		userData.ServerRespond(b, ver, cmd, server.Bad, true)
-		next(err)
+		respondError(owner, ver, cmd, fmt.Errorf("fail to start matching ticket. %w", err), next)
 		return
 	}
-
-	userData.ServerRespond(nil, ver, cmd, server.Ok, true)
+	owner.ServerRespond(nil, ver, cmd, server.Ok, true)
 	next(nil)
 }
 
-func newTicketMembers(memberIDs []string) *matching.TicketMembers {
+func respondError(userData *user.User, ver uint8, cmd uint16, err error, next func(error)) {
+	b, _ := json.Marshal(common.CommandResponse{
+		Error: &common.CommandError{
+			Message: err.Error(),
+		},
+	})
+	userData.ServerRespond(b, ver, cmd, server.Bad, true)
+	next(err)
+}
+
+func setTeamMembers(owner *user.User, memberIDs []string) {
+	b, _ := json.Marshal(memberIDs)
+	owner.SetAsString(teamMembersKey, string(b))
+}
+
+func getTeamMembers(owner *user.User) []string {
+	var memberIDs []string
+	if v, ok := owner.GetAsString(teamMembersKey); ok {
+		_ = json.Unmarshal([]byte(v), &memberIDs)
+	}
+	return memberIDs
+}
+
+func newTicketMembers(memberIDs []string, meshAddrs []string) *matching.TicketMembers {
 	if len(memberIDs) == 0 {
 		return nil
-	}
-	meshAddrs := make([]string, len(memberIDs))
-	for i := range memberIDs {
-		meshAddrs[i] = mesh.GetMyEndPoint()
 	}
 	return &matching.TicketMembers{IDs: memberIDs, MeshAddrs: meshAddrs}
 }
 
-func startTeamTicket(owner *user.User, memberIDs []string) error {
+func startTeamTicket(owner *user.User, memberIDs []string, meshAddrs []string) error {
 	searchTries := rand.Intn(10-1) + 1
 	emptySearches := rand.Intn(searchTries) + 1
 	options := &matching.TicketOptions{
@@ -242,20 +256,20 @@ func startTeamTicket(owner *user.User, memberIDs []string) error {
 			AddProperties:    map[string]int{"level": 1},
 			SearchProperties: map[string][]int{"level": {1}},
 		},
-		TicketMembers: newTicketMembers(memberIDs),
+		TicketMembers: newTicketMembers(memberIDs, meshAddrs),
 	}
-	logger.Infof("start team ticket", "owner", owner.ID, "members", memberIDs)
+	logger.Infof("start team ticket", "owner", owner.ID, "members", memberIDs, "meshAddrs", meshAddrs)
 	return matching.StartTicketWithOptions(common.TeamTicketType, owner, options)
 }
 
-func startBattleTicket(owner *user.User, memberIDs []string) error {
+func startBattleTicket(owner *user.User, memberIDs []string, meshAddrs []string) error {
 	searchTries := rand.Intn(10-1) + 1
 	emptySearches := rand.Intn(searchTries) + 1
 	options := &matching.TicketOptions{
 		TicketParams: &matching.TicketParams{
 			ProfileIDs:       []string{"battle"},
-			MaxMembers:       teamMaxMembers * teamVsTeamSize, // all members of all teams
-			SearchInterval:   100,                             // 100ms
+			MaxMembers:       teamMaxMembers * teamVsTeamSize,
+			SearchInterval:   100, // 100ms
 			SearchTries:      uint8(searchTries),
 			EmptySearches:    uint8(emptySearches),
 			TicketDuration:   ticketDuration,
@@ -263,60 +277,8 @@ func startBattleTicket(owner *user.User, memberIDs []string) error {
 			AddProperties:    map[string]int{"level": 1},
 			SearchProperties: map[string][]int{"level": {1}},
 		},
-		TicketMembers: newTicketMembers(memberIDs),
+		TicketMembers: newTicketMembers(memberIDs, meshAddrs),
 	}
-	logger.Infof("start battle ticket", "owner", owner.ID, "members", memberIDs)
+	logger.Infof("start battle ticket", "owner", owner.ID, "members", memberIDs, "meshAddrs", meshAddrs)
 	return matching.StartTicketWithOptions(common.BattleTicketType, owner, options)
-}
-
-// handleGetTicketMembers Returns the members of a matching ticket.
-func handleGetTicketMembers(data []byte, senderAddr string) (response []byte, err error) {
-	var req getTicketMembersReq
-	if err := json.Unmarshal(data, &req); err != nil {
-		return nil, err
-	}
-
-	owner := user.GetUserByUID(req.OwnerID)
-	if owner == nil {
-		return nil, errors.New("owner of ticket not found")
-	}
-
-	members, _ := matching.GetTicketMemberIDs(req.TicketType, owner)
-	response, err = json.Marshal(getTicketMembersResponse{MemberIDs: members})
-	return
-}
-
-func handleRemoteTicketBroadcast(data []byte, senderAddr string) (response []byte, err error) {
-	var req ticketBroadcastReq
-	if err := json.Unmarshal(data, &req); err != nil {
-		logger.Error("handleRemoteTicketBroadcast: json.Unmarshal: %v", err)
-		return nil, err
-	}
-
-	owner := user.GetUserByUID(req.OwnerID)
-	if owner == nil {
-		logger.Error("handleRemoteTicketBroadcast: owner not found")
-		return nil, errors.New("owner of ticket not found")
-	}
-
-	err = matching.TicketBroadcast(req.TicketType, owner, req.Version, req.Command, req.Data)
-
-	return
-}
-
-type getTicketMembersReq struct {
-	TicketType uint8
-	OwnerID    string
-}
-
-type getTicketMembersResponse struct {
-	MemberIDs []string
-}
-
-type ticketBroadcastReq struct {
-	TicketType uint8
-	OwnerID    string
-	Data       []byte
-	Version    uint8
-	Command    uint16
 }

@@ -10,3 +10,5 @@ const (
 	// teams together.
 	BattleTicketType uint8 = 2
 )
+
+const PartySessionType uint8 = 0
