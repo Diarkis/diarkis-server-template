@@ -6,7 +6,6 @@ import (
 	"github.com/Diarkis/diarkis-server-template/lib/meshCmds"
 	"github.com/Diarkis/diarkis/log"
 	"github.com/Diarkis/diarkis/room"
-	"github.com/Diarkis/diarkis/roomsupport"
 	"github.com/Diarkis/diarkis/user"
 )
 
@@ -21,11 +20,12 @@ func Setup() {
 	room.SetOnDiscardCustomMessage(onDiscardCustomMessage)
 	// Sends a custom broadcast to all members when the room owner changes
 	room.SetOnRoomOwnerChange(onRoomOwnerChange)
-	// When a new room is create, we setup on join event to sync owner ID by message
+	// When a new room is created (by create room command or by random join), we setup on join event
+	// to sync owner ID by message. SetOnCreate is invoked exactly once per room, so the on join callback
+	// is never registered more than once for the same room.
+	room.SetOnCreate(setupOnJoinCallback)
+	// When a new room is created by create room command, we sync owner ID to the creator
 	room.AfterCreateRoomCmd(afterCreateRoom)
-	// When a user performs random join and the server creates a new room, we setup on join event
-	// to sync owner ID by message
-	roomsupport.AfterRandomRoomCmd(afterRandomJoin)
 	// set up custom mesh commands
 	meshCmds.Setup()
 }
@@ -46,26 +46,8 @@ func afterCreateRoom(ver uint8, cmd uint16, payload []byte, userData *user.User,
 		next(nil)
 		return
 	}
-	setupOnJoinCallback(roomID)
 	ownerID := room.GetRoomOwnerID(roomID)
 	syncRoomOwnerID(roomID, ownerID)
-	next(nil)
-}
-
-func afterRandomJoin(ver uint8, cmd uint16, payload []byte, userData *user.User, next func(error)) {
-	roomID := room.GetRoomID(userData)
-	if roomID == "" {
-		// user is not in the room
-		next(nil)
-		return
-	}
-	// first byte is a flag to tell use either create or join
-	if payload[0] != 0x00 {
-		// it was join
-		next(nil)
-		return
-	}
-	setupOnJoinCallback(roomID)
 	next(nil)
 }
 
